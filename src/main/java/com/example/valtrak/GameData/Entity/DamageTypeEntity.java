@@ -2,10 +2,14 @@ package com.example.valtrak.GameData.Entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 
 @Data
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 @Entity
 @Table(name = "damage_types")
 public class DamageTypeEntity {

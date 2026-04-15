@@ -2,11 +2,15 @@ package com.example.valtrak.GameData.Entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 
+
 @Data
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 @Entity
 @Table(name = "secondary_weapons")
 public class SecondaryWeaponEntity {
