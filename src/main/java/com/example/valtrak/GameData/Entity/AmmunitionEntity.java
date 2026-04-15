@@ -1,0 +1,24 @@
+package com.example.valtrak.GameData.Entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NonNull;
+
+
+@Data
+@Entity
+@Table(name = "ammunition")
+public class AmmunitionEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NonNull
+    @Column(name = "ammunition_name", unique = true)
+    private String name;
+
+    @NonNull
+    @ManyToOne
+    @JoinColumn(name = "damage_type_id")
+    private DamageTypeEntity damageType;
+}
