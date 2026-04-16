@@ -1,8 +1,8 @@
 package com.example.valtrak.GameData.Config;
 
-import com.example.valtrak.CardData.General.VehicleInfo.*;
-import com.example.valtrak.CardData.General.WeaponInfo.*;
-import com.example.valtrak.CardData.UnitedStatesVehicles;
+import com.example.valtrak.CardData.Information.VehicleInfo.*;
+import com.example.valtrak.CardData.Information.WeaponInfo.*;
+import com.example.valtrak.CardData.Nations.*;
 import com.example.valtrak.GameData.Entity.*;
 import com.example.valtrak.GameData.Repository.*;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +82,7 @@ public class DataLoader implements CommandLineRunner {
     private void loadPrimaryWeapons() {
         for (PrimaryWeapon pw : PrimaryWeapon.values()) {
             if (!primaryWeaponRepo.existsByWeaponName(pw.name())) {
-                List<AmmunitionEntity> ammoEntities = pw.getRequiredAmmo().stream()
+                List<AmmunitionEntity> ammoEntities = pw.getCompatibleAmmunition().stream()
                         .map(a -> ammoRepo.findByName(a.name())
                                 .orElseThrow(() -> new RuntimeException(
                                         "Ammunition not found: " + a.name()
@@ -97,7 +97,7 @@ public class DataLoader implements CommandLineRunner {
     private void loadSecondaryWeapons() {
         for (SecondaryWeapon sw : SecondaryWeapon.values()) {
             if (!secondaryWeaponRepo.existsByWeaponName(sw.name())) {
-                List<AmmunitionEntity> ammoEntities = sw.getRequiredAmmo().stream()
+                List<AmmunitionEntity> ammoEntities = sw.getCompatibleAmmunition().stream()
                         .map(a -> ammoRepo.findByName(a.name())
                                 .orElseThrow(() -> new RuntimeException(
                                         "Ammunition not found: " + a.name()

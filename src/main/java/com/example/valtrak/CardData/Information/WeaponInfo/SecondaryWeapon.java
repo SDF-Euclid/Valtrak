@@ -1,4 +1,4 @@
-package com.example.valtrak.CardData.General.WeaponInfo;
+package com.example.valtrak.CardData.Information.WeaponInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,5 +11,5 @@ public enum SecondaryWeapon {
     BROWNING_50CAL(List.of(Ammunition.NATO_127x99MM));
 
 
-    private final List<Ammunition> requiredAmmo;
+    private final List<Ammunition> compatibleAmmunition;
 }

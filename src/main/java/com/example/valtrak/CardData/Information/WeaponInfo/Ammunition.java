@@ -1,4 +1,4 @@
-package com.example.valtrak.CardData.General.WeaponInfo;
+package com.example.valtrak.CardData.Information.WeaponInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

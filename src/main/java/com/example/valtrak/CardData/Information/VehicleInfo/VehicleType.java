@@ -1,4 +1,4 @@
-package com.example.valtrak.CardData.General.VehicleInfo;
+package com.example.valtrak.CardData.Information.VehicleInfo;
 
 public enum VehicleType {
     GROUND,
