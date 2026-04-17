@@ -2,8 +2,9 @@ package com.example.valtrak.CardData.Information.VehicleInfo;
 
 public enum VehicleClass {
     LIGHT_TANK,
-    MEDIUM_BATTLE_TANK,
+    MEDIUM_TANK,
     HEAVY_TANK,
+    MAIN_BATTLE_TANK,
     ANTI_AIR,
     SPECIALIST,
     SUPPLY,

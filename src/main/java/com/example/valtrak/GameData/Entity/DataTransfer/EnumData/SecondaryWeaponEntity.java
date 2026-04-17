@@ -1,4 +1,4 @@
-package com.example.valtrak.GameData.Entity;
+package com.example.valtrak.GameData.Entity.DataTransfer.EnumData;
 
 import jakarta.persistence.*;
 import lombok.Data;

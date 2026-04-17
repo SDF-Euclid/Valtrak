@@ -1,14 +1,15 @@
-package com.example.valtrak.GameData.Entity;
+package com.example.valtrak.GameData.Entity.DataTransfer.EnumData;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 
-
+/**
+ *
+ */
 @Data
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor
@@ -37,6 +38,9 @@ public class VehicleCard {
     @ManyToOne
     @JoinColumn(name = "vehicle_class_id")
     private VehicleClassEntity vehicleClass;
+
+    @NonNull
+    private Integer vehicleArmor;
 
     @NonNull
     @ManyToMany

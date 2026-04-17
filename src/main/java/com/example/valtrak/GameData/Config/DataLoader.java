@@ -2,9 +2,10 @@ package com.example.valtrak.GameData.Config;
 
 import com.example.valtrak.CardData.Information.VehicleInfo.*;
 import com.example.valtrak.CardData.Information.WeaponInfo.*;
-import com.example.valtrak.CardData.Nations.*;
-import com.example.valtrak.GameData.Entity.*;
-import com.example.valtrak.GameData.Repository.*;
+import com.example.valtrak.CardData.Nations.Information.Nations;
+import com.example.valtrak.CardData.Nations.Vehicles.UnitedStatesVehicles;
+import com.example.valtrak.GameData.Entity.DataTransfer.EnumData.*;
+import com.example.valtrak.GameData.Repository.EnumData.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.CommandLineRunner;
@@ -17,7 +18,9 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {
-
+    /**
+     *
+     */
     private final DamageTypeRepository damageTypeRepo;
     private final VehicleTypeRepository vehicleTypeRepo;
     private final VehicleClassRepository vehicleClassRepo;
@@ -25,6 +28,7 @@ public class DataLoader implements CommandLineRunner {
     private final PrimaryWeaponRepository primaryWeaponRepo;
     private final SecondaryWeaponRepository secondaryWeaponRepo;
     private final VehicleRepository vehicleRepo;
+    private final NationRepository nationRepo;
 
     @Override
     public void run(String @NonNull ... args) {
@@ -35,6 +39,7 @@ public class DataLoader implements CommandLineRunner {
         loadPrimaryWeapons();
         loadSecondaryWeapons();
         loadUnitedStatesVehicles();
+        loadNations();
     }
 
     /*==================== DAMAGE TYPE ====================*/
@@ -108,7 +113,16 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*====================INITIALIZE DATA BASE====================*/
+    /*==================== NATIONS ====================*/
+    private void loadNations() {
+        for (Nations n : Nations.values()) {
+            if (!nationRepo.existsByNationName(n.getName())) {
+                nationRepo.save(new NationEntity(n.getName(), n.getAbbreviation()));
+            }
+        }
+    }
+
+    /*============================== INITIALIZE DATA BASE ==============================*/
 
     /*==================== UNITED STATES VEHICLES ====================*/
     private void loadUnitedStatesVehicles() {
@@ -147,6 +161,7 @@ public class DataLoader implements CommandLineRunner {
                         "United States",
                         vehicleType,
                         vehicleClass,
+                        vehicle.getVehicleArmor(),
                         primaryWeapons,
                         secondaryWeapons
                 ));

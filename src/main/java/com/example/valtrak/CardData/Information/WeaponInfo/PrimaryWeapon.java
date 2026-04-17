@@ -11,7 +11,23 @@ import java.util.List;
 @AllArgsConstructor
 public enum PrimaryWeapon {
 
-    SMOOTHBORE_CANNON_120MM(List.of(Ammunition.APFSDS_120MM, Ammunition.HEAT_120MM));
+    /*==================== SMOOTHBORE CANNONS ====================*/
+
+    SMOOTHBORE_CANNON_120MM(List.of(Ammunition.APFSDS_120MM, Ammunition.HEAT_120MM)),
+
+    /*============================================================*/
+
+    /*==================== AUTO CANNONS ====================*/
+
+    BUSHMASTER_25MM(List.of(Ammunition.APFSDS_25MM, Ammunition.HE_25MM)),
+
+    /*======================================================*/
+
+    /*==================== ATGM LAUNCHERS ====================*/
+
+    TOW_ATGM(List.of(Ammunition.BGM_71_152MM));
+
+    /*========================================================*/
 
     /**
      *

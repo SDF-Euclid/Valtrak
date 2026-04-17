@@ -1,4 +1,4 @@
-package com.example.valtrak.GameData.Entity;
+package com.example.valtrak.GameData.Entity.DataTransfer.EnumData;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -18,6 +18,6 @@ public class VehicleTypeEntity {
     private Long id;
 
     @NonNull
-    @Column(name = "vehicle_type_name", unique = true)
+    @Column(name = "type_name", unique = true)
     private String name;
 }

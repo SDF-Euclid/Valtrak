@@ -1,4 +1,4 @@
-package com.example.valtrak.GameData.Entity;
+package com.example.valtrak.GameData.Entity.DataTransfer.EnumData;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,18 +11,13 @@ import lombok.RequiredArgsConstructor;
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor
 @Entity
-@Table(name = "ammunition")
-public class AmmunitionEntity {
+@Table(name = "vehicle_classes")
+public class VehicleClassEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NonNull
-    @Column(name = "ammunition_name", unique = true)
-    private String name;
-
-    @NonNull
-    @ManyToOne
-    @JoinColumn(name = "damage_type_id")
-    private DamageTypeEntity damageType;
+    @Column(name = "class_name",  unique = true)
+    private String className;
 }
