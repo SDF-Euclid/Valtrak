@@ -1,6 +1,6 @@
 package com.example.valtrak.Data.GameData.Repository.EnumData;
 
-import com.example.valtrak.Gameplay.Cards.GroundVehicleCard;
+import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

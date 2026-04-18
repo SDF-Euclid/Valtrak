@@ -2,9 +2,9 @@ package com.example.valtrak.Data.GameData.Service;
 
 import com.example.valtrak.Data.GameData.DataTransfer.PlayerData.AccountCreation.CreateAccountRequest;
 import com.example.valtrak.Data.GameData.DataTransfer.PlayerData.AccountCreation.CreateAccountResponse;
-import com.example.valtrak.Gameplay.Player;
+import com.example.valtrak.Data.GameData.Entity.Player;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.PlayerNotFoundException;
-import com.example.valtrak.Data.GameData.Repository.Players.PlayerRepository;
+import com.example.valtrak.Data.GameData.Repository.PlayerRepository;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;

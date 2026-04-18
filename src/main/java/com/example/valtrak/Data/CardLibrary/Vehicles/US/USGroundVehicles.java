@@ -1,9 +1,12 @@
 package com.example.valtrak.Data.CardLibrary.Vehicles.US;
 
 import com.example.valtrak.Data.CardLibrary.CardLevel;
-import com.example.valtrak.Data.CardLibrary.Information.VehicleInfo.*;
-import com.example.valtrak.Data.CardLibrary.Information.WeaponInfo.*;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Interfaces.GroundVehicleCardInterface;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleType;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.*;
+import com.example.valtrak.Data.CardLibrary.Interfaces.GroundVehicleCardInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.VehicleAttackInterface;
+import com.example.valtrak.Data.GameData.Config.Records.VehicleAttackDefinition;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import java.util.List;
@@ -21,6 +24,7 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
 
     /*==================== LIGHT TANKS ====================*/
 
+    /*
     M3_BRADLEY("M3 Bradley",
                "United States",
                "A light reconnaissance vehicle with devastating firepower.",
@@ -28,9 +32,11 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
                VehicleType.GROUND,
                VehicleClass.LIGHT_TANK,
                60, //Review
-               List.of(PrimaryWeapon.BUSHMASTER_25MM, PrimaryWeapon.TOW_ATGM),
+               List.of(Weapon.BUSHMASTER_25MM, Weapon.TOW_ATGM),
                List.of()
     ),
+    */
+
 
     /*=====================================================*/
 
@@ -55,8 +61,11 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
                 VehicleType.GROUND,
                 VehicleClass.MAIN_BATTLE_TANK,
                 100, //Review
-                List.of(PrimaryWeapon.SMOOTHBORE_CANNON_120MM),
-                List.of(SecondaryWeapon.BROWNING_50CAL, SecondaryWeapon.BROWNING_50CAL)
+                List.of(
+                        new VehicleAttackDefinition("Suppressing Fire", AttackSlot.ATTACK_1, Weapon.BROWNING_50CAL, 15, 1, 0, SpecialEffect.SUPPRESSION),
+                        new VehicleAttackDefinition("Cannon Shot", AttackSlot.ATTACK_2, Weapon.SMOOTHBORE_CANNON_120MM, 45, 2, 0, SpecialEffect.NONE),
+                        new VehicleAttackDefinition("Sabot Barrage", AttackSlot.ATTACK_3, Weapon.SMOOTHBORE_CANNON_120MM, 80, 3, 1, SpecialEffect.PIERCE)
+                )
     );
 
     /*===========================================================*/
@@ -73,6 +82,5 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
     private final VehicleType vehicleType;
     private final VehicleClass vehicleClass;
     private final Integer vehicleArmor; //Review
-    private final List<PrimaryWeapon> primaryWeapons;
-    private final List<SecondaryWeapon> secondaryWeapons;
+    private final List<VehicleAttackInterface> vehicleAttacks;
 }

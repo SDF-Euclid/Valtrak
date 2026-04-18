@@ -4,6 +4,7 @@ public enum CardLevel {
     COMMON,
     UNCOMMON,
     RARE,
+    EPIC,
     LEGENDARY,
     COMMANDER
 }
