@@ -1,49 +1,98 @@
 package com.example.valtrak.Data.GameData.Config;
 
-import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.*;
-import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.*;
-import com.example.valtrak.Data.CardLibrary.Interfaces.*;
-import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
+import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.AmmoSupplyCrate;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.ArmorBracket;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleType;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.DamageType;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.SpecialEffect;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Items.AmmunitionItemInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.VehicleAttackInterface;
 import com.example.valtrak.Data.CardLibrary.Nations;
+import com.example.valtrak.Data.CardLibrary.Vehicles.Germany.GermanVehicles;
+import com.example.valtrak.Data.CardLibrary.Vehicles.Russia.RussianVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.US.USGroundVehicles;
+import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
+import com.example.valtrak.Data.GameData.Repository.Cards.AmmunitionCardRepository;
+import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.*;
+import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * Bootstraps the Valtrak database with all static game data on application startup.
+ * This class runs once when the Spring application starts via {@link CommandLineRunner}.
+ * It seeds all enumerated constants (damage types, vehicle classes, ammunition, weapons,
+ * nations, etc.) as database entities, then seeds all card definitions from each nation's
+ * vehicle enum. Each seed method is idempotent — it checks for existing entries before
+ * inserting to prevent duplicate data on subsequent startups.
+ * Seeding order matters due to foreign key dependencies:
+ * <pre>
+ * DamageTypes -> DamageTypeMatchups -> VehicleTypes -> VehicleClasses
+ *     → Ammunition -> Weapons -> Nations -> Ground Vehicles -> Vehicle Attacks
+ * </pre>
  */
 @Component
 @RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {
+
+    /*==================== REPOSITORIES ====================*/
 
     private final DamageTypeRepository damageTypeRepo;
     private final DamageTypeMatchupRepository damageTypeMatchupRepo;
     private final VehicleTypeRepository vehicleTypeRepo;
     private final VehicleClassRepository vehicleClassRepo;
     private final AmmunitionRepository ammoRepo;
+    private final AmmunitionCardRepository ammunitionCardRepo;
     private final WeaponRepository weaponRepo;
     private final NationRepository nationRepo;
-    private final VehicleRepository vehicleRepo;
+    private final VehicleCardRepository vehicleRepo;
     private final VehicleAttackRepository vehicleAttackRepo;
 
+    /*======================================================*/
+
+    /**
+     * Console logger used to track seeding progress and report completion
+     */
+    private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
+
+    /**
+     * Entry point for database seeding. Called automatically by Spring Boot on startup.
+     * Runs all seed methods in dependency order and logs completion.
+     * @param args command line arguments passed to the application (unused)
+     */
     @Override
     public void run(String @NonNull ... args) {
         loadDamageTypes();
+        loadDamageTypeMatchups();
         loadVehicleTypes();
         loadVehicleClasses();
         loadAmmunition();
         loadWeapons();
         loadNations();
         loadGroundVehicles(USGroundVehicles.values());
+        loadGroundVehicles(RussianVehicles.values());
+        loadGroundVehicles(GermanVehicles.values());
+        loadAmmunitionCards(AmmoSupplyCrate.values());
+        logger.info("Data loaded successfully");
     }
 
-    /*==================== DAMAGE TYPES ====================*/
+    /**
+     * Seeds all {@link DamageType} enum constants into the damage_types table.
+     * Each entry represents a category of damage (KINETIC, CHEMICAL, EXPLOSIVE, ELECTRIC)
+     * that determines how weapons interact with different armor brackets.
+     */
     private void loadDamageTypes() {
         for (DamageType dt : DamageType.values()) {
             if (!damageTypeRepo.existsByName(dt.name())) {
@@ -52,7 +101,15 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*==================== DAMAGE MATCHUPS ====================*/
+    /**
+     * Seeds the damage type matchup table which defines how each damage type
+     * performs against each armor bracket.
+     * Each matchup entry contains:
+     * - A damage modifier (e.g. KINETIC vs HEAVY = 1.3x)
+     * - An auto effect that triggers on hit (e.g. EXPLOSIVE vs UNARMORED = STUN)
+     * These values drive the core combat damage formula:
+     * finalDamage = max(1, round(baseDamage * modifier) - round(armor * 0.15))
+     */
     private void loadDamageTypeMatchups() {
         Map<DamageType, Map<ArmorBracket, Double>> modifiers = Map.of(
                 DamageType.KINETIC, Map.of(
@@ -130,7 +187,11 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*==================== VEHICLE TYPES ====================*/
+    /**
+     * Seeds all {@link VehicleType} enum constants into the vehicle_types table.
+     * Vehicle types categorize units by their operating environment
+     * (e.g. GROUND, AIR, WATER).
+     */
     private void loadVehicleTypes() {
         for (VehicleType vt : VehicleType.values()) {
             if (!vehicleTypeRepo.existsByName(vt.name())) {
@@ -139,7 +200,11 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*==================== VEHICLE CLASSES ====================*/
+    /**
+     * Seeds all {@link VehicleClass} enum constants into the vehicle_classes table.
+     * Vehicle classes define the combat role of a unit
+     * (e.g. LIGHT_TANK, MAIN_BATTLE_TANK, ANTI_AIR).
+     */
     private void loadVehicleClasses() {
         for (VehicleClass vc : VehicleClass.values()) {
             if (!vehicleClassRepo.existsByClassName(vc.name())) {
@@ -148,7 +213,13 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*==================== AMMUNITION ====================*/
+    /**
+     * Seeds all {@link Ammunition} enum constants into the ammunition table.
+     * Each ammo type references a {@link DamageType} foreign key, so damage types
+     * must be seeded before this method runs.
+     *
+     * @throws RuntimeException if a required DamageType entity is not found
+     */
     private void loadAmmunition() {
         for (Ammunition ammo : Ammunition.values()) {
             if (!ammoRepo.existsByName(ammo.name())) {
@@ -162,7 +233,14 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*==================== WEAPONS ====================*/
+    /**
+     * Seeds all {@link Weapon} enum constants into the weapons table.
+     * Each weapon references a list of compatible {@link Ammunition} entities
+     * via a many-to-many join table, so ammunition must be seeded before this
+     * method runs.
+     *
+     * @throws RuntimeException if a required Ammunition entity is not found
+     */
     private void loadWeapons() {
         for (Weapon w : Weapon.values()) {
             if (!weaponRepo.existsByWeaponName(w.name())) {
@@ -177,7 +255,11 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*==================== NATIONS ====================*/
+    /**
+     * Seeds all {@link Nations} enum constants into the nations table.
+     * Nations are used as cosmetic display choices for player profiles
+     * and as metadata on vehicle cards indicating their country of origin.
+     */
     private void loadNations() {
         for (Nations n : Nations.values()) {
             if (!nationRepo.existsByNationName(n.getName())) {
@@ -186,10 +268,28 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    /*==================== GROUND VEHICLES ====================*/
-    private void loadGroundVehicles(GroundVehicleCardInterface[] vehicles) {
+    /**
+     * Seeds ground vehicle cards from a given nation's vehicle enum into the
+     * database. For each vehicle, this method:
+     * <ol>
+     *   <li>Looks up the required {@link VehicleTypeEntity} and {@link VehicleClassEntity}</li>
+     *   <li>Saves the base {@link GroundVehicleCard} entity</li>
+     *   <li>Iterates over the vehicle's attack definitions and saves each as a
+     *       {@link VehicleAttackEntity} linked to the card</li>
+     * </ol>
+     *
+     * This method is generic across all nations — adding a new nation only
+     * requires implementing {@link GroundVehicleCardInterface} on a new enum
+     * and passing its values here.
+     *
+     * @param vehicles an array of {@link GroundVehicleCardInterface} values
+     *                 from a nation enum (e.g. USGroundVehicles.values())
+     * @throws RuntimeException if any required VehicleType, VehicleClass,
+     *                          or Weapon entity is not found
+     */
+    private void loadGroundVehicles(GroundVehicleCardInterface @NonNull [] vehicles) {
         for (GroundVehicleCardInterface vehicle : vehicles) {
-            if (vehicleRepo.findByVehicleName(vehicle.getVehicleName()).isEmpty()) {
+            if (vehicleRepo.findByName(vehicle.getVehicleName()).isEmpty()) {
 
                 VehicleTypeEntity vehicleType = vehicleTypeRepo
                         .findByName(vehicle.getVehicleType().name())
@@ -227,6 +327,20 @@ public class DataLoader implements CommandLineRunner {
                     ));
                 }
             }
+        }
+    }
+
+    /**
+     * Seeds all {@link AmmoSupplyCrate} enum constants into the ammunition_cards table.
+     * Each entry represents a playable item card that resupplies a specific
+     * ammunition type to a unit on the field.
+     * @param crates an array of {@link AmmunitionItemInterface} values
+     * @throws RuntimeException if required data is missing
+     */
+    private void loadAmmunitionCards(AmmunitionItemInterface[] crates) {
+        for (AmmunitionItemInterface crate : crates) {
+            if (ammunitionCardRepo.existsByName(crate.getItemName())) continue;
+            ammunitionCardRepo.save(new AmmunitionCard(crate));
         }
     }
 }

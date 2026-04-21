@@ -16,8 +16,10 @@ public enum Ammunition {
 
     /*==================== KINETIC ====================*/
 
-    APFSDS_25MM(DamageType.KINETIC, 25),
+    APDS_105MM(DamageType.KINETIC, 105),
 
+    APFSDS_25MM(DamageType.KINETIC, 25),
+    APFSDS_105MM(DamageType.KINETIC, 105),
     APFSDS_120MM(DamageType.KINETIC, 120),
     APFSDS_125MM(DamageType.KINETIC, 125),
 
@@ -34,9 +36,12 @@ public enum Ammunition {
 
     /*==================== EXPLOSIVE ====================*/
 
-    HE_25MM(DamageType.EXPLOSIVE, 25),
+    HE_40MM(DamageType.EXPLOSIVE, 40),
 
+    HE_25MM(DamageType.EXPLOSIVE, 25),
     HE_120MM(DamageType.EXPLOSIVE, 120),
+
+    SQUASH_HEAD_105MM(DamageType.EXPLOSIVE, 105),
 
     /*===================================================*/
 
@@ -52,11 +57,10 @@ public enum Ammunition {
 
     /*======================================== SECONDARY WEAPON AMMUNITION ========================================*/
 
-    /*==================== SECONDARY WEAPON AMMO ====================*/
+    NATO_127x99MM(DamageType.KINETIC, 12),
 
-    NATO_127x99MM(DamageType.KINETIC, 12);
-
-    /*===============================================================*/
+    MG3_762x51MM(DamageType.KINETIC, 8),
+    PKT_762x54MM(DamageType.KINETIC, 8);
 
     /*=============================================================================================================*/
 

@@ -1,6 +1,6 @@
 package com.example.valtrak.Gameplay.Cards.Vehicle;
 
-import com.example.valtrak.Data.CardLibrary.Interfaces.GroundVehicleCardInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
 import com.example.valtrak.Gameplay.Cards.Base.Card;
 import jakarta.persistence.*;

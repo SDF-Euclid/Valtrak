@@ -1,4 +1,4 @@
-package com.example.valtrak.Data.CardLibrary.Interfaces;
+package com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle;
 
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.*;
 

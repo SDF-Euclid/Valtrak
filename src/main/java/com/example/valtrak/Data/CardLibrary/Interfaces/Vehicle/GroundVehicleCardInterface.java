@@ -1,9 +1,8 @@
-package com.example.valtrak.Data.CardLibrary.Interfaces;
+package com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle;
 
 import com.example.valtrak.Data.CardLibrary.CardLevel;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleType;
-import com.example.valtrak.Data.GameData.Entity.EnumEntity.VehicleAttackEntity;
 
 import java.util.List;
 
