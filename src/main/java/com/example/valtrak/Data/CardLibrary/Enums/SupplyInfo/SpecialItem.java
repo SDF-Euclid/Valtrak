@@ -48,11 +48,4 @@ public enum SpecialItem implements SpecialItemInterface {
     private final SpecialItemEffect specialItemEffect;
     private final Double primaryEffectValue;
     private final Double secondaryEffectValue;
-
-    /**
-     *
-     * @return
-     */
-    @Override
-    public ItemType getItemType() {return ItemType.SPECIAL;}
 }

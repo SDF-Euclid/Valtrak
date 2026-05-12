@@ -14,25 +14,25 @@ public enum RepairSupplyKit implements RepairItemInterface {
 
     /**/
 
-    FIELD_REPAIR_KIT("Field Repair Kit", "Restores 25 HP to a unit", CardLevel.COMMON, 25, 1),
+    FIELD_REPAIR_KIT("Field Repair Kit", "Restores 25 HP to a unit", CardLevel.COMMON, ItemType.REPAIR, 25, 1),
 
     /**/
 
     /**/
 
-    MOBILE_WORKSHOP("Mobile Workshop", "Restores 75 HP to a unit", CardLevel.UNCOMMON, 75, 1),
+    MOBILE_WORKSHOP("Mobile Workshop", "Restores 75 HP to a unit", CardLevel.UNCOMMON, ItemType.REPAIR, 75, 1),
 
     /**/
 
     /**/
 
-    RECOVERY_VEHICLE("Recovery Vehicle", "Restores 150 HP to a unit", CardLevel.RARE, 150, 1),
+    RECOVERY_VEHICLE("Recovery Vehicle", "Restores 150 HP to a unit", CardLevel.RARE, ItemType.REPAIR, 150, 1),
 
     /**/
 
     /**/
 
-    FULL_OVERHAUL("Full Repairs", "Fully restores a unit's HP and removes all BREACH stacks", CardLevel.LEGENDARY, 999, 1);
+    FULL_OVERHAUL("Full Repairs", "Fully restores a unit's HP and removes all BREACH stacks", CardLevel.LEGENDARY, ItemType.REPAIR, 999, 1);
 
     /**/
 
@@ -42,9 +42,7 @@ public enum RepairSupplyKit implements RepairItemInterface {
     private final String itemName;
     private final String itemDescription;
     private final CardLevel cardLevel;
+    private final ItemType itemType;
     private final Integer repairAmount;
     private final Integer count;
-
-    @Override
-    public ItemType getItemType() {return ItemType.REPAIR;}
 }
