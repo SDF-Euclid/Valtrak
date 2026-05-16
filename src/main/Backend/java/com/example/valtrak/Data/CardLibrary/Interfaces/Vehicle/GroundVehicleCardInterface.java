@@ -17,5 +17,6 @@ public interface GroundVehicleCardInterface {
     VehicleType getVehicleType();
     VehicleClass getVehicleClass();
     Integer getVehicleArmor();
+    Integer getVehicleHP();
     List<VehicleAttackInterface> getVehicleAttacks();
 }
