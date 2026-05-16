@@ -10,6 +10,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum DamageType {
+
     KINETIC(null, 0),
     CHEMICAL(ArmorBracket.LIGHT, 76),
     EXPLOSIVE(ArmorBracket.MEDIUM, 37),

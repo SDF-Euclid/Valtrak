@@ -35,7 +35,7 @@ import java.util.Map;
  * This class runs once when the Spring application starts via {@link CommandLineRunner}.
  * It seeds all enumerated constants (damage types, vehicle classes, ammunition, weapons,
  * nations, etc.) as database entities, then seeds all card definitions from each nation's
- * vehicle enum. Each seed method is idempotent — it checks for existing entries before
+ * vehicle enum. Each seed method is idempotent, and it checks for existing entries before
  * inserting to prevent duplicate data on subsequent startups.
  * Seeding order matters due to foreign key dependencies:
  * <pre>

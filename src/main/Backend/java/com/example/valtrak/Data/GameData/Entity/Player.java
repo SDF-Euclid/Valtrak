@@ -1,13 +1,10 @@
 package com.example.valtrak.Data.GameData.Entity;
 
-import com.example.valtrak.Gameplay.Cards.Base.Card;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter @Setter

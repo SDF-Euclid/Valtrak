@@ -9,8 +9,7 @@ import lombok.*;
  */
 @Entity
 @Getter @Setter
-@NoArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor @RequiredArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "cards")
 public abstract class Card {
