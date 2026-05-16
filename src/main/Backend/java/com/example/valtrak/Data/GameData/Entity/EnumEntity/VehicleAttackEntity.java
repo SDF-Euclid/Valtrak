@@ -2,6 +2,7 @@ package com.example.valtrak.Data.GameData.Entity.EnumEntity;
 
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.*;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class VehicleAttackEntity {
     @NonNull
     @ManyToOne
     @JoinColumn(name = "vehicle_id")
+    @JsonIgnore
     private GroundVehicleCard vehicle;
 
     @NonNull

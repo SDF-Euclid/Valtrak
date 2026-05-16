@@ -28,6 +28,8 @@ public class GroundVehicleCard extends Card {
 
     private Integer vehicleArmor;
 
+    private Integer vehicleHP;
+
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<VehicleAttackEntity> attacks;
 
@@ -40,5 +42,6 @@ public class GroundVehicleCard extends Card {
         this.vehicleType = vehicleType;
         this.vehicleClass = vehicleClass;
         this.vehicleArmor = data.getVehicleArmor();
+        this.vehicleHP = data.getVehicleHP();
     }
 }
