@@ -1,9 +1,12 @@
 package com.example.valtrak;
 
-import org.springframework.boot.SpringApplication;
+import com.example.valtrak.UI.ValtrakFXApp;
+import javafx.application.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class ValtrakApplication {
-    @SuppressWarnings("UnnecessaryModifier")
-    public static void main(String[] args) {SpringApplication.run(ValtrakApplication.class, args);}}
+    public static void main(String[] args) {
+        Application.launch(ValtrakFXApp.class, args);
+    }
+}
