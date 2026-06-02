@@ -9,7 +9,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public class ValtrakFXApp extends Application {
 
-    private ConfigurableApplicationContext springContext;
+    private static ConfigurableApplicationContext springContext;
+
+    public static ConfigurableApplicationContext getContext() { return springContext; }
 
     @Override
     public void init() {

@@ -39,12 +39,17 @@ public class MainMenuScene {
         subtitle.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
         subtitle.setTextFill(Color.web(TEXT_COLOR));
 
-        Button playBtn      = createButton("PLAY GAME",     false);
-        Button deckBtn      = createButton("DECK BUILDER",  true);
-        Button settingsBtn  = createButton("SETTINGS",      true);
-        Button quitBtn      = createButton("QUIT",          false);
+        Button playBtn      = createButton("PLAY GAME",    false);
+        Button deckBtn      = createButton("DECK BUILDER", false);
+        Button settingsBtn  = createButton("SETTINGS",     true);
+        Button quitBtn      = createButton("QUIT",         false);
 
         playBtn.setOnAction(e -> onPlay());
+        deckBtn.setOnAction(e -> {
+            stage.setResizable(true);
+            stage.setScene(new DeckBuilderScene(stage).build());
+            stage.centerOnScreen();
+        });
         quitBtn.setOnAction(e -> stage.close());
 
         VBox root = new VBox(16, title, subtitle, spacer(20), playBtn, deckBtn, settingsBtn, spacer(10), quitBtn);
