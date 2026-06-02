@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-@Entity @Table(name = "fuel_cards")
+@Entity @Table(name = "repair_cards")
 public class RepairCard extends ItemCard {
 
     private Integer repairAmount;
