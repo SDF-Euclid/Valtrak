@@ -289,43 +289,51 @@ public class DataLoader implements CommandLineRunner {
      */
     private void loadGroundVehicles(GroundVehicleCardInterface @NonNull [] vehicles) {
         for (GroundVehicleCardInterface vehicle : vehicles) {
-            if (vehicleRepo.findByName(vehicle.getVehicleName()).isEmpty()) {
+            var existing = vehicleRepo.findByName(vehicle.getVehicleName());
 
-                VehicleTypeEntity vehicleType = vehicleTypeRepo
-                        .findByName(vehicle.getVehicleType().name())
-                        .orElseThrow(() -> new RuntimeException(
-                                "VehicleType not found: " + vehicle.getVehicleType().name()
-                        ));
-
-                VehicleClassEntity vehicleClass = vehicleClassRepo
-                        .findByClassName(vehicle.getVehicleClass().name())
-                        .orElseThrow(() -> new RuntimeException(
-                                "VehicleClass not found: " + vehicle.getVehicleClass().name()
-                        ));
-
-                GroundVehicleCard card = vehicleRepo.save(new GroundVehicleCard(
-                        vehicle,
-                        vehicleType,
-                        vehicleClass
-                ));
-
-                for (VehicleAttackInterface attack : vehicle.getVehicleAttacks()) {
-                    WeaponEntity weapon = weaponRepo
-                            .findByWeaponName(attack.getWeapon().name())
-                            .orElseThrow(() -> new RuntimeException(
-                                    "Weapon not found: " + attack.getWeapon().name()
-                            ));
-                    vehicleAttackRepo.save(new VehicleAttackEntity(
-                            card,
-                            attack.getAttackName(),
-                            attack.getAttackSlot(),
-                            weapon,
-                            attack.getBaseDamage(),
-                            attack.getAmmoCost(),
-                            attack.getFuelCost(),
-                            attack.getSpecialEffect()
-                    ));
+            if (existing.isPresent()) {
+                GroundVehicleCard card = existing.get();
+                if (card.getVehicleHP() == null) {
+                    card.setVehicleHP(vehicle.getVehicleHP());
+                    vehicleRepo.save(card);
                 }
+                continue;
+            }
+
+            VehicleTypeEntity vehicleType = vehicleTypeRepo
+                    .findByName(vehicle.getVehicleType().name())
+                    .orElseThrow(() -> new RuntimeException(
+                            "VehicleType not found: " + vehicle.getVehicleType().name()
+                    ));
+
+            VehicleClassEntity vehicleClass = vehicleClassRepo
+                    .findByClassName(vehicle.getVehicleClass().name())
+                    .orElseThrow(() -> new RuntimeException(
+                            "VehicleClass not found: " + vehicle.getVehicleClass().name()
+                    ));
+
+            GroundVehicleCard card = vehicleRepo.save(new GroundVehicleCard(
+                    vehicle,
+                    vehicleType,
+                    vehicleClass
+            ));
+
+            for (VehicleAttackInterface attack : vehicle.getVehicleAttacks()) {
+                WeaponEntity weapon = weaponRepo
+                        .findByWeaponName(attack.getWeapon().name())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Weapon not found: " + attack.getWeapon().name()
+                        ));
+                vehicleAttackRepo.save(new VehicleAttackEntity(
+                        card,
+                        attack.getAttackName(),
+                        attack.getAttackSlot(),
+                        weapon,
+                        attack.getBaseDamage(),
+                        attack.getAmmoCost(),
+                        attack.getFuelCost(),
+                        attack.getSpecialEffect()
+                ));
             }
         }
     }

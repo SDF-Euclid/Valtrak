@@ -5,10 +5,12 @@ import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter @Setter
-@Entity @Table(name = "fuel_cards")
+@NoArgsConstructor
+@Entity @Table(name = "repair_cards")
 public class RepairCard extends ItemCard {
 
     private Integer repairAmount;

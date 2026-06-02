@@ -1,5 +1,7 @@
 package com.example.valtrak.Data.GameData.ExceptionHandling;
 
+import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.GameNotFoundException;
+import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.InvalidGameActionException;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.PlayerNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,5 +26,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PlayerNotFoundException.class)
     public ResponseEntity<String> handlePlayerNotFoundException(PlayerNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(GameNotFoundException.class)
+    public ResponseEntity<String> handleGameNotFoundException(GameNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidGameActionException.class)
+    public ResponseEntity<String> handleInvalidGameAction(InvalidGameActionException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 }
