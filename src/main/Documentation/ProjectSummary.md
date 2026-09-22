@@ -199,11 +199,11 @@ new VehicleAttackDefinition(attackName, attackSlot, weapon, baseDamage, ammoCost
 M1A3 Abrams — armor 100, HP 300, LEGENDARY (baseline)
 
 Armor brackets:
-UNARMORED    0-30    → HP guideline: 100-150
-LIGHT        31-70   → HP guideline: 150-225
-MEDIUM       71-120  → HP guideline: 225-325
-HEAVY        121-180 → HP guideline: 325-425
-SUPER_HEAVY  181+    → HP guideline: 425-500
+UNARMORED    0-30    -> HP guideline: 100-150
+LIGHT        31-70   -> HP guideline: 150-225
+MEDIUM       71-120  -> HP guideline: 225-325
+HEAVY        121-180 -> HP guideline: 325-425
+SUPER_HEAVY  181+    -> HP guideline: 425-500
 ```
 
 ---

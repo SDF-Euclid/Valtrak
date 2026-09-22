@@ -11,7 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import java.util.List;
 
-//TODO: Review vehicle health
+//TODO: Review vehicle health and descriptions
 
 /**
  *
@@ -120,7 +120,7 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
      */
     private final String vehicleName;
     private final String vehicleNation;
-    private final String description;
+    private final String description; //Review
     private final CardLevel level;
     private final VehicleType vehicleType;
     private final VehicleClass vehicleClass;

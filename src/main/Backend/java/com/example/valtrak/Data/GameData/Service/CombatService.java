@@ -47,9 +47,7 @@ public class CombatService {
         //Damage modifier from matchup table
         DamageTypeMatchupEntity matchup = matchupRepo
                 .findByDamageTypeAndArmorBracket(damageType, bracket)
-                .orElseThrow(() -> new RuntimeException(
-                        "Matchup not found for: " + damageType + " vs " + bracket
-                ));
+                .orElseThrow(() -> new RuntimeException("Matchup not found for: " + damageType + " vs " + bracket));
 
         //Check pierce
         boolean piercing = ArmorBracketHelper.isPierce(damageType, bracket,
