@@ -1,12 +1,17 @@
 package com.example.valtrak.Data.GameData.Config;
 
+import com.example.valtrak.Data.GameData.Service.AccountService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -25,15 +30,23 @@ public class SecurityConfiguration {
      * @return The PasswordEncoder object used to hash passwords
      */
     @Bean
-    public PasswordEncoder passwordEncoder() {return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();}
+    public static PasswordEncoder passwordEncoder() {return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();}
 
+    /**
+     * Guests can use the open endpoints (such as the card catalog). Account
+     * endpoints need a signed-in player, identified by a bearer token.
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, AccountService accounts) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for WebSocket connections
+                .csrf(AbstractHttpConfigurer::disable) // token-based API, no cookies
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new TokenAuthenticationFilter(accounts), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // Allow all traffic as of now
+                        .requestMatchers("/account/me", "/account/me/**", "/account/logout").authenticated()
+                        .anyRequest().permitAll() // game endpoints get locked down in a later step
                 )
+                .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 );

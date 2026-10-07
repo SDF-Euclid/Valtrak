@@ -9,5 +9,7 @@ import org.springframework.stereotype.Repository;
 public interface NationRepository extends JpaRepository<NationEntity, Long> {
     boolean existsByNationName(String nationName);
 
+    java.util.Optional<NationEntity> findByNationName(String nationName);
+
     boolean existsByNationAbbreviation(String nationAbbreviation);
 }

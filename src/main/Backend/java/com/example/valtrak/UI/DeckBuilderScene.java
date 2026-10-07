@@ -4,6 +4,9 @@ import com.example.valtrak.Data.CardLibrary.CardLevel;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
 import com.example.valtrak.UI.components.CardTile;
+import com.example.valtrak.UI.net.AccountSession;
+import com.example.valtrak.UI.net.ServerApi;
+import javafx.animation.PauseTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -38,7 +41,8 @@ public class DeckBuilderScene {
 
     private final Stage stage;
     private final List<CardDto> cards;
-    private final FavoritesStore favorites = new FavoritesStore();
+    /** The signed-in player's favorite card ids; null when playing as a guest. */
+    private final Set<Long> favorites;
 
     private final Map<Long, Integer> deckCounts = new LinkedHashMap<>();
     private final Map<Long, String>  deckNames  = new LinkedHashMap<>();
@@ -46,11 +50,14 @@ public class DeckBuilderScene {
     private Filter currentFilter = Filter.ALL;
     private Grouping currentGrouping = Grouping.CATEGORY;
     private VBox grid;
+    private Label hint;
+    private PauseTransition noticeReset;
     private Label deckCountLabel;
     private VBox  deckListBox;
 
-    public DeckBuilderScene(Stage stage, List<CardDto> catalog) {
+    public DeckBuilderScene(Stage stage, List<CardDto> catalog, Set<Long> favoriteIds) {
         this.stage = stage;
+        this.favorites = favoriteIds;
         List<CardDto> all = new ArrayList<>(catalog);
         // vehicles first, then items; within each group by rarity, then name
         all.sort(Comparator
@@ -83,8 +90,7 @@ public class DeckBuilderScene {
         backBtn.setOnAction(e -> {
             stage.setResizable(false);
             stage.setScene(new MainMenuScene(stage).build());
-            stage.setWidth(640);
-            stage.setHeight(480);
+            stage.sizeToScene();
             stage.centerOnScreen();
         });
 
@@ -95,7 +101,7 @@ public class DeckBuilderScene {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label hint = new Label("Click ☆ on a card to favorite it  ·  Use + / − in the deck to adjust copies");
+        hint = new Label(defaultHint());
         hint.setFont(Font.font("Arial", 11));
         hint.setTextFill(Color.web(DIM));
 
@@ -160,7 +166,9 @@ public class DeckBuilderScene {
         }
         if (groups.isEmpty()) {
             Label empty = new Label(currentFilter == Filter.FAVORITES
-                    ? "No favorites yet — click the ☆ on any card to add it here."
+                    ? (favorites == null
+                            ? "Sign in to save favorites. Guests can build decks but favorites need an account."
+                            : "No favorites yet — click the ☆ on any card to add it here.")
                     : "No cards to show.");
             empty.setFont(Font.font("Arial", 13));
             empty.setTextFill(Color.web(DIM));
@@ -184,9 +192,10 @@ public class DeckBuilderScene {
                     for (CardDto c : e.getValue()) {
                         row.getChildren().add(new CardTile(
                                 c,
-                                favorites.isFavorite(c.name()),
+                                isFavorite(c),
+                                favorites != null,
                                 () -> addCard(c.id(), c.name()),
-                                () -> { favorites.toggle(c.name()); populateGrid(); }
+                                () -> toggleFavorite(c)
                         ).build());
                     }
                     grid.getChildren().add(row);
@@ -241,7 +250,7 @@ public class DeckBuilderScene {
     private boolean matchesFilter(CardDto c) {
         return switch (currentFilter) {
             case ALL       -> true;
-            case FAVORITES -> favorites.isFavorite(c.name());
+            case FAVORITES -> isFavorite(c);
             case VEHICLES  -> isVehicle(c);
             case ITEMS     -> !isVehicle(c);
         };
@@ -356,6 +365,54 @@ public class DeckBuilderScene {
         int total = deckTotal();
         deckCountLabel.setText(total + " / " + MAX_DECK + " cards");
         deckCountLabel.setTextFill(Color.web(total >= MAX_DECK ? ACCENT : TEXT));
+    }
+
+    // ── Favorites ─────────────────────────────────────────────────────────────
+
+    private boolean isFavorite(CardDto c) {
+        return favorites != null && favorites.contains(c.id());
+    }
+
+    private String defaultHint() {
+        return favorites == null
+                ? "Guest mode: sign in to save favorites  ·  Use + / − in the deck to adjust copies"
+                : "Click ☆ on a card to favorite it  ·  Use + / − in the deck to adjust copies";
+    }
+
+    /** Shows a short message in the top bar, then restores the normal hint. */
+    private void notice(String message, boolean error) {
+        hint.setText(message);
+        hint.setTextFill(Color.web(error ? "#ff6b6b" : ACCENT));
+        if (noticeReset != null) noticeReset.stop();
+        noticeReset = new PauseTransition(javafx.util.Duration.seconds(4));
+        noticeReset.setOnFinished(e -> {
+            hint.setText(defaultHint());
+            hint.setTextFill(Color.web(DIM));
+        });
+        noticeReset.play();
+    }
+
+    private void toggleFavorite(CardDto card) {
+        if (favorites == null) {
+            notice("Sign in to save favorites (MY ACCOUNT on the main menu).", false);
+            return;
+        }
+        boolean nowFavorite = !favorites.contains(card.id());
+        if (nowFavorite) favorites.add(card.id()); else favorites.remove(card.id());
+        populateGrid();
+        Ui.async(() -> { ServerApi.setFavorite(card.id(), nowFavorite); return true; },
+                ok -> { },
+                err -> {
+                    // undo the optimistic change
+                    if (nowFavorite) favorites.remove(card.id()); else favorites.add(card.id());
+                    populateGrid();
+                    if (err instanceof ServerApi.ApiError api && api.status() == 401) {
+                        AccountSession.signOut();
+                        notice("Your session expired. Sign in again from the main menu to use favorites.", true);
+                    } else {
+                        notice("Couldn't save that favorite: " + err.getMessage(), true);
+                    }
+                });
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

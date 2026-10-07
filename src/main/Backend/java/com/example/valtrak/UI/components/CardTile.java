@@ -18,12 +18,14 @@ public class CardTile {
 
     private final CardDto card;
     private final boolean favorite;
+    private final boolean favoritesEnabled;
     private final Runnable onAdd;
     private final Runnable onToggleFavorite;
 
-    public CardTile(CardDto card, boolean favorite, Runnable onAdd, Runnable onToggleFavorite) {
+    public CardTile(CardDto card, boolean favorite, boolean favoritesEnabled, Runnable onAdd, Runnable onToggleFavorite) {
         this.card = card;
         this.favorite = favorite;
+        this.favoritesEnabled = favoritesEnabled;
         this.onAdd = onAdd;
         this.onToggleFavorite = onToggleFavorite;
     }
@@ -84,7 +86,7 @@ public class CardTile {
 
     private Button buildStar() {
         Button star = new Button(favorite ? "★" : "☆");
-        String color = favorite ? "#ffd700" : "#cccccc";
+        String color = favorite ? "#ffd700" : favoritesEnabled ? "#cccccc" : "#666666";
         String base = "-fx-background-color: #000000aa; -fx-text-fill: " + color + "; " +
                 "-fx-font-size: 14px; -fx-background-radius: 0 0 0 6; -fx-padding: 1 6 1 6; -fx-cursor: hand;";
         star.setStyle(base);

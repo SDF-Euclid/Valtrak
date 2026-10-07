@@ -1,15 +1,11 @@
 package com.example.valtrak.Data.GameData.Service;
 
-import com.example.valtrak.Data.GameData.DataTransfer.PlayerData.AccountCreation.CreateAccountRequest;
-import com.example.valtrak.Data.GameData.DataTransfer.PlayerData.AccountCreation.CreateAccountResponse;
 import com.example.valtrak.Data.GameData.Entity.Player;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.PlayerNotFoundException;
 import com.example.valtrak.Data.GameData.Repository.PlayerRepository;
-import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,12 +15,6 @@ public class PlayerService {
     /*==================== VARIABLES ====================*/
 
     private final PlayerRepository playerRepository;
-
-    /**
-     * An auto-injected Argon2 PasswordEncoder for handling password hashing
-     */
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     /*===================================================*/
 
@@ -51,24 +41,4 @@ public class PlayerService {
     }
 
     /*======================================================================*/
-
-    /*==================== LOGIC METHOD IMPLEMENTATION ====================*/
-
-    /**
-     *
-     * @param createAccountRequest
-     * @return
-     */
-    public CreateAccountResponse createNewAccount(@Nonnull CreateAccountRequest createAccountRequest) {
-        Player newPlayer = new Player(createAccountRequest.getUserName(),
-                                      createAccountRequest.getDisplayName(),
-                                      createAccountRequest.getDisplayNation(),
-                                      createAccountRequest.getEmail()
-        );
-        newPlayer.setPassword(passwordEncoder.encode(createAccountRequest.getPassword()));
-        playerRepository.save(newPlayer);
-        return new CreateAccountResponse(newPlayer.getId(), newPlayer.getUserName(), newPlayer.getCreationDate());
-    }
-
-    /*=====================================================================*/
 }
