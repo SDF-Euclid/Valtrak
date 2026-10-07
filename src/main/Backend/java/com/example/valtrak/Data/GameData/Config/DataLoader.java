@@ -1,6 +1,8 @@
 package com.example.valtrak.Data.GameData.Config;
 
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.AmmoSupplyCrate;
+import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.FuelSupplyDrum;
+import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.RepairSupplyKit;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.ArmorBracket;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleType;
@@ -9,6 +11,8 @@ import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.DamageType;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.SpecialEffect;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.AmmunitionItemInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Items.FuelItemInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Items.RepairItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.VehicleAttackInterface;
 import com.example.valtrak.Data.CardLibrary.Nations;
@@ -17,9 +21,13 @@ import com.example.valtrak.Data.CardLibrary.Vehicles.Russia.RussianVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.US.USGroundVehicles;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
 import com.example.valtrak.Data.GameData.Repository.Cards.AmmunitionCardRepository;
+import com.example.valtrak.Data.GameData.Repository.Cards.FuelCardRepository;
+import com.example.valtrak.Data.GameData.Repository.Cards.RepairCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.*;
 import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
+import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
+import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
@@ -55,6 +63,8 @@ public class DataLoader implements CommandLineRunner {
     private final VehicleClassRepository vehicleClassRepo;
     private final AmmunitionRepository ammoRepo;
     private final AmmunitionCardRepository ammunitionCardRepo;
+    private final FuelCardRepository fuelCardRepo;
+    private final RepairCardRepository repairCardRepo;
     private final WeaponRepository weaponRepo;
     private final NationRepository nationRepo;
     private final VehicleCardRepository vehicleRepo;
@@ -85,6 +95,8 @@ public class DataLoader implements CommandLineRunner {
         loadGroundVehicles(RussianVehicles.values());
         loadGroundVehicles(GermanVehicles.values());
         loadAmmunitionCards(AmmoSupplyCrate.values());
+        loadFuelCards(FuelSupplyDrum.values());
+        loadRepairCards(RepairSupplyKit.values());
         logger.info("Data loaded successfully");
     }
 
@@ -349,6 +361,28 @@ public class DataLoader implements CommandLineRunner {
         for (AmmunitionItemInterface crate : crates) {
             if (ammunitionCardRepo.existsByName(crate.getItemName())) continue;
             ammunitionCardRepo.save(new AmmunitionCard(crate));
+        }
+    }
+
+    /**
+     * Seeds all {@link FuelSupplyDrum} enum constants into the fuel_cards table.
+     * @param drums an array of {@link FuelItemInterface} values
+     */
+    private void loadFuelCards(FuelItemInterface[] drums) {
+        for (FuelItemInterface drum : drums) {
+            if (fuelCardRepo.existsByName(drum.getItemName())) continue;
+            fuelCardRepo.save(new FuelCard(drum));
+        }
+    }
+
+    /**
+     * Seeds all {@link RepairSupplyKit} enum constants into the repair_cards table.
+     * @param kits an array of {@link RepairItemInterface} values
+     */
+    private void loadRepairCards(RepairItemInterface[] kits) {
+        for (RepairItemInterface kit : kits) {
+            if (repairCardRepo.existsByName(kit.getItemName())) continue;
+            repairCardRepo.save(new RepairCard(kit));
         }
     }
 }

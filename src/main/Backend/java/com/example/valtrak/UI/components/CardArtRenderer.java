@@ -1,12 +1,16 @@
 package com.example.valtrak.UI.components;
 
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.DamageType;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
+
+import java.util.function.Consumer;
 
 public class CardArtRenderer {
 
@@ -18,30 +22,89 @@ public class CardArtRenderer {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         boolean isAir = vehicleClass.equals("AIR_SUPERIORITY") || vehicleClass.equals("CLOSE_AIR_SUPPORT");
         drawSkyBackground(gc, isAir);
-        if (!isAir) drawGroundStrip(gc);
-        switch (vehicleClass) {
-            case "LIGHT_TANK"        -> drawTank(gc, 0.78, false);
-            case "MEDIUM_TANK"       -> drawTank(gc, 0.88, false);
-            case "HEAVY_TANK"        -> drawTank(gc, 0.95, true);
-            case "MAIN_BATTLE_TANK"  -> drawTank(gc, 1.0,  true);
-            case "ANTI_AIR"          -> drawAntiAir(gc);
-            case "RECON"             -> drawRecon(gc);
-            case "AIR_SUPERIORITY"   -> drawJet(gc, true);
-            case "CLOSE_AIR_SUPPORT" -> drawJet(gc, false);
-            case "SUPPLY"            -> drawSupplyTruck(gc);
-            default                  -> drawGenericVehicle(gc);
-        }
+        drawCentered(gc, !isAir, sprite -> {
+            switch (vehicleClass) {
+                case "LIGHT_TANK"        -> drawTank(sprite, 0.78, false);
+                case "MEDIUM_TANK"       -> drawTank(sprite, 0.88, false);
+                case "HEAVY_TANK"        -> drawTank(sprite, 0.95, true);
+                case "MAIN_BATTLE_TANK"  -> drawTank(sprite, 1.0,  true);
+                case "ANTI_AIR"          -> drawAntiAir(sprite);
+                case "RECON"             -> drawRecon(sprite);
+                case "AIR_SUPERIORITY"   -> drawJet(sprite, true);
+                case "CLOSE_AIR_SUPPORT" -> drawJet(sprite, false);
+                case "SUPPLY"            -> drawSupplyTruck(sprite);
+                default                  -> drawGenericVehicle(sprite);
+            }
+        });
         drawNationAccent(gc, vehicleNation);
         return canvas;
     }
 
     public static Canvas createAmmoArt(DamageType damageType) {
         if (damageType == null) damageType = DamageType.KINETIC;
+        final DamageType dt = damageType;
         Canvas canvas = new Canvas(W, H);
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        drawAmmoBackground(gc, damageType);
-        drawShell(gc, damageType);
+        drawAmmoBackground(gc, dt);
+        drawCentered(gc, false, sprite -> drawShell(sprite, dt));
         return canvas;
+    }
+
+    public static Canvas createFuelArt(int count) {
+        Canvas canvas = new Canvas(W, H);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.web("#14100a"));
+        gc.fillRect(0, 0, W, H);
+        drawCrateGrid(gc);
+        drawCentered(gc, false, sprite -> drawFuel(sprite, count));
+        return canvas;
+    }
+
+    public static Canvas createRepairArt() {
+        Canvas canvas = new Canvas(W, H);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.web("#0a1210"));
+        gc.fillRect(0, 0, W, H);
+        drawCrateGrid(gc);
+        drawCentered(gc, false, CardArtRenderer::drawRepairKit);
+        return canvas;
+    }
+
+    /**
+     * Paints the artwork onto a transparent sprite, finds its visible bounding box,
+     * and draws it so that box is centred on the card. Ground vehicles also get a
+     * ground strip placed at the base of the (centred) vehicle.
+     */
+    private static void drawCentered(GraphicsContext gc, boolean withGround, Consumer<GraphicsContext> painter) {
+        Canvas spriteCanvas = new Canvas(W, H);
+        painter.accept(spriteCanvas.getGraphicsContext2D());
+        SnapshotParameters params = new SnapshotParameters();
+        params.setFill(Color.TRANSPARENT);
+        WritableImage sprite = spriteCanvas.snapshot(params, null);
+
+        int w = (int) W, h = (int) H;
+        int minX = w, minY = h, maxX = -1, maxY = -1;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                if ((sprite.getPixelReader().getArgb(x, y) >>> 24) > 100) {
+                    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+                }
+            }
+        }
+        double dx = 0, dy = 0;
+        if (maxX >= 0) {
+            dx = Math.round(W / 2.0 - (minX + maxX + 1) / 2.0);
+            dy = Math.round(H / 2.0 - (minY + maxY + 1) / 2.0);
+        }
+        if (withGround && maxX >= 0) {
+            double groundTop = maxY + 1 + dy - 3;
+            gc.setFill(Color.web("#162510"));
+            gc.fillRect(0, groundTop, W, H - groundTop);
+            gc.setFill(Color.web("#1f3318"));
+            gc.fillRect(0, groundTop, W, 3);
+        }
+        gc.drawImage(sprite, dx, dy);
     }
 
     // ── Backgrounds ─────────────────────────────────────────────────────────
@@ -54,13 +117,6 @@ public class CardArtRenderer {
         gc.fillRect(0, 0, W, H);
     }
 
-    private static void drawGroundStrip(GraphicsContext gc) {
-        gc.setFill(Color.web("#162510"));
-        gc.fillRect(0, 70, W, H - 70);
-        gc.setFill(Color.web("#1f3318"));
-        gc.fillRect(0, 70, W, 3);
-    }
-
     private static void drawAmmoBackground(GraphicsContext gc, DamageType dt) {
         Color bg = switch (dt) {
             case KINETIC   -> Color.web("#0e0e14");
@@ -70,6 +126,10 @@ public class CardArtRenderer {
         };
         gc.setFill(bg);
         gc.fillRect(0, 0, W, H);
+        drawCrateGrid(gc);
+    }
+
+    private static void drawCrateGrid(GraphicsContext gc) {
         gc.setStroke(Color.web("#1a1a22", 0.6));
         gc.setLineWidth(1);
         for (int x = 0; x < W; x += 20) gc.strokeLine(x, 0, x, H);
@@ -295,6 +355,74 @@ public class CardArtRenderer {
 
         gc.setFill(Color.web("#cc8800"));
         gc.fillRect(cx - 8, cy - 7, 16, 4);
+    }
+
+    // ── Fuel / repair ────────────────────────────────────────────────────────
+
+    private static void drawFuel(GraphicsContext gc, int count) {
+        if (count >= 20) {
+            drawTanker(gc);
+            return;
+        }
+        int drums = count <= 1 ? 1 : count <= 5 ? 2 : 3;
+        double spacing = 34;
+        double startX = W / 2.0 - (drums - 1) * spacing / 2.0 - 13;
+        for (int i = 0; i < drums; i++) {
+            drawDrum(gc, startX + i * spacing, 32);
+        }
+    }
+
+    private static void drawDrum(GraphicsContext gc, double x, double y) {
+        gc.setFill(Color.web("#8f2f1a"));
+        gc.fillRoundRect(x, y, 26, 36, 5, 5);
+        gc.setFill(Color.web("#a8402a"));
+        gc.fillRoundRect(x + 3, y + 2, 5, 32, 3, 3);
+        gc.setFill(Color.web("#5e1d0f"));
+        gc.fillRect(x, y + 9, 26, 3);
+        gc.fillRect(x, y + 24, 26, 3);
+        gc.setFill(Color.web("#b3513a"));
+        gc.fillOval(x, y - 3, 26, 8);
+        gc.setFill(Color.web("#3a1208"));
+        gc.fillOval(x + 9, y - 1, 8, 4);
+    }
+
+    private static void drawTanker(GraphicsContext gc) {
+        gc.setFill(Color.web("#1a1a1a"));
+        gc.fillOval(26, 58, 20, 20);
+        gc.fillOval(52, 58, 20, 20);
+        gc.fillOval(104, 58, 20, 20);
+        gc.setFill(Color.web("#333333"));
+        gc.fillOval(30, 62, 12, 12);
+        gc.fillOval(56, 62, 12, 12);
+        gc.fillOval(108, 62, 12, 12);
+        gc.setFill(Color.web("#8a8f95"));
+        gc.fillRoundRect(18, 34, 88, 30, 15, 15);
+        gc.setFill(Color.web("#b0b5ba"));
+        gc.fillRoundRect(24, 38, 76, 6, 3, 3);
+        gc.setFill(Color.web("#8f2f1a"));
+        gc.fillRect(18, 52, 88, 4);
+        gc.setFill(Color.web("#5a4828"));
+        gc.fillRoundRect(106, 42, 30, 22, 3, 3);
+        gc.setFill(Color.web("#3a5a6a"));
+        gc.fillRect(110, 46, 22, 10);
+    }
+
+    private static void drawRepairKit(GraphicsContext gc) {
+        double cx = W / 2.0;
+        gc.setStroke(Color.web("#707070"));
+        gc.setLineWidth(3);
+        gc.strokeArc(cx - 16, 24, 32, 22, 0, 180, javafx.scene.shape.ArcType.OPEN);
+        gc.setFill(Color.web("#3f5a3a"));
+        gc.fillRoundRect(cx - 38, 36, 76, 40, 6, 6);
+        gc.setFill(Color.web("#2e4429"));
+        gc.fillRect(cx - 38, 50, 76, 3);
+        gc.setFill(Color.web("#506f49"));
+        gc.fillRoundRect(cx - 35, 38, 70, 5, 3, 3);
+        gc.setFill(Color.web("#a0a0a0"));
+        gc.fillRect(cx - 6, 47, 12, 6);
+        gc.setFill(Color.web("#e8e8e8"));
+        gc.fillRect(cx - 5, 56, 10, 16);
+        gc.fillRect(cx - 12, 59, 24, 10);
     }
 
     // ── Nation accent ─────────────────────────────────────────────────────────

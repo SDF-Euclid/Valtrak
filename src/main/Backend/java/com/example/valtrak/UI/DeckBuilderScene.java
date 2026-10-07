@@ -1,7 +1,8 @@
 package com.example.valtrak.UI;
 
 import com.example.valtrak.Data.GameData.Service.DeckBrowserService;
-import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
+import com.example.valtrak.Gameplay.Cards.Base.Card;
+import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import com.example.valtrak.UI.components.CardTile;
 import javafx.geometry.Insets;
@@ -24,24 +25,33 @@ public class DeckBuilderScene {
     private static final String TEXT   = "#d4d4d4";
     private static final String DIM    = "#555555";
 
-    private static final int MAX_DECK  = 80;
+    private static final int MAX_DECK   = 80;
     private static final int MAX_COPIES = 3;
 
+    private enum Filter { ALL, FAVORITES, VEHICLES, ITEMS }
+
     private final Stage stage;
-    private final List<GroundVehicleCard> vehicleCards;
-    private final List<AmmunitionCard>   ammoCards;
+    private final List<Card> cards;
+    private final FavoritesStore favorites = new FavoritesStore();
 
     private final Map<Long, Integer> deckCounts = new LinkedHashMap<>();
     private final Map<Long, String>  deckNames  = new LinkedHashMap<>();
 
+    private Filter currentFilter = Filter.ALL;
+    private FlowPane grid;
     private Label deckCountLabel;
     private VBox  deckListBox;
 
     public DeckBuilderScene(Stage stage) {
         this.stage = stage;
         DeckBrowserService svc = ValtrakFXApp.getContext().getBean(DeckBrowserService.class);
-        this.vehicleCards = svc.getAllVehicleCards();
-        this.ammoCards    = svc.getAllAmmunitionCards();
+        List<Card> all = new ArrayList<>(svc.getAllCards());
+        // vehicles first, then items; within each group by rarity, then name
+        all.sort(Comparator
+                .comparingInt((Card c) -> c instanceof GroundVehicleCard ? 0 : 1)
+                .thenComparingInt(c -> c.getLevel() != null ? c.getLevel().ordinal() : 0)
+                .thenComparing(Card::getName));
+        this.cards = all;
     }
 
     public Scene build() {
@@ -79,7 +89,7 @@ public class DeckBuilderScene {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label hint = new Label("Click a card to add it  ·  Click a deck entry to remove one copy");
+        Label hint = new Label("Click ☆ on a card to favorite it  ·  Use + / − in the deck to adjust copies");
         hint.setFont(Font.font("Arial", 11));
         hint.setTextFill(Color.web(DIM));
 
@@ -95,25 +105,27 @@ public class DeckBuilderScene {
 
     private ScrollPane buildLibrary() {
         ToggleGroup filterGroup = new ToggleGroup();
-        ToggleButton allBtn     = filterToggle("ALL",      filterGroup);
-        ToggleButton vehBtn     = filterToggle("VEHICLES", filterGroup);
-        ToggleButton itemBtn    = filterToggle("ITEMS",    filterGroup);
+        ToggleButton allBtn  = filterToggle("ALL",         Filter.ALL,       filterGroup);
+        ToggleButton favBtn  = filterToggle("★ FAVORITES", Filter.FAVORITES, filterGroup);
+        ToggleButton vehBtn  = filterToggle("VEHICLES",    Filter.VEHICLES,  filterGroup);
+        ToggleButton itemBtn = filterToggle("ITEMS",       Filter.ITEMS,     filterGroup);
         allBtn.setSelected(true);
 
-        HBox filters = new HBox(8, allBtn, vehBtn, itemBtn);
+        HBox filters = new HBox(8, allBtn, favBtn, vehBtn, itemBtn);
         filters.setPadding(new Insets(10, 16, 10, 16));
         filters.setStyle("-fx-background-color: " + BG + ";");
 
-        FlowPane grid = new FlowPane();
+        grid = new FlowPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(6, 16, 16, 16));
         grid.setStyle("-fx-background-color: " + BG + ";");
-        populateGrid(grid, "ALL");
+        populateGrid();
 
         filterGroup.selectedToggleProperty().addListener((obs, old, newVal) -> {
             if (newVal == null) { filterGroup.selectToggle(allBtn); return; }
-            populateGrid(grid, ((ToggleButton) newVal).getText());
+            currentFilter = (Filter) newVal.getUserData();
+            populateGrid();
         });
 
         VBox content = new VBox(filters, grid);
@@ -125,18 +137,34 @@ public class DeckBuilderScene {
         return scroll;
     }
 
-    private void populateGrid(FlowPane grid, String filter) {
+    private void populateGrid() {
         grid.getChildren().clear();
-        if (!filter.equals("ITEMS")) {
-            for (GroundVehicleCard c : vehicleCards) {
-                grid.getChildren().add(new CardTile(c, () -> addCard(c.getId(), c.getName())).build());
-            }
+        for (Card c : cards) {
+            if (!matchesFilter(c)) continue;
+            grid.getChildren().add(new CardTile(
+                    c,
+                    favorites.isFavorite(c.getName()),
+                    () -> addCard(c.getId(), c.getName()),
+                    () -> { favorites.toggle(c.getName()); populateGrid(); }
+            ).build());
         }
-        if (!filter.equals("VEHICLES")) {
-            for (AmmunitionCard c : ammoCards) {
-                grid.getChildren().add(new CardTile(c, () -> addCard(c.getId(), c.getName())).build());
-            }
+        if (grid.getChildren().isEmpty()) {
+            Label empty = new Label(currentFilter == Filter.FAVORITES
+                    ? "No favorites yet — click the ☆ on any card to add it here."
+                    : "No cards to show.");
+            empty.setFont(Font.font("Arial", 13));
+            empty.setTextFill(Color.web(DIM));
+            grid.getChildren().add(empty);
         }
+    }
+
+    private boolean matchesFilter(Card c) {
+        return switch (currentFilter) {
+            case ALL       -> true;
+            case FAVORITES -> favorites.isFavorite(c.getName());
+            case VEHICLES  -> c instanceof GroundVehicleCard;
+            case ITEMS     -> c instanceof ItemCard;
+        };
     }
 
     // ── Deck panel ────────────────────────────────────────────────────────────
@@ -160,9 +188,9 @@ public class DeckBuilderScene {
         deckScroll.setStyle("-fx-background: " + PANEL + "; -fx-background-color: " + PANEL + ";");
         VBox.setVgrow(deckScroll, Priority.ALWAYS);
 
-        Label removeHint = new Label("Click an entry to remove one copy");
-        removeHint.setFont(Font.font("Arial", 9));
-        removeHint.setTextFill(Color.web(DIM));
+        Label copiesHint = new Label("Max " + MAX_COPIES + " copies of each card");
+        copiesHint.setFont(Font.font("Arial", 9));
+        copiesHint.setTextFill(Color.web(DIM));
 
         Button clearBtn = new Button("CLEAR DECK");
         clearBtn.setMaxWidth(Double.MAX_VALUE);
@@ -177,21 +205,27 @@ public class DeckBuilderScene {
             refreshDeckList();
         });
 
-        VBox panel = new VBox(10, title, deckCountLabel, sep, deckScroll, removeHint, clearBtn);
+        VBox panel = new VBox(10, title, deckCountLabel, sep, deckScroll, copiesHint, clearBtn);
         panel.setPadding(new Insets(16));
         panel.setStyle("-fx-background-color: " + PANEL + ";");
-        panel.setMinWidth(220);
+        panel.setMinWidth(240);
         return panel;
     }
 
     // ── Deck state ────────────────────────────────────────────────────────────
 
+    private int deckTotal() {
+        return deckCounts.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    private boolean canAdd(Long id) {
+        return deckCounts.getOrDefault(id, 0) < MAX_COPIES && deckTotal() < MAX_DECK;
+    }
+
     private void addCard(Long id, String name) {
-        int current = deckCounts.getOrDefault(id, 0);
-        if (current < MAX_COPIES) {
-            deckCounts.put(id, current + 1);
-            deckNames.put(id, name);
-        }
+        if (!canAdd(id)) return;
+        deckCounts.merge(id, 1, Integer::sum);
+        deckNames.put(id, name);
         refreshDeckList();
     }
 
@@ -208,39 +242,64 @@ public class DeckBuilderScene {
 
     private void refreshDeckList() {
         deckListBox.getChildren().clear();
-        int total = deckCounts.values().stream().mapToInt(Integer::intValue).sum();
 
         for (Map.Entry<Long, Integer> entry : deckCounts.entrySet()) {
             Long id    = entry.getKey();
             int  count = entry.getValue();
-            String name = deckNames.get(id);
 
-            Label row = new Label(count + "×  " + name);
-            row.setFont(Font.font("Arial", 12));
-            row.setTextFill(Color.web(TEXT));
-            row.setMaxWidth(Double.MAX_VALUE);
-            row.setStyle("-fx-cursor: hand; -fx-padding: 2 4 2 4;");
-            row.setOnMouseClicked(e -> removeCard(id));
-            row.setOnMouseEntered(e -> {
-                row.setTextFill(Color.web("#ff8888"));
-                row.setStyle("-fx-cursor: hand; -fx-background-color: #2a1010; -fx-padding: 2 4 2 4;");
-            });
-            row.setOnMouseExited(e -> {
-                row.setTextFill(Color.web(TEXT));
-                row.setStyle("-fx-cursor: hand; -fx-padding: 2 4 2 4;");
-            });
+            Label name = new Label(deckNames.get(id));
+            name.setFont(Font.font("Arial", 12));
+            name.setTextFill(Color.web(TEXT));
+            name.setMinWidth(0);
+            name.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(name, Priority.ALWAYS);
+
+            Button minus = stepButton("−");
+            minus.setOnAction(e -> removeCard(id));
+
+            Label countLbl = new Label(String.valueOf(count));
+            countLbl.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+            countLbl.setTextFill(Color.web(ACCENT));
+            countLbl.setMinWidth(18);
+            countLbl.setAlignment(Pos.CENTER);
+
+            Button plus = stepButton("+");
+            plus.setDisable(!canAdd(id));
+            plus.setOnAction(e -> addCard(id, deckNames.get(id)));
+
+            HBox row = new HBox(6, name, minus, countLbl, plus);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.setPadding(new Insets(2, 4, 2, 4));
             deckListBox.getChildren().add(row);
         }
 
-        boolean over = total > MAX_DECK;
-        deckCountLabel.setText(total + " / " + MAX_DECK + " cards" + (over ? " ⚠" : ""));
-        deckCountLabel.setTextFill(Color.web(over ? "#ff6b6b" : TEXT));
+        int total = deckTotal();
+        deckCountLabel.setText(total + " / " + MAX_DECK + " cards");
+        deckCountLabel.setTextFill(Color.web(total >= MAX_DECK ? ACCENT : TEXT));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private ToggleButton filterToggle(String label, ToggleGroup group) {
+    private Button stepButton(String symbol) {
+        Button b = new Button(symbol);
+        b.setMinSize(24, 24);
+        b.setMaxSize(24, 24);
+        String base = "-fx-background-color: #0f3460; -fx-text-fill: " + ACCENT + "; -fx-font-weight: bold; "
+                + "-fx-font-size: 13px; -fx-background-radius: 4; -fx-padding: 0;";
+        String hover = base.replace("#0f3460", "#1a4a80");
+        String off = "-fx-background-color: #222233; -fx-text-fill: " + DIM + "; -fx-font-weight: bold; "
+                + "-fx-font-size: 13px; -fx-background-radius: 4; -fx-padding: 0;";
+        b.setStyle(base);
+        b.setOnMouseEntered(e -> { if (!b.isDisabled()) b.setStyle(hover); });
+        b.setOnMouseExited(e -> b.setStyle(b.isDisabled() ? off : base));
+        b.disabledProperty().addListener((obs, was, is) -> b.setStyle(is ? off : base));
+        b.setFocusTraversable(false);
+        return b;
+    }
+
+    private ToggleButton filterToggle(String label, Filter filter, ToggleGroup group) {
         ToggleButton btn = new ToggleButton(label);
+        btn.setUserData(filter);
         btn.setToggleGroup(group);
         String base = "-fx-background-color: #16213e; -fx-text-fill: " + TEXT
                 + "; -fx-font-size: 12px; -fx-background-radius: 4; "
