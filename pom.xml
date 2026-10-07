@@ -110,6 +110,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <mainClass>com.example.valtrak.ValtrakApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -123,7 +124,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.example.valtrak.ValtrakApplication</mainClass>
+                    <mainClass>com.example.valtrak.ValtrakClient</mainClass>
                 </configuration>
             </plugin>
             <plugin>

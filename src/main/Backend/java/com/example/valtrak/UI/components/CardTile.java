@@ -1,12 +1,8 @@
 package com.example.valtrak.UI.components;
 
 import com.example.valtrak.Data.CardLibrary.CardLevel;
-import com.example.valtrak.Gameplay.Cards.Base.Card;
-import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
-import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
-import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
-import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
-import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.DamageType;
+import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
@@ -20,12 +16,12 @@ import javafx.scene.text.FontWeight;
 
 public class CardTile {
 
-    private final Card card;
+    private final CardDto card;
     private final boolean favorite;
     private final Runnable onAdd;
     private final Runnable onToggleFavorite;
 
-    public CardTile(Card card, boolean favorite, Runnable onAdd, Runnable onToggleFavorite) {
+    public CardTile(CardDto card, boolean favorite, Runnable onAdd, Runnable onToggleFavorite) {
         this.card = card;
         this.favorite = favorite;
         this.onAdd = onAdd;
@@ -37,7 +33,7 @@ public class CardTile {
         StackPane.setAlignment(art.getChildren().get(1), Pos.TOP_RIGHT);
         art.setMaxSize(CardArtRenderer.W, CardArtRenderer.H);
 
-        Label nameLbl = new Label(card.getName());
+        Label nameLbl = new Label(card.name());
         nameLbl.setFont(Font.font("Arial", FontWeight.BOLD, 11));
         nameLbl.setTextFill(Color.WHITE);
         nameLbl.setWrapText(true);
@@ -55,9 +51,9 @@ public class CardTile {
         statsLbl.setWrapText(true);
         statsLbl.setMaxWidth(155);
 
-        Label rarityLbl = new Label(card.getLevel() != null ? card.getLevel().name() : "");
+        Label rarityLbl = new Label(card.level() != null ? card.level() : "");
         rarityLbl.setFont(Font.font("Arial", FontWeight.BOLD, 9));
-        rarityLbl.setTextFill(Color.web(rarityColor(card.getLevel())));
+        rarityLbl.setTextFill(Color.web(rarityColor(card.level())));
         rarityLbl.setMaxWidth(155);
 
         Button addBtn = new Button("+ Add to Deck");
@@ -80,7 +76,7 @@ public class CardTile {
         tile.setMaxWidth(176);
         tile.setStyle(
                 "-fx-background-color: #16213e; " +
-                "-fx-border-color: " + rarityColor(card.getLevel()) + "; " +
+                "-fx-border-color: " + rarityColor(card.level()) + "; " +
                 "-fx-border-width: 1.5; -fx-border-radius: 5; -fx-background-radius: 5;"
         );
         return tile;
@@ -100,60 +96,42 @@ public class CardTile {
     }
 
     private Canvas buildArt() {
-        if (card instanceof GroundVehicleCard v) {
-            String vc = v.getVehicleClass() != null ? v.getVehicleClass().getClassName() : "UNKNOWN";
-            return CardArtRenderer.createVehicleArt(vc, v.getVehicleNation());
-        }
-        if (card instanceof AmmunitionCard a && a.getAmmunition() != null) {
-            return CardArtRenderer.createAmmoArt(a.getAmmunition().getDamageType());
-        }
-        if (card instanceof FuelCard f) {
-            return CardArtRenderer.createFuelArt(f.getCount() != null ? f.getCount() : 1);
-        }
-        if (card instanceof RepairCard) {
-            return CardArtRenderer.createRepairArt();
-        }
-        return CardArtRenderer.createAmmoArt(null);
+        return switch (card.category()) {
+            case "VEHICLE"    -> CardArtRenderer.createVehicleArt(
+                    card.vehicleClass() != null ? card.vehicleClass() : "UNKNOWN", card.nation());
+            case "AMMUNITION" -> CardArtRenderer.createAmmoArt(
+                    card.damageType() != null ? DamageType.valueOf(card.damageType()) : null);
+            case "FUEL"       -> CardArtRenderer.createFuelArt(card.count() != null ? card.count() : 1);
+            case "REPAIR"     -> CardArtRenderer.createRepairArt();
+            default           -> CardArtRenderer.createAmmoArt(null);
+        };
     }
 
     private String buildSubtitle() {
-        if (card instanceof GroundVehicleCard v) {
-            String nation = v.getVehicleNation() != null ? v.getVehicleNation() : "Unknown";
-            String vc = v.getVehicleClass() != null
-                    ? v.getVehicleClass().getClassName().replace("_", " ")
-                    : "Vehicle";
-            return nation + " · " + vc;
-        }
-        if (card instanceof AmmunitionCard a && a.getAmmunition() != null) {
-            return "AMMO · " + a.getAmmunition().name();
-        }
-        if (card instanceof ItemCard item && item.getItemType() != null) {
-            return "ITEM · " + item.getItemType().name();
-        }
-        return "Item";
+        return switch (card.category()) {
+            case "VEHICLE" -> (card.nation() != null ? card.nation() : "Unknown") + " · "
+                    + (card.vehicleClass() != null ? card.vehicleClass().replace("_", " ") : "Vehicle");
+            case "AMMUNITION" -> card.ammunition() != null ? "AMMO · " + card.ammunition() : "Ammunition";
+            default -> card.itemType() != null ? "ITEM · " + card.itemType() : "Item";
+        };
     }
 
     private String buildStats() {
-        if (card instanceof GroundVehicleCard v) {
-            int hp    = v.getVehicleHP()    != null ? v.getVehicleHP()    : 0;
-            int armor = v.getVehicleArmor() != null ? v.getVehicleArmor() : 0;
-            return "HP " + hp + "  ·  Armor " + armor;
-        }
-        if (card instanceof AmmunitionCard a && a.getCount() != null) {
-            return "Resupply ×" + a.getCount();
-        }
-        if (card instanceof FuelCard f && f.getCount() != null) {
-            return "Fuel +" + f.getCount();
-        }
-        if (card instanceof RepairCard r && r.getRepairAmount() != null) {
-            return r.getRepairAmount() >= 999 ? "Repairs: full HP" : "Repairs " + r.getRepairAmount() + " HP";
-        }
-        return card.getDescription() != null ? card.getDescription() : "";
+        return switch (card.category()) {
+            case "VEHICLE" -> "HP " + orZero(card.hp()) + "  ·  Armor " + orZero(card.armor());
+            case "AMMUNITION" -> card.count() != null ? "Resupply ×" + card.count() : "";
+            case "FUEL" -> card.count() != null ? "Fuel +" + card.count() : "";
+            case "REPAIR" -> card.repairAmount() == null ? ""
+                    : card.repairAmount() >= 999 ? "Repairs: full HP" : "Repairs " + card.repairAmount() + " HP";
+            default -> card.description() != null ? card.description() : "";
+        };
     }
 
-    private String rarityColor(CardLevel level) {
-        if (level == null) return "#555555";
-        return switch (level) {
+    private static int orZero(Integer v) { return v != null ? v : 0; }
+
+    private String rarityColor(String levelName) {
+        if (levelName == null) return "#555555";
+        return switch (CardLevel.valueOf(levelName)) {
             case COMMON    -> "#6c757d";
             case UNCOMMON  -> "#28a745";
             case RARE      -> "#007bff";

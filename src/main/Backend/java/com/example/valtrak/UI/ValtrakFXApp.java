@@ -1,22 +1,13 @@
 package com.example.valtrak.UI;
 
-import com.example.valtrak.ValtrakApplication;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.stage.Stage;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
+/**
+ * The desktop client. It holds no game data or rules of its own; everything
+ * comes from the game server (see {@link com.example.valtrak.UI.net.ServerApi}).
+ */
 public class ValtrakFXApp extends Application {
-
-    private static ConfigurableApplicationContext springContext;
-
-    public static ConfigurableApplicationContext getContext() { return springContext; }
-
-    @Override
-    public void init() {
-        springContext = SpringApplication.run(ValtrakApplication.class);
-    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -24,11 +15,5 @@ public class ValtrakFXApp extends Application {
         primaryStage.setScene(new MainMenuScene(primaryStage).build());
         primaryStage.setResizable(false);
         primaryStage.show();
-    }
-
-    @Override
-    public void stop() {
-        springContext.close();
-        Platform.exit();
     }
 }
