@@ -3,6 +3,9 @@ package com.example.valtrak.UI;
 import com.example.valtrak.Data.GameData.Service.DeckBrowserService;
 import com.example.valtrak.Gameplay.Cards.Base.Card;
 import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
+import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
+import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
+import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import com.example.valtrak.UI.components.CardTile;
 import javafx.geometry.Insets;
@@ -30,6 +33,13 @@ public class DeckBuilderScene {
 
     private enum Filter { ALL, FAVORITES, VEHICLES, ITEMS }
 
+    private enum Grouping {
+        CATEGORY("Category"), RARITY("Rarity"), NATION("Nation"), NONE("None");
+        final String label;
+        Grouping(String label) { this.label = label; }
+        @Override public String toString() { return label; }
+    }
+
     private final Stage stage;
     private final List<Card> cards;
     private final FavoritesStore favorites = new FavoritesStore();
@@ -38,7 +48,8 @@ public class DeckBuilderScene {
     private final Map<Long, String>  deckNames  = new LinkedHashMap<>();
 
     private Filter currentFilter = Filter.ALL;
-    private FlowPane grid;
+    private Grouping currentGrouping = Grouping.CATEGORY;
+    private VBox grid;
     private Label deckCountLabel;
     private VBox  deckListBox;
 
@@ -111,13 +122,22 @@ public class DeckBuilderScene {
         ToggleButton itemBtn = filterToggle("ITEMS",       Filter.ITEMS,     filterGroup);
         allBtn.setSelected(true);
 
-        HBox filters = new HBox(8, allBtn, favBtn, vehBtn, itemBtn);
+        Region filterSpacer = new Region();
+        HBox.setHgrow(filterSpacer, Priority.ALWAYS);
+        Label groupLbl = new Label("Group by:");
+        groupLbl.setTextFill(Color.web(DIM));
+        groupLbl.setFont(Font.font("Arial", 11));
+        ComboBox<Grouping> groupBox = new ComboBox<>();
+        groupBox.getItems().addAll(Grouping.values());
+        groupBox.setValue(currentGrouping);
+        groupBox.setOnAction(e -> { currentGrouping = groupBox.getValue(); populateGrid(); });
+
+        HBox filters = new HBox(8, allBtn, favBtn, vehBtn, itemBtn, filterSpacer, groupLbl, groupBox);
+        filters.setAlignment(Pos.CENTER_LEFT);
         filters.setPadding(new Insets(10, 16, 10, 16));
         filters.setStyle("-fx-background-color: " + BG + ";");
 
-        grid = new FlowPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
+        grid = new VBox(14);
         grid.setPadding(new Insets(6, 16, 16, 16));
         grid.setStyle("-fx-background-color: " + BG + ";");
         populateGrid();
@@ -139,23 +159,87 @@ public class DeckBuilderScene {
 
     private void populateGrid() {
         grid.getChildren().clear();
+        Map<String, List<Card>> groups = new LinkedHashMap<>();
         for (Card c : cards) {
-            if (!matchesFilter(c)) continue;
-            grid.getChildren().add(new CardTile(
-                    c,
-                    favorites.isFavorite(c.getName()),
-                    () -> addCard(c.getId(), c.getName()),
-                    () -> { favorites.toggle(c.getName()); populateGrid(); }
-            ).build());
+            if (matchesFilter(c)) groups.computeIfAbsent(groupKey(c), k -> new ArrayList<>()).add(c);
         }
-        if (grid.getChildren().isEmpty()) {
+        if (groups.isEmpty()) {
             Label empty = new Label(currentFilter == Filter.FAVORITES
                     ? "No favorites yet — click the ☆ on any card to add it here."
                     : "No cards to show.");
             empty.setFont(Font.font("Arial", 13));
             empty.setTextFill(Color.web(DIM));
             grid.getChildren().add(empty);
+            return;
         }
+        groups.entrySet().stream()
+                .sorted(Comparator.comparingInt((Map.Entry<String, List<Card>> e) -> groupOrder(e.getValue().get(0)))
+                        .thenComparing(Map.Entry::getKey))
+                .forEach(e -> {
+                    if (currentGrouping != Grouping.NONE) {
+                        Label header = new Label(e.getKey().toUpperCase() + "  (" + e.getValue().size() + ")");
+                        header.setFont(Font.font("Arial", FontWeight.BOLD, 13));
+                        header.setTextFill(Color.web(ACCENT));
+                        header.setMaxWidth(Double.MAX_VALUE);
+                        header.setPadding(new Insets(0, 0, 4, 0));
+                        header.setStyle("-fx-border-color: #444466; -fx-border-width: 0 0 1 0;");
+                        grid.getChildren().add(header);
+                    }
+                    FlowPane row = new FlowPane(10, 10);
+                    for (Card c : e.getValue()) {
+                        row.getChildren().add(new CardTile(
+                                c,
+                                favorites.isFavorite(c.getName()),
+                                () -> addCard(c.getId(), c.getName()),
+                                () -> { favorites.toggle(c.getName()); populateGrid(); }
+                        ).build());
+                    }
+                    grid.getChildren().add(row);
+                });
+    }
+
+    private String groupKey(Card c) {
+        return switch (currentGrouping) {
+            case NONE     -> "All cards";
+            case RARITY   -> c.getLevel() != null ? title(c.getLevel().name()) : "Unknown";
+            case NATION   -> c instanceof GroundVehicleCard v && v.getVehicleNation() != null
+                    ? v.getVehicleNation() : "Supplies";
+            case CATEGORY -> categoryOf(c);
+        };
+    }
+
+    /** Sort position of a group (all cards in a group share it). */
+    private int groupOrder(Card c) {
+        return switch (currentGrouping) {
+            case RARITY   -> c.getLevel() != null ? c.getLevel().ordinal() : 99;
+            case CATEGORY -> c instanceof GroundVehicleCard v && v.getVehicleClass() != null
+                    ? java.util.Arrays.asList(
+                            com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass.values())
+                            .indexOf(com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass
+                                    .valueOf(v.getVehicleClass().getClassName()))
+                    : 100;
+            case NATION   -> c instanceof GroundVehicleCard ? 0 : 1;
+            case NONE     -> 0;
+        };
+    }
+
+    private String categoryOf(Card c) {
+        if (c instanceof GroundVehicleCard v) {
+            return v.getVehicleClass() != null ? title(v.getVehicleClass().getClassName()) : "Vehicles";
+        }
+        if (c instanceof AmmunitionCard) return "Ammunition";
+        if (c instanceof FuelCard) return "Fuel";
+        if (c instanceof RepairCard) return "Repair";
+        return "Other Items";
+    }
+
+    private static String title(String enumName) {
+        StringBuilder sb = new StringBuilder();
+        for (String w : enumName.toLowerCase().split("_")) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1));
+        }
+        return sb.toString();
     }
 
     private boolean matchesFilter(Card c) {
