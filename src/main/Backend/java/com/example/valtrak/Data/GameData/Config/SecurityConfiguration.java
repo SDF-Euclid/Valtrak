@@ -43,8 +43,8 @@ public class SecurityConfiguration {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new TokenAuthenticationFilter(accounts), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/account/me", "/account/me/**", "/account/logout").authenticated()
-                        .anyRequest().permitAll() // game endpoints get locked down in a later step
+                        .requestMatchers("/account/me", "/account/me/**", "/account/logout", "/game/**").authenticated()
+                        .anyRequest().permitAll() // card catalog, nations and sign-in stay open to guests
                 )
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .headers(headers -> headers

@@ -9,9 +9,11 @@ import com.example.valtrak.Data.GameData.DataTransfer.DamageData.CombatResult;
 import com.example.valtrak.Data.GameData.DataTransfer.GameData.AttackRequest;
 import com.example.valtrak.Data.GameData.DataTransfer.GameData.CreateGameRequest;
 import com.example.valtrak.Data.GameData.DataTransfer.GameData.DeployRequest;
+import com.example.valtrak.Data.GameData.DataTransfer.GameData.GameView;
 import com.example.valtrak.Data.GameData.DataTransfer.GameData.PlayResourceRequest;
 import com.example.valtrak.Data.GameData.Entity.GameState.*;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.VehicleAttackEntity;
+import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.ApiException;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.GameNotFoundException;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.InvalidGameActionException;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.PlayerNotFoundException;
@@ -30,6 +32,7 @@ import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +59,10 @@ public class GameService {
     private final CombatService combatService;
 
     @Transactional
-    public Game createGame(CreateGameRequest req) {
+    public Game createGame(CreateGameRequest req, Long callerId) {
+        if (!callerId.equals(req.player1Id()) && !callerId.equals(req.player2Id())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You can only create games that you are playing in.");
+        }
         if (req.player1Id().equals(req.player2Id())) {
             throw new InvalidGameActionException("A player cannot play against themselves.");
         }
@@ -81,6 +87,34 @@ public class GameService {
 
     public Game getGame(Long gameId) {
         return gameRepo.findById(gameId).orElseThrow(() -> new GameNotFoundException(gameId));
+    }
+
+    /**
+     * The game as seen by one of its players. Anyone who is not a player in the
+     * game gets the same "not found" as a game that doesn't exist.
+     */
+    @Transactional(readOnly = true)
+    public GameView getGameView(Long gameId, Long viewerId) {
+        Game game = getGame(gameId);
+        boolean isPlayer1 = game.getPlayer1().getId().equals(viewerId);
+        if (!isPlayer1 && !game.getPlayer2().getId().equals(viewerId)) {
+            throw new GameNotFoundException(gameId);
+        }
+        return new GameView(game.getId(), game.getStatus(), game.getCurrentPhase(), game.getTurnNumber(),
+                game.getActivePlayerId(), game.getWinnerId(),
+                playerView(isPlayer1 ? game.getPlayer1() : game.getPlayer2(),
+                        isPlayer1 ? game.getPlayer1State() : game.getPlayer2State(), true),
+                playerView(isPlayer1 ? game.getPlayer2() : game.getPlayer1(),
+                        isPlayer1 ? game.getPlayer2State() : game.getPlayer1State(), false));
+    }
+
+    private GameView.PlayerView playerView(Player player, PlayerGameState state, boolean isViewer) {
+        return new GameView.PlayerView(player.getId(), player.getDisplayName(), player.getDisplayNation(),
+                state.getDeck().size(), state.getHand().size(),
+                isViewer ? List.copyOf(state.getHand()) : null,
+                List.copyOf(state.getDiscard()), java.util.Map.copyOf(state.getAmmoInventory()),
+                state.getFuelPool(), state.getSupplyPool(), state.getRepairPool(), state.getTerritoryChips(),
+                state.getStrikeGroups());
     }
 
     @Transactional
