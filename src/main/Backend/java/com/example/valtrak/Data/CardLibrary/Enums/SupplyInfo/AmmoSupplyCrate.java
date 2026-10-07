@@ -29,7 +29,7 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
     APFSDS_125MM_X5("5x 125mm Sabot Crate", "Re-supplies 5 125mm apfsds darts", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.APFSDS_125MM, 5),
 
     HEAT_120MM_X5("5x 120mm HEAT Crate", "Re-supplies 5 120mm heat shells", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HEAT_120MM, 5),
-    HEAT_125MM_X5("5x 120mm HEAT Crate", "Re-supplies 5 125mm heat shells", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HEAT_125MM, 5),
+    HEAT_125MM_X5("5x 125mm HEAT Crate", "Re-supplies 5 125mm heat shells", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HEAT_125MM, 5),
 
     /*=========================================================*/
 
