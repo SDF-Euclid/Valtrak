@@ -1,5 +1,6 @@
 package com.example.valtrak.Data.GameData.ExceptionHandling;
 
+import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.ApiException;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.GameNotFoundException;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.InvalidGameActionException;
 import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.PlayerNotFoundException;
@@ -21,6 +22,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(e.getMessage());
         //.body("An unexpected error occurred");
+    }
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<String> handleApiException(ApiException exception) {
+        return ResponseEntity.status(exception.getStatus()).body(exception.getMessage());
     }
 
     @ExceptionHandler(PlayerNotFoundException.class)
