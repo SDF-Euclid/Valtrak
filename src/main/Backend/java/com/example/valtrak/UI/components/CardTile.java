@@ -58,6 +58,7 @@ public class CardTile {
         Label rarityLbl = new Label(card.getLevel() != null ? card.getLevel().name() : "");
         rarityLbl.setFont(Font.font("Arial", FontWeight.BOLD, 9));
         rarityLbl.setTextFill(Color.web(rarityColor(card.getLevel())));
+        rarityLbl.setMaxWidth(155);
 
         Button addBtn = new Button("+ Add to Deck");
         addBtn.setMaxWidth(Double.MAX_VALUE);
@@ -74,9 +75,9 @@ public class CardTile {
 
         VBox tile = new VBox(5, art, nameLbl, subLbl, statsLbl, rarityLbl, addBtn);
         tile.setPadding(new Insets(8));
-        tile.setAlignment(Pos.TOP_LEFT);
-        tile.setMinWidth(171);
-        tile.setMaxWidth(171);
+        tile.setAlignment(Pos.TOP_CENTER);
+        tile.setMinWidth(176);
+        tile.setMaxWidth(176);
         tile.setStyle(
                 "-fx-background-color: #16213e; " +
                 "-fx-border-color: " + rarityColor(card.getLevel()) + "; " +
