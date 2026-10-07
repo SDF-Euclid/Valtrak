@@ -87,18 +87,22 @@ public final class Ui {
     }
 
     /** A dark dropdown matching the text fields. */
-    public static void styleCombo(javafx.scene.control.ComboBox<String> box) {
+    public static <T> void styleCombo(javafx.scene.control.ComboBox<T> box) {
         box.setStyle("-fx-background-color: #0d1326; -fx-border-color: #3a4a70; -fx-border-radius: 4; "
                 + "-fx-background-radius: 4; -fx-mark-color: " + ACCENT + ";");
-        box.setButtonCell(darkCell());
-        box.setCellFactory(lv -> darkCell());
+        box.setButtonCell(darkCell(box));
+        box.setCellFactory(lv -> darkCell(box));
     }
 
-    private static javafx.scene.control.ListCell<String> darkCell() {
+    private static <T> javafx.scene.control.ListCell<T> darkCell(javafx.scene.control.ComboBox<T> box) {
         return new javafx.scene.control.ListCell<>() {
-            @Override protected void updateItem(String item, boolean empty) {
+            @Override protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty ? null : item);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(box.getConverter() != null ? box.getConverter().toString(item) : String.valueOf(item));
+                }
                 setTextFill(Color.WHITE);
                 setStyle("-fx-background-color: #0d1326;");
             }

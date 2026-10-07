@@ -2,6 +2,7 @@ package com.example.valtrak.UI.net;
 
 import com.example.valtrak.Data.GameData.DataTransfer.AccountData.AccountDtos.*;
 import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
+import com.example.valtrak.Data.GameData.DataTransfer.DeckData.DeckDtos.*;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -12,6 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The desktop client's only connection to the game server. Calls here block,
@@ -90,6 +92,24 @@ public class ServerApi {
     public static void setFavorite(long cardId, boolean favorite) throws IOException {
         send(favorite ? "PUT" : "DELETE", "/account/me/favorites/" + cardId, null,
                 new TypeReference<FavoritesResponse>() {});
+    }
+
+    // ── Saved decks (signed-in players) ──────────────────────────────────────
+
+    public static List<DeckDto> fetchDecks() throws IOException {
+        return send("GET", "/decks", null, new TypeReference<List<DeckDto>>() {});
+    }
+
+    public static DeckDto createDeck(String name, Map<Long, Integer> cardCounts) throws IOException {
+        return send("POST", "/decks", new SaveDeckRequest(name, cardCounts), new TypeReference<DeckDto>() {});
+    }
+
+    public static DeckDto updateDeck(long deckId, String name, Map<Long, Integer> cardCounts) throws IOException {
+        return send("PUT", "/decks/" + deckId, new SaveDeckRequest(name, cardCounts), new TypeReference<DeckDto>() {});
+    }
+
+    public static void deleteDeck(long deckId) throws IOException {
+        send("DELETE", "/decks/" + deckId, null, null);
     }
 
     // ── Plumbing ─────────────────────────────────────────────────────────────
