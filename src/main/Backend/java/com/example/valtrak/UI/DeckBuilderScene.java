@@ -1,12 +1,8 @@
 package com.example.valtrak.UI;
 
-import com.example.valtrak.Data.GameData.Service.DeckBrowserService;
-import com.example.valtrak.Gameplay.Cards.Base.Card;
-import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
-import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
-import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
-import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
-import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
+import com.example.valtrak.Data.CardLibrary.CardLevel;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
+import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
 import com.example.valtrak.UI.components.CardTile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -41,7 +37,7 @@ public class DeckBuilderScene {
     }
 
     private final Stage stage;
-    private final List<Card> cards;
+    private final List<CardDto> cards;
     private final FavoritesStore favorites = new FavoritesStore();
 
     private final Map<Long, Integer> deckCounts = new LinkedHashMap<>();
@@ -53,15 +49,14 @@ public class DeckBuilderScene {
     private Label deckCountLabel;
     private VBox  deckListBox;
 
-    public DeckBuilderScene(Stage stage) {
+    public DeckBuilderScene(Stage stage, List<CardDto> catalog) {
         this.stage = stage;
-        DeckBrowserService svc = ValtrakFXApp.getContext().getBean(DeckBrowserService.class);
-        List<Card> all = new ArrayList<>(svc.getAllCards());
+        List<CardDto> all = new ArrayList<>(catalog);
         // vehicles first, then items; within each group by rarity, then name
         all.sort(Comparator
-                .comparingInt((Card c) -> c instanceof GroundVehicleCard ? 0 : 1)
-                .thenComparingInt(c -> c.getLevel() != null ? c.getLevel().ordinal() : 0)
-                .thenComparing(Card::getName));
+                .comparingInt((CardDto c) -> isVehicle(c) ? 0 : 1)
+                .thenComparingInt(DeckBuilderScene::rarityOrder)
+                .thenComparing(CardDto::name));
         this.cards = all;
     }
 
@@ -159,8 +154,8 @@ public class DeckBuilderScene {
 
     private void populateGrid() {
         grid.getChildren().clear();
-        Map<String, List<Card>> groups = new LinkedHashMap<>();
-        for (Card c : cards) {
+        Map<String, List<CardDto>> groups = new LinkedHashMap<>();
+        for (CardDto c : cards) {
             if (matchesFilter(c)) groups.computeIfAbsent(groupKey(c), k -> new ArrayList<>()).add(c);
         }
         if (groups.isEmpty()) {
@@ -173,7 +168,7 @@ public class DeckBuilderScene {
             return;
         }
         groups.entrySet().stream()
-                .sorted(Comparator.comparingInt((Map.Entry<String, List<Card>> e) -> groupOrder(e.getValue().get(0)))
+                .sorted(Comparator.comparingInt((Map.Entry<String, List<CardDto>> e) -> groupOrder(e.getValue().get(0)))
                         .thenComparing(Map.Entry::getKey))
                 .forEach(e -> {
                     if (currentGrouping != Grouping.NONE) {
@@ -186,51 +181,52 @@ public class DeckBuilderScene {
                         grid.getChildren().add(header);
                     }
                     FlowPane row = new FlowPane(10, 10);
-                    for (Card c : e.getValue()) {
+                    for (CardDto c : e.getValue()) {
                         row.getChildren().add(new CardTile(
                                 c,
-                                favorites.isFavorite(c.getName()),
-                                () -> addCard(c.getId(), c.getName()),
-                                () -> { favorites.toggle(c.getName()); populateGrid(); }
+                                favorites.isFavorite(c.name()),
+                                () -> addCard(c.id(), c.name()),
+                                () -> { favorites.toggle(c.name()); populateGrid(); }
                         ).build());
                     }
                     grid.getChildren().add(row);
                 });
     }
 
-    private String groupKey(Card c) {
+    private String groupKey(CardDto c) {
         return switch (currentGrouping) {
             case NONE     -> "All cards";
-            case RARITY   -> c.getLevel() != null ? title(c.getLevel().name()) : "Unknown";
-            case NATION   -> c instanceof GroundVehicleCard v && v.getVehicleNation() != null
-                    ? v.getVehicleNation() : "Supplies";
+            case RARITY   -> c.level() != null ? title(c.level()) : "Unknown";
+            case NATION   -> c.nation() != null ? c.nation() : "Supplies";
             case CATEGORY -> categoryOf(c);
         };
     }
 
     /** Sort position of a group (all cards in a group share it). */
-    private int groupOrder(Card c) {
+    private int groupOrder(CardDto c) {
         return switch (currentGrouping) {
-            case RARITY   -> c.getLevel() != null ? c.getLevel().ordinal() : 99;
-            case CATEGORY -> c instanceof GroundVehicleCard v && v.getVehicleClass() != null
-                    ? java.util.Arrays.asList(
-                            com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass.values())
-                            .indexOf(com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass
-                                    .valueOf(v.getVehicleClass().getClassName()))
-                    : 100;
-            case NATION   -> c instanceof GroundVehicleCard ? 0 : 1;
+            case RARITY   -> rarityOrder(c);
+            case CATEGORY -> isVehicle(c) && c.vehicleClass() != null
+                    ? VehicleClass.valueOf(c.vehicleClass()).ordinal() : 100;
+            case NATION   -> isVehicle(c) ? 0 : 1;
             case NONE     -> 0;
         };
     }
 
-    private String categoryOf(Card c) {
-        if (c instanceof GroundVehicleCard v) {
-            return v.getVehicleClass() != null ? title(v.getVehicleClass().getClassName()) : "Vehicles";
-        }
-        if (c instanceof AmmunitionCard) return "Ammunition";
-        if (c instanceof FuelCard) return "Fuel";
-        if (c instanceof RepairCard) return "Repair";
-        return "Other Items";
+    private String categoryOf(CardDto c) {
+        return switch (c.category()) {
+            case "VEHICLE"    -> c.vehicleClass() != null ? title(c.vehicleClass()) : "Vehicles";
+            case "AMMUNITION" -> "Ammunition";
+            case "FUEL"       -> "Fuel";
+            case "REPAIR"     -> "Repair";
+            default           -> "Other Items";
+        };
+    }
+
+    private static boolean isVehicle(CardDto c) { return "VEHICLE".equals(c.category()); }
+
+    private static int rarityOrder(CardDto c) {
+        return c.level() != null ? CardLevel.valueOf(c.level()).ordinal() : 99;
     }
 
     private static String title(String enumName) {
@@ -242,12 +238,12 @@ public class DeckBuilderScene {
         return sb.toString();
     }
 
-    private boolean matchesFilter(Card c) {
+    private boolean matchesFilter(CardDto c) {
         return switch (currentFilter) {
             case ALL       -> true;
-            case FAVORITES -> favorites.isFavorite(c.getName());
-            case VEHICLES  -> c instanceof GroundVehicleCard;
-            case ITEMS     -> c instanceof ItemCard;
+            case FAVORITES -> favorites.isFavorite(c.name());
+            case VEHICLES  -> isVehicle(c);
+            case ITEMS     -> !isVehicle(c);
         };
     }
 

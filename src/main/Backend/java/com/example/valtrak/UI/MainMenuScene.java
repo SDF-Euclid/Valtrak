@@ -1,5 +1,8 @@
 package com.example.valtrak.UI;
 
+import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
+import com.example.valtrak.UI.net.ServerApi;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -10,6 +13,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+
+import java.util.List;
 
 public class MainMenuScene {
 
@@ -45,14 +50,18 @@ public class MainMenuScene {
         Button quitBtn      = createButton("QUIT",         false);
 
         playBtn.setOnAction(e -> onPlay());
-        deckBtn.setOnAction(e -> {
-            stage.setResizable(true);
-            stage.setScene(new DeckBuilderScene(stage).build());
-            stage.centerOnScreen();
-        });
+        Label status = new Label();
+        status.setFont(Font.font("Arial", 12));
+        status.setTextFill(Color.web("#ff6b6b"));
+        status.setWrapText(true);
+        status.setMaxWidth(420);
+        status.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+        status.setAlignment(Pos.CENTER);
+
+        deckBtn.setOnAction(e -> openDeckBuilder(deckBtn, status));
         quitBtn.setOnAction(e -> stage.close());
 
-        VBox root = new VBox(16, title, subtitle, spacer(20), playBtn, deckBtn, settingsBtn, spacer(10), quitBtn);
+        VBox root = new VBox(14, title, subtitle, spacer(8), playBtn, deckBtn, settingsBtn, spacer(10), quitBtn, status);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(40));
         root.setStyle("-fx-background-color: " + BG_COLOR + ";");
@@ -86,6 +95,31 @@ public class MainMenuScene {
         javafx.scene.layout.Region r = new javafx.scene.layout.Region();
         r.setMinHeight(height);
         return r;
+    }
+
+    /** Loads the card catalog from the server off the UI thread, then opens the deck builder. */
+    private void openDeckBuilder(Button deckBtn, Label status) {
+        deckBtn.setDisable(true);
+        status.setTextFill(Color.web(TEXT_COLOR));
+        status.setText("Loading cards from " + ServerApi.BASE_URL + " ...");
+        Task<List<CardDto>> load = new Task<>() {
+            @Override protected List<CardDto> call() throws Exception { return ServerApi.fetchCards(); }
+        };
+        load.setOnSucceeded(ev -> {
+            deckBtn.setDisable(false);
+            status.setText("");
+            stage.setResizable(true);
+            stage.setScene(new DeckBuilderScene(stage, load.getValue()).build());
+            stage.centerOnScreen();
+        });
+        load.setOnFailed(ev -> {
+            deckBtn.setDisable(false);
+            status.setTextFill(Color.web("#ff6b6b"));
+            status.setText("Can't reach the server at " + ServerApi.BASE_URL + ". Is it running?");
+        });
+        Thread t = new Thread(load, "load-cards");
+        t.setDaemon(true);
+        t.start();
     }
 
     private void onPlay() {
