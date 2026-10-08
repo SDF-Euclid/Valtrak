@@ -117,6 +117,15 @@ class DataLoaderSyncTest {
         assertThat(fixed.getLevel()).isEqualTo(CardLevel.COMMON);
     }
 
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
+
+    @Test
+    void noEnumColumnsAreLeftSoNewEnumValuesCanBeStored() {
+        Integer enums = jdbc.queryForObject("select count(*) from information_schema.columns where data_type = 'ENUM' "
+                + "and table_schema <> 'INFORMATION_SCHEMA' and table_name not like 'HTE\\_%' escape '\\'", Integer.class);
+        assertThat(enums).isZero();
+    }
+
     @Test
     void everyCardDescriptionFitsInTheDatabaseColumn() {
         for (var item : com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SpecialItem.values()) {
