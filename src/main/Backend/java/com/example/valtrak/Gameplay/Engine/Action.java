@@ -44,6 +44,9 @@ public sealed interface Action {
      */
     record PlayItem(long cardId, List<Long> targetIds, List<Long> cardIds) implements Action {}
 
+    /** Switch a strike group's Jammer on or off (free). */
+    record SetJammer(long groupId, boolean on) implements Action {}
+
     /** Attack with one vehicle (Skirmish) or several (Combined Assault). Ends your turn. */
     record Attack(long groupId, List<AttackChoice> choices) implements Action {}
 

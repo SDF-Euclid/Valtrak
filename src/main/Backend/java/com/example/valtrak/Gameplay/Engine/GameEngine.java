@@ -157,6 +157,7 @@ public final class GameEngine {
             case Move a -> move(s, me, a, r);
             case UseAbility a -> useAbility(me, opp, a, r);
             case PlayItem a -> playItem(s, me, opp, a, r);
+            case SetJammer a -> setJammer(me, a, r);
             case Attack a -> attack(s, me, opp, a, r);
             case EndTurn a -> {
                 r.say("Player " + (player + 1) + " ends their turn.");
@@ -280,7 +281,7 @@ public final class GameEngine {
             if (v.faceUp) throw violation("That vehicle is already face up.");
             if (!toFlip.contains(v)) toFlip.add(v);
         }
-        toFlip.forEach(v -> flipUp(v));
+        toFlip.forEach(v -> v.faceUp = true);
         r.say("Player " + (me.index + 1) + " reveals " + toFlip.size() + " vehicle(s).");
     }
 
@@ -289,7 +290,7 @@ public final class GameEngine {
         List<Vehicle> toFlip = g.vehicles.stream()
                 .filter(v -> !v.faceUp && !catalog.vehicle(v.cardId).isResupply()).toList();
         if (toFlip.isEmpty()) throw violation("Everything in that group is already face up.");
-        toFlip.forEach(v -> flipUp(v));
+        toFlip.forEach(v -> v.faceUp = true);
         r.say("Player " + (me.index + 1) + " reveals a strike group.");
     }
 
@@ -300,7 +301,6 @@ public final class GameEngine {
         requireFuel(loc.group, cost);
         spend(me, loc.group.pool, ResourceKind.FUEL, null, cost);
         loc.vehicle.faceUp = false;
-        loc.vehicle.jammerOn = false;
         r.say("A vehicle retreats face down (" + cost + " Fuel).");
     }
 
@@ -310,7 +310,7 @@ public final class GameEngine {
         int cost = retreatCost(g.leader()) * rules.groupRetreatMultiplier;
         requireFuel(g, cost);
         spend(me, g.pool, ResourceKind.FUEL, null, cost);
-        g.vehicles.forEach(v -> { v.faceUp = false; v.jammerOn = false; });
+        g.vehicles.forEach(v -> v.faceUp = false);
         r.say("A strike group retreats face down (" + cost + " Fuel).");
     }
 
@@ -394,7 +394,7 @@ public final class GameEngine {
             case SEARCH -> prepareSearch(s, me, spec, chosen, r);
             case DRAW -> prepareDraw(me, spec, r);
             case SMOKE -> prepareSmoke(me, spec, targets, r);
-            case JAMMER -> prepareJammer(me, spec, targets, r);
+            case JAMMER -> prepareJammer(s, me, spec, targets, r);
             case CAMO -> prepareCamo(me, spec, targets, r);
             case SABOTAGE -> prepareSabotage(s, me, opp, spec, r);
             case RECYCLE -> prepareRecycle(me, spec, chosen, r);
@@ -444,21 +444,37 @@ public final class GameEngine {
         };
     }
 
-    private Runnable prepareJammer(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
-        if (targets.size() != 1) throw violation(spec.name() + " attaches to exactly one of your vehicles.");
-        Vehicle v = findVehicle(me, targets.get(0)).vehicle;
+    private Runnable prepareJammer(GameState s, PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
+        if (targets.size() != 1) throw violation(spec.name() + " attaches to exactly one of your strike groups.");
+        StrikeGroup g = group(me, targets.get(0));
         return () -> {
-            if (v.jammerCardId != 0) me.discard.add(v.jammerCardId);
-            v.jammerCardId = spec.cardId();
-            v.jammerOn = v.faceUp;                       // it runs while its vehicle is face up
-            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " (upkeep " + spec.power() + " Fuel while it runs).");
+            if (g.jammerCardId != 0) me.discard.add(g.jammerCardId);
+            g.jammerCardId = spec.cardId();
+            g.jammerId = s.nextId++;
+            g.jammerHp = spec.count();
+            g.jammerMaxHp = spec.count();
+            g.jammerOn = false;                          // it starts switched off
+            r.say("Player " + (me.index + 1) + " attaches " + spec.name() + " to a strike group.");
         };
     }
 
-    /** Turns a vehicle face up on its owner's say-so; a Jammer it carries starts running. */
-    private static void flipUp(Vehicle v) {
-        v.faceUp = true;
-        if (v.jammerCardId != 0) v.jammerOn = true;
+    private void setJammer(PlayerState me, SetJammer a, ActionResult r) {
+        StrikeGroup g = group(me, a.groupId());
+        if (g.jammerCardId == 0) throw violation("That strike group has no Jammer.");
+        if (g.jammerOn == a.on()) throw violation("That Jammer is already " + (a.on() ? "on." : "off."));
+        g.jammerOn = a.on();
+        r.say("Player " + (me.index + 1) + (a.on() ? " switches a Jammer on." : " switches a Jammer off."));
+    }
+
+    /** The Jammer is destroyed: the jamming ends (the group is not revealed, but abilities can reveal it again). */
+    private void destroyJammer(PlayerState owner, StrikeGroup g, ActionResult r) {
+        owner.discard.add(g.jammerCardId);
+        g.jammerCardId = 0;
+        g.jammerId = 0;
+        g.jammerHp = 0;
+        g.jammerMaxHp = 0;
+        g.jammerOn = false;
+        r.say("A Jammer is destroyed.");
     }
 
     private Runnable prepareCamo(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
@@ -623,7 +639,6 @@ public final class GameEngine {
     private static void discardAttachments(PlayerState owner, Vehicle v) {
         if (v.eraCardId != 0) owner.discard.add(v.eraCardId);
         if (v.camoCardId != 0) owner.discard.add(v.camoCardId);
-        if (v.jammerCardId != 0) owner.discard.add(v.jammerCardId);
     }
 
     private Random nextRandom(GameState s) {
@@ -638,7 +653,8 @@ public final class GameEngine {
 
     // ── Attacking ────────────────────────────────────────────────────────────
 
-    private record Plan(Vehicle attacker, VehicleSpec spec, AttackSpec attack, Ammunition ammo, Vehicle target) {}
+    /** {@code target} is the enemy vehicle hit, or null when {@code jammerOf} (the enemy group whose Jammer is being shot) is set. */
+    private record Plan(Vehicle attacker, VehicleSpec spec, AttackSpec attack, Ammunition ammo, Vehicle target, StrikeGroup jammerOf) {}
 
     private void attack(GameState s, PlayerState me, PlayerState opp, Attack a, ActionResult r) {
         if (s.firstPlayer == me.index && me.turnsTaken <= 1) {
@@ -673,11 +689,17 @@ public final class GameEngine {
                 throw violation(ammo + " doesn't fit the weapon used by " + attack.name() + ".");
             }
             Vehicle target = opp.groups.stream().flatMap(x -> x.vehicles.stream())
-                    .filter(v -> v.id == c.targetVehicleId()).findFirst()
-                    .orElseThrow(() -> violation("Target " + c.targetVehicleId() + " was not found."));
+                    .filter(v -> v.id == c.targetVehicleId()).findFirst().orElse(null);
+            if (target == null) {                               // not a vehicle: maybe a Jammer that is switched on
+                StrikeGroup jammed = opp.groups.stream()
+                        .filter(x -> x.jammerCardId != 0 && x.jammerOn && x.jammerId == c.targetVehicleId()).findFirst()
+                        .orElseThrow(() -> violation("Target " + c.targetVehicleId() + " was not found."));
+                plans.add(new Plan(attacker, spec, attack, ammo, null, jammed));
+                continue;
+            }
             if (!target.faceUp) throw violation("You can only attack face-up vehicles.");
             if (target.smoked) throw violation("That vehicle is hidden in smoke and can't be targeted.");
-            plans.add(new Plan(attacker, spec, attack, ammo, target));
+            plans.add(new Plan(attacker, spec, attack, ammo, target, null));
         }
         if (plans.size() >= 2 && !g.leader().faceUp) {
             throw violation("A Combined Assault needs the Leader to be face up.");
@@ -703,6 +725,10 @@ public final class GameEngine {
 
         r.say("Player " + (me.index + 1) + (plans.size() >= 2 ? " launches a Combined Assault." : " makes a Skirmish attack."));
         for (Plan p : plans) {
+            if (p.jammerOf != null) {
+                shootJammer(opp, p, r);
+                continue;
+            }
             if (p.target.hp <= 0) {
                 r.say(p.spec.name() + "'s target was already destroyed.");
                 continue;
@@ -721,6 +747,20 @@ public final class GameEngine {
             if (s.phase == GameState.Phase.FINISHED) return;
         }
         endTurn(s, r, true);
+    }
+
+    /** An attack on a Jammer: it has no armor and takes the weapon's damage; at 0 HP it is destroyed. */
+    private void shootJammer(PlayerState owner, Plan p, ActionResult r) {
+        StrikeGroup g = p.jammerOf;
+        if (g.jammerCardId == 0) {
+            r.say(p.spec.name() + "'s target was already destroyed.");
+            return;
+        }
+        DamageCalculator.Result dmg = DamageCalculator.calculate(p.attack.baseDamage(), p.attack.effect(), p.ammo, 0, 0);
+        int dealt = rules.damagePercent == 100 ? dmg.damage() : Math.max(1, Math.round(dmg.damage() * rules.damagePercent / 100f));
+        g.jammerHp -= dealt;
+        r.say(p.spec.name() + " hits a Jammer for " + dealt + ".");
+        if (g.jammerHp <= 0) destroyJammer(owner, g, r);
     }
 
     private static void applyEffect(Vehicle target, SpecialEffect effect) {
@@ -765,6 +805,7 @@ public final class GameEngine {
 
         owner.discard.add(target.cardId);
         discardAttachments(owner, target);
+        if (g.jammerCardId != 0) owner.discard.add(g.jammerCardId);
         owner.groups.remove(g);
         for (Vehicle survivor : g.vehicles) {
             if (survivor == target) continue;
@@ -777,7 +818,6 @@ public final class GameEngine {
                 owner.hand.add(survivor.cardId);
                 if (survivor.eraCardId != 0) owner.hand.add(survivor.eraCardId);
                 if (survivor.camoCardId != 0) owner.hand.add(survivor.camoCardId);
-                if (survivor.jammerCardId != 0) owner.hand.add(survivor.jammerCardId);
             }
         }
         if (attacker.chips >= rules.winChips) {
@@ -822,15 +862,13 @@ public final class GameEngine {
                 v.abilityUsed = false;
                 v.smoked = false;                       // a Smoke Screen lasts until its owner's next turn starts
             });
-            for (Vehicle v : g.vehicles) {              // a face-up Jammer carrier pays its upkeep from the group's pool, or the Jammer stays off
-                if (v.jammerCardId == 0) continue;
-                int upkeep = catalog.item(v.jammerCardId).power();
-                if (v.faceUp && available(g.pool, ResourceKind.FUEL, null) >= upkeep) {
+            if (g.jammerCardId != 0 && g.jammerOn) {    // a Jammer that is on costs Fuel from the group's pool each turn, or switches itself off
+                int upkeep = catalog.item(g.jammerCardId).power();
+                if (available(g.pool, ResourceKind.FUEL, null) >= upkeep) {
                     spend(p, g.pool, ResourceKind.FUEL, null, upkeep);
-                    v.jammerOn = true;
                 } else {
-                    if (v.jammerOn) r.say("A Jammer powers down" + (v.faceUp ? ": its group couldn't pay the upkeep." : "."));
-                    v.jammerOn = false;
+                    g.jammerOn = false;
+                    r.say("A Jammer switches off: its group couldn't pay the upkeep.");
                 }
             }
         }
@@ -888,6 +926,7 @@ public final class GameEngine {
             }
         }
         for (StrikeGroup g : me.groups) {
+            if (g.jammerCardId != 0) c.add(new SetJammer(g.id, !g.jammerOn));
             c.add(new RevealGroup(g.id));
             c.add(new RetreatGroup(g.id));
             for (ResourceStack stack : me.depot) c.add(new Convoy(g.id, List.of(stack.id)));
@@ -898,8 +937,9 @@ public final class GameEngine {
                 for (StrikeGroup other : me.groups) if (other != g) c.add(new Move(v.id, other.id));
             }
         }
-        List<Vehicle> targets = opp.groups.stream().flatMap(g -> g.vehicles.stream())
-                .filter(v -> v.faceUp).toList();
+        List<Long> targetIds = new ArrayList<>(opp.groups.stream().flatMap(g -> g.vehicles.stream())
+                .filter(v -> v.faceUp).map(v -> v.id).toList());
+        opp.groups.stream().filter(g -> g.jammerCardId != 0 && g.jammerOn).forEach(g -> targetIds.add(g.jammerId));   // a Jammer that is on can be shot
         List<Vehicle> hidden = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> !v.faceUp).toList();
         for (StrikeGroup g : me.groups) {
             for (Vehicle v : g.vehicles) {
@@ -916,8 +956,8 @@ public final class GameEngine {
                 boolean firstFound = false;
                 for (AttackSpec at : spec.attacks()) {
                     for (Ammunition ammo : at.weapon().getCompatibleAmmunition()) {
-                        for (Vehicle t : targets) {
-                            AttackChoice choice = new AttackChoice(v.id, at.slot(), ammo, t.id);
+                        for (long targetId : targetIds) {
+                            AttackChoice choice = new AttackChoice(v.id, at.slot(), ammo, targetId);
                             c.add(new Attack(g.id, List.of(choice)));
                             if (!firstFound) {
                                 firstChoices.add(choice);
@@ -943,7 +983,8 @@ public final class GameEngine {
                 }
                 c.add(new PlayItem(id, List.of(), found));
             }
-            case ERA, CAMO, SMOKE, JAMMER -> me.groups.forEach(g -> g.vehicles.forEach(v -> c.add(new PlayItem(id, List.of(v.id), List.of()))));
+            case ERA, CAMO, SMOKE -> me.groups.forEach(g -> g.vehicles.forEach(v -> c.add(new PlayItem(id, List.of(v.id), List.of()))));
+            case JAMMER -> me.groups.forEach(g -> c.add(new PlayItem(id, List.of(g.id), List.of())));
             case SABOTAGE -> c.add(new PlayItem(id, List.of(), List.of()));
             case RECYCLE -> c.add(new PlayItem(id, List.of(), me.discard.stream().filter(x -> catalog.find(x) instanceof ResourceSpec)
                     .limit(item.count()).toList()));

@@ -122,28 +122,43 @@ class GameViewBuilderTest {
     }
 
     @Test
-    void smokeAndARunningJammerArePublicButAttachmentsOnAFaceDownVehicleAreNot() {
+    void smokeIsPublicButAttachmentsOnAFaceDownVehicleAreNot() {
         StrikeGroup theirs = w.group(1, TANK_RARE, false);
         theirs.leader().smoked = true;
         Vehicle hidden = w.add(theirs, ANTI_AIR, false);
         hidden.camoCardId = CAMO_1;
-        hidden.jammerCardId = JAMMER_1;
         Vehicle shown = w.add(theirs, RECON, true);
         shown.camoCardId = CAMO_3;
-        shown.jammerCardId = JAMMER_2;
-        shown.jammerOn = true;
 
         GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
         GroupView group = view.opponent().groups().get(0);
-        assertThat(group.jammed()).isTrue();
-        assertThat(byId(group.vehicles(), shown.id).jammerCardId()).isEqualTo(JAMMER_2);
-        assertThat(byId(group.vehicles(), shown.id).jammerOn()).isTrue();
-        assertThat(byId(group.vehicles(), hidden.id).jammerCardId()).isNull();
-        assertThat(byId(group.vehicles(), hidden.id).jammerOn()).isNull();
+
         assertThat(byId(group.vehicles(), theirs.leader().id).smoked()).isTrue();
         assertThat(byId(group.vehicles(), theirs.leader().id).cardId()).isNull();
         assertThat(byId(group.vehicles(), hidden.id).camoCardId()).isNull();
         assertThat(byId(group.vehicles(), shown.id).camoCardId()).isEqualTo(CAMO_3);
+    }
+
+    @Test
+    void youSeeYourOwnJammerAlwaysButAnOpponentOnlySeesOneThatIsOn() {
+        StrikeGroup mine = w.group(0, TANK_COMMON, false);
+        mine.jammerCardId = JAMMER_2;
+        mine.jammerId = 77;
+        mine.jammerHp = 50;
+        mine.jammerMaxHp = 80;
+        StrikeGroup theirs = w.group(1, TANK_RARE, false);
+        theirs.jammerCardId = JAMMER_1;
+        theirs.jammerId = 78;
+        theirs.jammerHp = 160;
+        theirs.jammerMaxHp = 160;
+
+        GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
+        assertThat(view.you().groups().get(0).jammer()).isEqualTo(new JammerView(77, JAMMER_2, 50, 80, false));
+        assertThat(view.opponent().groups().get(0).jammer()).as("their Jammer is off").isNull();
+
+        theirs.jammerOn = true;
+        view = GameViewBuilder.build(match(), w.s, 0, w.rules);
+        assertThat(view.opponent().groups().get(0).jammer()).isEqualTo(new JammerView(78, JAMMER_1, 160, 160, true));
     }
 
     @Test

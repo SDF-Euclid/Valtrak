@@ -10,7 +10,7 @@ import com.example.valtrak.Data.CardLibrary.CardLevel;
  *   <li>SEARCH: {@code count} = how many cards, {@code searchKind} = what kind</li>
  *   <li>DRAW, SABOTAGE, RECYCLE: {@code count} = how many cards</li>
  *   <li>SMOKE: {@code count} = how many vehicles</li>
- *   <li>JAMMER: {@code power} = Fuel upkeep each turn while it is running</li>
+ *   <li>JAMMER: {@code power} = Fuel upkeep each turn while it is on, {@code count} = its HP</li>
  *   <li>CAMO: {@code power} = Fuel less to retreat</li>
  *   <li>RAPID_DEPLOY: {@code count} = how many vehicles
  * </ul>

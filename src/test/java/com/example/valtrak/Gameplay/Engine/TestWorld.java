@@ -82,8 +82,8 @@ public final class TestWorld {
         c.add(new ItemSpec(DRAW_3, "Total Mobilization", CardLevel.LEGENDARY, ItemEffect.DRAW, 0, 3, null));
         c.add(new ItemSpec(SMOKE_1, "Smoke Grenades", CardLevel.COMMON, ItemEffect.SMOKE, 0, 1, null));
         c.add(new ItemSpec(SMOKE_2, "Smoke Screen", CardLevel.RARE, ItemEffect.SMOKE, 0, 2, null));
-        c.add(new ItemSpec(JAMMER_2, "Portable Jammer", CardLevel.COMMON, ItemEffect.JAMMER, 2, 0, null));
-        c.add(new ItemSpec(JAMMER_1, "Wide-Band Jammer", CardLevel.RARE, ItemEffect.JAMMER, 1, 0, null));
+        c.add(new ItemSpec(JAMMER_2, "Portable Jammer", CardLevel.COMMON, ItemEffect.JAMMER, 2, 80, null));
+        c.add(new ItemSpec(JAMMER_1, "Wide-Band Jammer", CardLevel.RARE, ItemEffect.JAMMER, 1, 160, null));
         c.add(new ItemSpec(CAMO_1, "Camo Netting", CardLevel.COMMON, ItemEffect.CAMO, 1, 0, null));
         c.add(new ItemSpec(CAMO_3, "Thermal Camo", CardLevel.LEGENDARY, ItemEffect.CAMO, 3, 0, null));
         c.add(new ItemSpec(SABOTAGE_1, "Sabotage", CardLevel.COMMON, ItemEffect.SABOTAGE, 0, 1, null));

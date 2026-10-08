@@ -91,7 +91,7 @@ public final class EnumCardCatalog implements CardCatalog {
                 case SEARCH_SUPPORT -> new ItemSpec(id, n, l, ItemEffect.SEARCH, 0, power, SearchKind.SUPPORT);
                 case DRAW_CARDS -> new ItemSpec(id, n, l, ItemEffect.DRAW, 0, power, null);
                 case SMOKE_SCREEN -> new ItemSpec(id, n, l, ItemEffect.SMOKE, 0, power, null);
-                case JAMMER -> new ItemSpec(id, n, l, ItemEffect.JAMMER, power, 0, null);
+                case JAMMER -> new ItemSpec(id, n, l, ItemEffect.JAMMER, power, second, null);
                 case CAMOUFLAGE -> new ItemSpec(id, n, l, ItemEffect.CAMO, power, 0, null);
                 case SABOTAGE -> new ItemSpec(id, n, l, ItemEffect.SABOTAGE, 0, power, null);
                 case RECYCLE -> new ItemSpec(id, n, l, ItemEffect.RECYCLE, 0, power, null);

@@ -17,10 +17,6 @@ public class Vehicle {
     public long eraCardId;
     /** Card id of the Camouflage attached to this vehicle, or 0 for none. */
     public long camoCardId;
-    /** Card id of the Jammer attached to this vehicle, or 0 for none. */
-    public long jammerCardId;
-    /** True while the Jammer is running: it needs its vehicle face up, and it costs Fuel each turn. */
-    public boolean jammerOn;
     /** Under a Smoke Screen: can't be targeted and can't attack, until its owner's next turn starts. */
     public boolean smoked;
 
@@ -45,8 +41,6 @@ public class Vehicle {
         v.eraCardId = eraCardId;
         v.camoCardId = camoCardId;
         v.smoked = smoked;
-        v.jammerCardId = jammerCardId;
-        v.jammerOn = jammerOn;
         return v;
     }
 }

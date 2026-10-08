@@ -57,6 +57,15 @@ class ActionMapperTest {
     }
 
     @Test
+    void mapsSwitchingAJammer() {
+        assertThat(ActionMapper.map(new ActionRequest("JAMMER_ON", null, 4L, null, null, null, null, null, null)))
+                .isEqualTo(new Action.SetJammer(4L, true));
+        assertThat(ActionMapper.map(new ActionRequest("JAMMER_OFF", null, 4L, null, null, null, null, null, null)))
+                .isEqualTo(new Action.SetJammer(4L, false));
+        assertThatThrownBy(() -> ActionMapper.map(req("JAMMER_ON"))).isInstanceOf(ApiException.class).hasMessageContaining("groupId");
+    }
+
+    @Test
     void mapsAnAttackWithAmmoAndSlot() {
         var choice = new AttackChoiceRequest(1L, "ATTACK_2", "APFSDS_120MM", 2L);
         Action a = ActionMapper.map(new ActionRequest("ATTACK", null, 6L, null, null, null, null, null, List.of(choice)));

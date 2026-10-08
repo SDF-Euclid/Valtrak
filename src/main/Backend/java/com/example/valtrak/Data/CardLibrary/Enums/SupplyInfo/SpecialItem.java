@@ -14,7 +14,7 @@ import lombok.Getter;
  *   <li>SEARCH_*: primary = how many cards to take</li>
  *   <li>DRAW_CARDS, SABOTAGE, RECYCLE: primary = how many cards</li>
  *   <li>SMOKE_SCREEN, RAPID_DEPLOYMENT: primary = how many vehicles</li>
- *   <li>JAMMER: primary = Fuel upkeep each turn</li>
+ *   <li>JAMMER: primary = Fuel upkeep each turn while on, secondary = its HP</li>
  *   <li>CAMOUFLAGE: primary = Fuel less to retreat</li>
  * </ul>
  */
@@ -65,8 +65,8 @@ public enum SpecialItem implements SpecialItemInterface {
     SMOKE_GRENADES("Smoke Grenades", "Up to 1 of your vehicles can't be targeted until your next turn, and it can't attack in that time", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.SMOKE_SCREEN, 1.0, 0.0),
     SMOKE_SCREEN("Smoke Screen", "Up to 2 of your vehicles can't be targeted until your next turn, and they can't attack in that time", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.SMOKE_SCREEN, 2.0, 0.0),
     SMOKE_CURTAIN("Smoke Curtain", "Up to 3 of your vehicles can't be targeted until your next turn, and they can't attack in that time", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.SMOKE_SCREEN, 3.0, 0.0),
-    PORTABLE_JAMMER("Portable Jammer", "Attach to one of your vehicles. While it is face up, enemy reveal abilities can't target its group. Upkeep: 2 Fuel from the group's pool each turn (unpaid = off that turn). Flip it face down to switch off", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.JAMMER, 2.0, 0.0),
-    WIDE_BAND_JAMMER("Wide-Band Jammer", "Attach to one of your vehicles. While it is face up, enemy reveal abilities can't target its group. Upkeep: 1 Fuel from the group's pool each turn (unpaid = off that turn). Flip it face down to switch off", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.JAMMER, 1.0, 0.0),
+    PORTABLE_JAMMER("Portable Jammer", "Attach to one of your strike groups. While switched on (free to toggle), enemy reveal abilities can't target its vehicles. Upkeep: 2 Fuel per turn while on. While on it can be shot (80 HP); destroying it ends the jamming", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.JAMMER, 2.0, 80.0),
+    WIDE_BAND_JAMMER("Wide-Band Jammer", "Attach to one of your strike groups. While switched on (free to toggle), enemy reveal abilities can't target its vehicles. Upkeep: 1 Fuel per turn while on. While on it can be shot (160 HP); destroying it ends the jamming", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.JAMMER, 1.0, 160.0),
     CAMO_NETTING("Camouflage Netting", "Attach to one of your vehicles: retreating it costs 1 less Fuel", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.CAMOUFLAGE, 1.0, 0.0),
     DISRUPTIVE_CAMO("Disruptive Camo Pattern", "Attach to one of your vehicles: retreating it costs 2 less Fuel", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.CAMOUFLAGE, 2.0, 0.0),
     THERMAL_CAMO("Thermal Camouflage Suite", "Attach to one of your vehicles: retreating it costs 3 less Fuel", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.CAMOUFLAGE, 3.0, 0.0),

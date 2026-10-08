@@ -44,7 +44,7 @@ public final class GameViewBuilder {
         return new GroupView(g.id, g.formed, isViewer ? g.convoyMoved : 0,
                 (isViewer ? g.vehicles : hideOrder(g.vehicles)).stream().map(v -> vehicle(v, isViewer)).toList(),
                 g.pool.stream().map(GameViewBuilder::resource).toList(),
-                g.jammed());
+                jammer(g, isViewer));
     }
 
     /**
@@ -61,11 +61,16 @@ public final class GameViewBuilder {
     /** Your own vehicles are shown in full. An enemy vehicle is only shown in full while it is face up. */
     private static VehicleView vehicle(Vehicle v, boolean isViewer) {
         if (!isViewer && !v.faceUp) {
-            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null, null, null, null, null, v.smoked);
+            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null, null, null, v.smoked);
         }
         return new VehicleView(v.id, v.faceUp, v.cardId, v.hp, v.maxHp, v.breachStacks, v.stunned, v.suppressed, v.disabled, v.abilityUsed,
-                v.eraCardId == 0 ? null : v.eraCardId, v.camoCardId == 0 ? null : v.camoCardId,
-                v.jammerCardId == 0 ? null : v.jammerCardId, v.jammerCardId == 0 ? null : v.jammerOn, v.smoked);
+                v.eraCardId == 0 ? null : v.eraCardId, v.camoCardId == 0 ? null : v.camoCardId, v.smoked);
+    }
+
+    /** You see your own Jammer always; an opponent only sees one that is switched on. */
+    private static JammerView jammer(StrikeGroup g, boolean isViewer) {
+        if (g.jammerCardId == 0 || (!isViewer && !g.jammerOn)) return null;
+        return new JammerView(g.jammerId, g.jammerCardId, g.jammerHp, g.jammerMaxHp, g.jammerOn);
     }
 
     private static ResourceView resource(ResourceStack r) {

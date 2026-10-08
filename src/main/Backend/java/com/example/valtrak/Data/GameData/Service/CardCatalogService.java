@@ -77,7 +77,7 @@ public class CardCatalogService {
             case SEARCH_SUPPORT -> "Search: " + power + " support vehicle" + (power == 1 ? "" : "s");
             case DRAW_CARDS -> "Draw " + power + " card" + (power == 1 ? "" : "s");
             case SMOKE_SCREEN -> "Smoke: " + power + " vehicle" + (power == 1 ? "" : "s") + " untargetable";
-            case JAMMER -> "Attached: blocks enemy reveals while face up (" + power + " Fuel per turn)";
+            case JAMMER -> "Group Jammer: blocks enemy reveals while on (" + power + " Fuel per turn, " + second + " HP)";
             case CAMOUFLAGE -> "Attached: retreat costs " + power + " less Fuel";
             case SABOTAGE -> "Opponent discards up to " + power + " at random (1 per turn)";
             case RECYCLE -> "Recycle: " + power + " resource card" + (power == 1 ? "" : "s") + " from the discard pile";
