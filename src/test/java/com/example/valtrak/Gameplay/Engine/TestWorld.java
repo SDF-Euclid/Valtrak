@@ -1,0 +1,157 @@
+package com.example.valtrak.Gameplay.Engine;
+
+import com.example.valtrak.Data.CardLibrary.CardLevel;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.AttackSlot;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.SpecialEffect;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon;
+
+import java.util.List;
+
+/**
+ * A small hand-built card catalog and helpers to set up game situations directly,
+ * so each test only describes the situation it cares about.
+ */
+final class TestWorld {
+
+    // tanks
+    static final long TANK_COMMON = 1, TANK_UNCOMMON = 2, TANK_RARE = 3, TANK_RARE_MBT = 4,
+            TANK_EPIC = 5, TANK_LEGENDARY = 6, TANK_LEGENDARY_HEAVY = 7, TANK_COMMANDER = 8;
+    // other vehicles
+    static final long ANTI_AIR = 10, RECON = 11, SPECIALIST = 12, RESUPPLY = 13, AIR = 14;
+    // resources
+    static final long APFSDS_5 = 20, HEAT_5 = 21, NATO_10 = 22, FUEL_5 = 23, FUEL_1 = 24, FUEL_10 = 25,
+            SUPPLY_1 = 26, SUPPLY_3 = 27, REPAIR_25 = 28, REPAIR_FULL = 29;
+
+    final GameRules rules = GameRules.defaults();
+    final MapCardCatalog catalog = buildCatalog();
+    final GameEngine engine = new GameEngine(rules, catalog);
+    final GameState s = playingState();
+
+    // ── building the world ───────────────────────────────────────────────────
+
+    static MapCardCatalog buildCatalog() {
+        MapCardCatalog c = new MapCardCatalog();
+        c.add(tank(TANK_COMMON, "Light Common", CardLevel.COMMON, VehicleClass.LIGHT_TANK, 100, 40));
+        c.add(tank(TANK_UNCOMMON, "Light Uncommon", CardLevel.UNCOMMON, VehicleClass.LIGHT_TANK, 120, 45));
+        c.add(tank(TANK_RARE, "Medium Rare", CardLevel.RARE, VehicleClass.MEDIUM_TANK, 180, 70));
+        c.add(tank(TANK_RARE_MBT, "MBT Rare", CardLevel.RARE, VehicleClass.MAIN_BATTLE_TANK, 200, 85));
+        c.add(tank(TANK_EPIC, "MBT Epic", CardLevel.EPIC, VehicleClass.MAIN_BATTLE_TANK, 250, 90));
+        c.add(tank(TANK_LEGENDARY, "MBT Legendary", CardLevel.LEGENDARY, VehicleClass.MAIN_BATTLE_TANK, 300, 100));
+        c.add(tank(TANK_LEGENDARY_HEAVY, "Heavy Legendary", CardLevel.LEGENDARY, VehicleClass.HEAVY_TANK, 320, 110));
+        c.add(tank(TANK_COMMANDER, "MBT Commander", CardLevel.COMMANDER, VehicleClass.MAIN_BATTLE_TANK, 350, 120));
+        c.add(armed(ANTI_AIR, "Anti-Air", CardLevel.COMMON, VehicleClass.ANTI_AIR, 80, 30));
+        c.add(armed(RECON, "Recon", CardLevel.UNCOMMON, VehicleClass.RECON, 70, 25));
+        c.add(new VehicleSpec(SPECIALIST, "Specialist", CardLevel.UNCOMMON, VehicleClass.SPECIALIST, 60, 20, List.of()));
+        c.add(new VehicleSpec(RESUPPLY, "Resupply", CardLevel.RARE, VehicleClass.SUPPLY, 90, 30, List.of()));
+        c.add(armed(AIR, "Air", CardLevel.RARE, VehicleClass.CLOSE_AIR_SUPPORT, 90, 20));
+
+        c.add(new ResourceSpec(APFSDS_5, "5x Sabot", CardLevel.UNCOMMON, ResourceKind.AMMO, Ammunition.APFSDS_120MM, 5));
+        c.add(new ResourceSpec(HEAT_5, "5x HEAT", CardLevel.UNCOMMON, ResourceKind.AMMO, Ammunition.HEAT_120MM, 5));
+        c.add(new ResourceSpec(NATO_10, "10x .50", CardLevel.RARE, ResourceKind.AMMO, Ammunition.NATO_127x99MM, 10));
+        c.add(new ResourceSpec(FUEL_5, "5x Fuel", CardLevel.UNCOMMON, ResourceKind.FUEL, null, 5));
+        c.add(new ResourceSpec(FUEL_1, "1x Fuel", CardLevel.COMMON, ResourceKind.FUEL, null, 1));
+        c.add(new ResourceSpec(FUEL_10, "10x Fuel", CardLevel.RARE, ResourceKind.FUEL, null, 10));
+        c.add(new ResourceSpec(SUPPLY_1, "1x Supply", CardLevel.COMMON, ResourceKind.SUPPLY, null, 1));
+        c.add(new ResourceSpec(SUPPLY_3, "3x Supply", CardLevel.RARE, ResourceKind.SUPPLY, null, 3));
+        c.add(new ResourceSpec(REPAIR_25, "Repair 25", CardLevel.COMMON, ResourceKind.REPAIR, null, 25));
+        c.add(new ResourceSpec(REPAIR_FULL, "Full Repairs", CardLevel.LEGENDARY, ResourceKind.REPAIR, null, 999));
+        return c;
+    }
+
+    /** MG (ATTACK_1: 1 ammo, suppresses) and a cannon (ATTACK_2: 2 ammo, 1 fuel). */
+    private static VehicleSpec tank(long id, String name, CardLevel level, VehicleClass vc, int hp, int armor) {
+        return new VehicleSpec(id, name, level, vc, hp, armor, List.of(
+                new AttackSpec(AttackSlot.ATTACK_1, "MG", Weapon.BROWNING_50CAL, 15, 1, 0, SpecialEffect.SUPPRESSION),
+                new AttackSpec(AttackSlot.ATTACK_2, "Cannon", Weapon.SMOOTHBORE_CANNON_120MM, 40, 2, 1, SpecialEffect.NONE)));
+    }
+
+    private static VehicleSpec armed(long id, String name, CardLevel level, VehicleClass vc, int hp, int armor) {
+        return new VehicleSpec(id, name, level, vc, hp, armor, List.of(
+                new AttackSpec(AttackSlot.ATTACK_1, "MG", Weapon.BROWNING_50CAL, 15, 1, 0, SpecialEffect.NONE)));
+    }
+
+    private static GameState playingState() {
+        GameState s = new GameState();
+        s.phase = GameState.Phase.PLAYING;
+        s.activePlayer = 0;
+        s.firstPlayer = 0;
+        s.nextId = 1000;
+        for (int i = 0; i < 2; i++) {
+            PlayerState p = new PlayerState(i);
+            p.turnsTaken = 2;
+            p.designationsLeft = 1;
+            p.placedStartingTank = true;
+            s.players.add(p);
+        }
+        return s;
+    }
+
+    // ── situations ───────────────────────────────────────────────────────────
+
+    PlayerState p(int i) { return s.player(i); }
+
+    void hand(int player, long... cardIds) {
+        for (long id : cardIds) p(player).hand.add(id);
+    }
+
+    /** A new group of one: the tank, face up or down. */
+    StrikeGroup group(int player, long tankCardId, boolean faceUp) {
+        StrikeGroup g = new StrikeGroup(s.nextId++);
+        Vehicle v = vehicle(tankCardId);
+        v.faceUp = faceUp;
+        g.vehicles.add(v);
+        p(player).groups.add(g);
+        return g;
+    }
+
+    /** Adds a vehicle to a group and marks the group as formed. */
+    Vehicle add(StrikeGroup g, long cardId, boolean faceUp) {
+        Vehicle v = vehicle(cardId);
+        v.faceUp = faceUp;
+        g.vehicles.add(v);
+        g.formed = true;
+        return v;
+    }
+
+    ResourceStack pool(StrikeGroup g, long cardId) {
+        ResourceStack r = stack(cardId);
+        g.pool.add(r);
+        return r;
+    }
+
+    ResourceStack depot(int player, long cardId) {
+        ResourceStack r = stack(cardId);
+        p(player).depot.add(r);
+        return r;
+    }
+
+    Vehicle vehicle(long cardId) {
+        VehicleSpec spec = catalog.vehicle(cardId);
+        return new Vehicle(s.nextId++, cardId, spec.hp());
+    }
+
+    private ResourceStack stack(long cardId) {
+        ResourceSpec spec = catalog.resource(cardId);
+        return new ResourceStack(s.nextId++, cardId, spec.kind(), spec.ammunition(), spec.amount());
+    }
+
+    // ── doing things ─────────────────────────────────────────────────────────
+
+    ActionResult act(int player, Action action) {
+        return engine.apply(s, player, action);
+    }
+
+    static Action.Attack skirmish(StrikeGroup g, Vehicle attacker, AttackSlot slot, Ammunition ammo, Vehicle target) {
+        return new Action.Attack(g.id, List.of(new AttackChoice(attacker.id, slot, ammo, target.id)));
+    }
+
+    int fuelIn(StrikeGroup g) {
+        return g.pool.stream().filter(x -> x.kind == ResourceKind.FUEL).mapToInt(x -> x.remaining).sum();
+    }
+
+    int ammoIn(StrikeGroup g, Ammunition a) {
+        return g.pool.stream().filter(x -> x.kind == ResourceKind.AMMO && x.ammunition == a).mapToInt(x -> x.remaining).sum();
+    }
+}

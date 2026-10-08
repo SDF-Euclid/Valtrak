@@ -251,6 +251,13 @@ public class DeckBuilderScene {
         };
     }
 
+    private static boolean isTank(CardDto c) {
+        return isVehicle(c) && switch (String.valueOf(c.vehicleClass())) {
+            case "LIGHT_TANK", "MEDIUM_TANK", "HEAVY_TANK", "MAIN_BATTLE_TANK" -> true;
+            default -> false;
+        };
+    }
+
     private static boolean isVehicle(CardDto c) { return "VEHICLE".equals(c.category()); }
 
     private static int rarityOrder(CardDto c) {
@@ -573,11 +580,21 @@ public class DeckBuilderScene {
         deckCountLabel.setText(total + " / " + MAX_DECK + " cards");
         deckCountLabel.setTextFill(Color.web(total >= MAX_DECK ? ACCENT : TEXT));
 
-        boolean hasVehicle = deckCounts.keySet().stream()
-                .anyMatch(id -> cardsById.get(id) != null && isVehicle(cardsById.get(id)));
-        problemLabel.setText(total > 0 && !hasVehicle
-                ? "⚠ Add at least one vehicle to make this deck playable."
-                : total == 0 ? "" : "");
+        int tanks = 0;
+        for (Map.Entry<Long, Integer> e : deckCounts.entrySet()) {
+            CardDto card = cardsById.get(e.getKey());
+            if (card != null && isTank(card)) tanks += e.getValue();
+        }
+        List<String> problems = new ArrayList<>();
+        if (total < DeckRules.MIN_PLAYABLE_DECK_SIZE) {
+            problems.add("needs " + (DeckRules.MIN_PLAYABLE_DECK_SIZE - total) + " more card(s) (minimum "
+                    + DeckRules.MIN_PLAYABLE_DECK_SIZE + ")");
+        }
+        if (tanks < DeckRules.MIN_TANKS) {
+            problems.add("needs " + (DeckRules.MIN_TANKS - tanks) + " more tank(s) (minimum " + DeckRules.MIN_TANKS + ")");
+        }
+        problemLabel.setText(total == 0 || problems.isEmpty() ? ""
+                : "⚠ Not playable yet: " + String.join(", ", problems) + ".");
         deckStatus.setText(dirty ? "● unsaved changes" : currentDeckId != null ? "✓ saved" : "");
         deckStatus.setTextFill(Color.web(dirty ? ACCENT : Ui.OK));
         deleteBtn.setDisable(currentDeckId == null);

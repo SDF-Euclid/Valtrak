@@ -1,14 +1,14 @@
-# Valtrak Rulebook: DRAFT v0.8
+# Valtrak Rulebook: DRAFT v0.9
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
 
 ## 1. Goal
-Be the first player to take **[7]** Territory Chips. You take chips when you destroy an enemy strike group (see §9). Chips are never lost.
-Games with this target are long, so test **[5]** as well. You also lose if you must draw from an empty deck.
+Be the first player to take **[5]** Territory Chips. You take chips when you destroy an enemy strike group (see §9). Chips are never lost.
+You also lose if you must draw from an empty deck.
 
 ## 2. Decks
-- **[50–80]** cards, at most **3 copies** of any card.
+- **[60–100]** cards, at most **3 copies** of any card.
 - At least **[12]** tanks, so a starting hand almost always has one (assumed).
 
 ## 3. Card types
@@ -107,13 +107,13 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
 ## 9. Losing vehicles and Territory Chips
 - **A vehicle that is not the Leader is destroyed:** it goes to the discard pile, the group keeps going with one fewer attacker,
   and the pool is unchanged. **No chip.**
-- **The Leader is destroyed:** the strike group is destroyed. The attacker takes **1 Territory Chip**, plus **[1 bonus chip if the group had 4 or more vehicles]** (assumed; never more than 2 chips for one group). The group disbands:
+- **The Leader is destroyed:** the strike group is destroyed. The attacker takes **1 Territory Chip**, plus **1 bonus chip if the group had 4 or more vehicles** (so a group is worth 1 or 2 chips). The group disbands:
   - Its owner discards **[half, rounded up]** of the resource **cards** in the pool (the owner chooses which); the rest go to the Depot (assumed).
   - Surviving **tanks** become groups of one, face down.
   - Surviving **Specialist, anti-air, Resupply and any other non-tank vehicles**, with all cards attached to them,
-    **return to your hand**. They can't be played on the turn they return.
+    **return to your hand**. (This happens during your opponent's turn, so you can play them on your next turn.)
 - **A group of one** is its own Leader, so destroying it takes a chip and discards its whole pool.
-- Each chip raises the taker's group limit by 1 (§4). If disbanded survivors put you over your limit,
+- Every 2 chips raise the taker's group limit by 1 (§4). If disbanded survivors put you over your limit,
   you can't create new groups until you are back under it (assumed).
 
 ## 10. Hidden information
@@ -124,7 +124,7 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
 ---
 
 ## Open questions
-1. **Chips to win** (7 vs 5) and game length against the deck limits.
+1. Game length with 5 chips, once the simulator can measure it.
 2. **Group upside:** big groups give the opponent a bonus chip when destroyed, so groups need a clear upside
    (Combined Assault's several attacks, Leader bonuses later). Wait for playtests.
 3. Names for Skirmish and Combined Assault.

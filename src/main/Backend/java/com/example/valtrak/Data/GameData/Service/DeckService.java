@@ -105,11 +105,23 @@ public class DeckService {
         return new LinkedHashMap<>(requested);
     }
 
+    private static boolean isTank(String vehicleClass) {
+        return switch (vehicleClass) {
+            case "LIGHT_TANK", "MEDIUM_TANK", "HEAVY_TANK", "MAIN_BATTLE_TANK" -> true;
+            default -> false;
+        };
+    }
+
     private DeckDto toDto(Deck deck) {
         int total = deck.getCardCounts().values().stream().mapToInt(Integer::intValue).sum();
-        boolean hasVehicle = cards.findAllById(deck.getCardCounts().keySet()).stream()
-                .anyMatch(c -> c instanceof GroundVehicleCard);
-        boolean playable = total > 0 && total <= DeckRules.MAX_DECK_SIZE && hasVehicle;
+        int tanks = 0;
+        for (Card c : cards.findAllById(deck.getCardCounts().keySet())) {
+            if (c instanceof GroundVehicleCard v && v.getVehicleClass() != null && isTank(v.getVehicleClass().getClassName())) {
+                tanks += deck.getCardCounts().get(c.getId());
+            }
+        }
+        boolean playable = total >= DeckRules.MIN_PLAYABLE_DECK_SIZE && total <= DeckRules.MAX_DECK_SIZE
+                && tanks >= DeckRules.MIN_TANKS;
         return new DeckDto(deck.getId(), deck.getName(), new LinkedHashMap<>(deck.getCardCounts()),
                 total, playable, deck.getUpdatedAt());
     }

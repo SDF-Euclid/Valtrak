@@ -29,6 +29,7 @@ import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
+import com.example.valtrak.Gameplay.Engine.DamageMatchups;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -117,82 +118,20 @@ public class DataLoader implements CommandLineRunner {
      * Seeds the damage type matchup table which defines how each damage type
      * performs against each armor bracket.
      * Each matchup entry contains:
-     * - A damage modifier (e.g. KINETIC vs HEAVY = 1.3x)
+     * - A damage modifier (e.g. KINETIC vs HEAVY = 1.3x), defined in {@link DamageMatchups}
      * - An auto effect that triggers on hit (e.g. EXPLOSIVE vs UNARMORED = STUN)
      * These values drive the core combat damage formula:
      * finalDamage = max(1, round(baseDamage * modifier) - round(armor * 0.15))
      */
     private void loadDamageTypeMatchups() {
-        Map<DamageType, Map<ArmorBracket, Double>> modifiers = Map.of(
-                DamageType.KINETIC, Map.of(
-                        ArmorBracket.UNARMORED,   0.6,
-                        ArmorBracket.LIGHT,       0.8,
-                        ArmorBracket.MEDIUM,      1.0,
-                        ArmorBracket.HEAVY,       1.3,
-                        ArmorBracket.SUPER_HEAVY, 1.5
-                ),
-                DamageType.CHEMICAL, Map.of(
-                        ArmorBracket.UNARMORED,   1.0,
-                        ArmorBracket.LIGHT,       1.0,
-                        ArmorBracket.MEDIUM,      1.0,
-                        ArmorBracket.HEAVY,       1.0,
-                        ArmorBracket.SUPER_HEAVY, 1.0
-                ),
-                DamageType.EXPLOSIVE, Map.of(
-                        ArmorBracket.UNARMORED,   1.8,
-                        ArmorBracket.LIGHT,       1.4,
-                        ArmorBracket.MEDIUM,      0.7,
-                        ArmorBracket.HEAVY,       0.4,
-                        ArmorBracket.SUPER_HEAVY, 0.2
-                ),
-                DamageType.ELECTRIC, Map.of(
-                        ArmorBracket.UNARMORED,   0.0,
-                        ArmorBracket.LIGHT,       0.0,
-                        ArmorBracket.MEDIUM,      0.0,
-                        ArmorBracket.HEAVY,       0.0,
-                        ArmorBracket.SUPER_HEAVY, 0.0
-                )
-        );
-
-        Map<DamageType, Map<ArmorBracket, SpecialEffect>> autoEffects = Map.of(
-                DamageType.KINETIC, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.NONE,
-                        ArmorBracket.LIGHT,       SpecialEffect.NONE,
-                        ArmorBracket.MEDIUM,      SpecialEffect.NONE,
-                        ArmorBracket.HEAVY,       SpecialEffect.NONE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.NONE
-                ),
-                DamageType.CHEMICAL, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.NONE,
-                        ArmorBracket.LIGHT,       SpecialEffect.NONE,
-                        ArmorBracket.MEDIUM,      SpecialEffect.NONE,
-                        ArmorBracket.HEAVY,       SpecialEffect.NONE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.NONE
-                ),
-                DamageType.EXPLOSIVE, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.STUN,
-                        ArmorBracket.LIGHT,       SpecialEffect.STUN,
-                        ArmorBracket.MEDIUM,      SpecialEffect.NONE,
-                        ArmorBracket.HEAVY,       SpecialEffect.NONE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.NONE
-                ),
-                DamageType.ELECTRIC, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.DISABLE,
-                        ArmorBracket.LIGHT,       SpecialEffect.DISABLE,
-                        ArmorBracket.MEDIUM,      SpecialEffect.DISABLE,
-                        ArmorBracket.HEAVY,       SpecialEffect.DISABLE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.DISABLE
-                )
-        );
-
         for (DamageType dt : DamageType.values()) {
             for (ArmorBracket bracket : ArmorBracket.values()) {
                 if (damageTypeMatchupRepo.findByDamageTypeAndArmorBracket(dt, bracket).isEmpty()) {
                     damageTypeMatchupRepo.save(new DamageTypeMatchupEntity(
                             dt,
                             bracket,
-                            modifiers.get(dt).get(bracket),
-                            autoEffects.get(dt).get(bracket)
+                            DamageMatchups.modifier(dt, bracket),
+                            DamageMatchups.autoEffect(dt, bracket)
                     ));
                 }
             }
