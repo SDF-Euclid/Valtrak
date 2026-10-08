@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.5
+# Valtrak Rulebook: DRAFT v0.6
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -33,56 +33,66 @@ A strike group is up to **5** vehicles with these slots:
 - **A single tank is a strike group of one.** It needs no formation cost and counts toward your group limit.
   Only tanks can stand alone (assumed); every other vehicle joins an existing group.
 - Group limit: **3** at a time, **+1 for each chip you hold** (so at most +2, since the game ends at 3 chips).
-- A group is **hidden** (face down) or **revealed** (face up). Units can be added to or removed from a group **only while it is hidden**.
-  A removed unit must go to another hidden group with room, or back to your hand (assumed).
+- A group is **hidden** (face down) or **revealed** (face up). Vehicles can be added to or removed from a group **only while the whole group is hidden**.
+  A removed vehicle goes into another hidden group with room, or back to your hand (assumed).
+- **Moving a vehicle from one group to another** costs **Fuel** (see §7). Deploying from your hand into a hidden group is free.
 - **Forming a multi-vehicle group:** when a second vehicle first joins a lone tank, spend **Supply** from your Depot by the Leader's rarity:
   Common/Uncommon **[1]**, Rare/Epic **[2]**, Legendary/Commander **[3]** (assumed).
 
 ## 5. Resources
-Resources are counters. When you play a Resource card it goes to your discard pile and you gain its resources
-(a 5x Ammo crate = 5 Ammo of that type). You can place them in one of two places:
+Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Supply cards show an amount
+(a "5x" crate = 5) and keep track of how much is left on them. You can place a resource card in one of two places:
 
 | | **Depot** | **Strike group pool** |
 |---|---|---|
-| What goes there | Any resource | Ammo and Fuel only (assumed; Supply and Repair are only ever spent from the Depot) |
+| What goes there | Any resource card | Ammo and Fuel cards only (assumed) |
 | Safe? | **Yes.** Never lost when a group is destroyed. | **At risk.** Part is discarded if the Leader dies (§9). |
-| Used for | Forming groups (Supply), healing (Repair), and refilling a pool through a convoy | Attacks and retreats |
-| Spent when used? | Yes | **Yes.** Attacks use up the resources they need |
+| Used for | Forming groups (Supply), healing (Repair), refilling a pool through a convoy | Attacks and retreats |
 
-- Resources that are used up go into your **spent pile** (kept as counts, so a future Recycle card can return some of them).
-- A **lone tank's pool** is its own; when other vehicles join it, the pool becomes the group's pool (assumed).
-- **Designate:** play one Resource card per turn **[1]** (items can raise this). Put it in your Depot, or directly into a group's pool (unlimited amount, but at risk).
-- Depot contents are public (assumed); the number of resources in each pool is public too.
-- **No storage limit:** a pool and the Depot can hold any amount. The risk of losing half a pool when its Leader dies is the balance for that.
+- **Spending:** when something costs resources, spend amounts from the cards in that place. A card can be used partly
+  (a 5x crate that has paid 3 keeps 2). A card with nothing left goes to your discard pile. Attacks use up the resources they need.
+- **Repair cards** are used whole, from the Depot: pick one vehicle and restore up to the card's amount of HP, then discard the card.
+  "Full Repairs" restores the vehicle to full HP and removes BREACH, then is discarded.
+- **A lone tank's pool** is its own; when other vehicles join it, the pool becomes the group's pool (assumed).
+- **Designate:** place one resource card per turn **[1]** from your hand into your Depot, or directly into a group's pool
+  (items can raise the limit). Using Repair from the Depot does not count as designating.
+- Depot contents are public (assumed); the cards in each pool are public too.
+- **No storage limit** on the Depot or a pool: losing half of a pool when its Leader dies is the balance for that.
   There is also **no hand limit**; draw-more cards are kept in check by the risk of decking out (§1).
-- **Convoy (a Resupply vehicle in the group):** during your main step you may move resources from your Depot into the group's pool,
-  up to the Resupply vehicle's **capacity** per turn (a number on its card; assumed **[Common 3, Rare 6, Legendary 10]**).
-  Without a convoy, resources can't move from the Depot into a pool. Any resources beyond the capacity must already be in the pool.
-  Example: an attack needs 9 Ammo and the convoy's capacity is 5, so at least 4 Ammo must already be in the pool.
-- **Repair:** spend any amount from your Depot to restore that much HP to one vehicle (assumed).
+- **Convoy (a Resupply vehicle in the group):** during your main step you may move resource cards from your Depot into the group's pool,
+  up to the Resupply vehicle's **capacity** per turn, counted in cards (a number on its card; assumed **[Common 1, Rare 2, Legendary 3]**).
+  Without a convoy, cards can't move from the Depot into a pool. Everything beyond the capacity must already be in the pool.
+  Example: an attack needs 9 Ammo and the convoy can move one card per turn: move a 5x crate in, and have 4 more already in the pool.
+- The discard pile is where used and lost resource cards go. A future Recycle card can bring some back from it.
 
 ## 6. Setup
 1. Shuffle, draw **7**. If your hand has no tank, you **mulligan**: shuffle back and draw 7 again.
    For each mulligan you take, your opponent draws **1 extra card** (up to **3** extra cards total).
 2. Each player puts one tank from hand onto the field **face down** (a group of one).
-3. A coin flip decides who goes first. Nobody can attack on their own first turn.
+3. A coin flip decides who goes first. **The first player can't attack on their first turn; the second player can.**
+   (Everything starts face down, so a first-turn attack needs a target that has been revealed.)
 
 ## 7. Your turn
 1. **Draw 1 card** (items or field conditions can add more). The first player also draws on turn 1.
 2. **Main step.** Do any of these in any order, as often as the rules allow:
    - **Designate** a Resource card into your Depot or a group's pool, and use a **convoy** to refill a pool (§5).
    - **Deploy** a vehicle from hand, face down: as a lone tank, or into a hidden group with a free slot. No resource cost.
-   - **Form** a strike group (§4), **organize** hidden groups (§4), **heal** with Repair (§5).
+   - **Form** a strike group (§4), **organize** hidden groups (§4), **heal** with a Repair card (§5).
    - **Reveal** a group: its Leader and Line vehicles turn face up. Free. Revealed vehicles can attack and be attacked.
    - **Reveal your Specialist** (separate, free): it only does its job while revealed, but a revealed Specialist can be attacked.
-   - **Retreat** a vehicle: spend **[1 Fuel]** from its group's pool (refill it with the convoy first if needed); it leaves the group and goes back to hidden.
+   - **Retreat** a vehicle: spend Fuel from its group's pool by its rarity (Common/Uncommon **[1]**, Rare/Epic **[2]**, Legendary/Commander **[3]**).
+     It turns face down but **stays in its group**; it can't attack or be attacked until you reveal it again (free).
+   - **Retreat a Leader:** costs the most, **[double]** its rarity cost, and the **whole group** turns face down.
+     A fully hidden group can then be reorganized this turn, with moves between groups costing **no** Fuel.
+   - **Move a vehicle** between two hidden groups: spend Fuel by its rarity from the group it leaves (§4).
    - **Play item cards**.
-3. **Attack, or pass.** Attacking **ends your turn** immediately. If you can't or won't attack, choose **End Turn**.
+3. **Attack, or pass.** Attacking **ends your turn** immediately, so an attacking group stays revealed through your opponent's turn.
+   If you can't or won't attack, choose **End Turn**.
 
 ## 8. Attacking
 - Choose one **revealed** strike group as the attacker.
 - Choose which of its vehicles attack (at least one, assumed) and which attack each uses. Add up the requirements of all chosen attacks:
-  the group's pool must contain at least that much of each Ammo type and of Fuel at that moment. **That amount is spent.**
+  the group's pool must contain at least that much of each Ammo type and of Fuel at that moment. **That amount is spent** from the cards in the pool.
   Anything extra stays in the pool. Use the convoy in your main step, before attacking, to move resources in from your Depot.
 - The Resupply vehicle never attacks. A Specialist attacks only if its card lists attacks.
 - Each attack targets one **revealed** enemy vehicle. Damage uses the existing damage-type, armor and special-effect rules.
@@ -93,8 +103,8 @@ Resources are counters. When you play a Resource card it goes to your discard pi
 ## 9. Losing vehicles and Territory Chips
 - **A vehicle that is not the Leader is destroyed:** it goes to the discard pile, the group keeps going with one fewer attacker,
   and the pool is unchanged. **No chip.**
-- **The Leader is destroyed:** the strike group is destroyed. The attacker takes **1 Territory Chip**, and the group disbands:
-  - Its owner discards **[half, rounded up]** of each resource type in the pool; the rest goes to the Depot (assumed).
+- **The Leader is destroyed:** the strike group is destroyed. The attacker takes **1 Territory Chip**, plus **[1 bonus chip if the group had 4 or more vehicles]** (assumed; never more than 2 chips for one group). The group disbands:
+  - Its owner discards **[half, rounded up]** of the resource **cards** in the pool (the owner chooses which); the rest go to the Depot (assumed).
   - Surviving **tanks** become groups of one, face down.
   - Surviving **Specialist, anti-air, Resupply and any other non-tank vehicles**, with all cards attached to them,
     **return to your hand**. They can't be played on the turn they return.
@@ -110,12 +120,14 @@ Resources are counters. When you play a Resource card it goes to your discard pi
 ---
 
 ## Open questions
-1. **Retreat:** does a retreated vehicle stay in its group (face down, can't attack or be attacked), and what happens if the Leader retreats?
-2. **Stalling:** what forces a hidden player to reveal? (Recon vehicles, a stalemate rule.)
-3. **Chip value:** should destroying a group of five be worth more than destroying a lone tank?
-4. **Repair counters:** how to handle "Full Repairs" (999 HP) when Repair is stored in the Depot.
-5. Convoy capacity numbers (and whether to keep the cap), second-player compensation, Resupply abilities, special items, and air units.
-6. All bracketed numbers: need playtesting (a bot-vs-bot simulator can help).
+1. **Group upside:** big groups give the opponent a bonus chip when destroyed, so groups need a clear upside beyond making several attacks per turn
+   (for example Leader bonuses). Wait for playtests.
+2. **Stalling:** Recon and UAV vehicles can force a reveal. Is that enough, or do you also want a stalemate rule?
+3. Fuel costs for retreating and moving vehicles, convoy capacity (and whether to keep the cap), group-size chip bonus.
+4. Resupply abilities beyond moving cards, special item rules, and air units.
+5. All bracketed numbers: need playtesting (a bot-vs-bot simulator can help).
 
 ## Planned cards (wish list)
-- Hand-disruption cards (shrink the opponent's hand), recycle cards (return part of the spent pile), capture/seize cards.
+- **UAV group (Specialist):** can force a hidden enemy vehicle or group face up. Whether this is an ability or an attack is undecided.
+  (An ability can be used before attacking the same turn; an attack would use up the turn.)
+- Hand-disruption cards (shrink the opponent's hand), Recycle cards (return resource cards from your discard pile), capture/seize cards.
