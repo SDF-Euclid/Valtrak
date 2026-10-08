@@ -24,6 +24,10 @@ public final class GameEngine {
         this.catalog = catalog;
     }
 
+    public CardCatalog catalog() {
+        return catalog;
+    }
+
     public GameRules rules() {
         return rules;
     }
@@ -152,7 +156,7 @@ public final class GameEngine {
             case Attack a -> attack(s, me, opp, a, r);
             case EndTurn a -> {
                 r.say("Player " + (player + 1) + " ends their turn.");
-                endTurn(s, r);
+                endTurn(s, r, false);
             }
         }
         return r;
@@ -407,14 +411,15 @@ public final class GameEngine {
             }
             DamageCalculator.Result dmg = DamageCalculator.calculate(p.attack.baseDamage(), p.attack.effect(),
                     p.ammo, catalog.vehicle(p.target.cardId).armor(), p.target.breachStacks);
-            p.target.hp -= dmg.damage();
+            int dealt = rules.damagePercent == 100 ? dmg.damage() : Math.max(1, Math.round(dmg.damage() * rules.damagePercent / 100f));
+            p.target.hp -= dealt;
             applyEffect(p.target, dmg.effect());
-            r.say(p.spec.name() + " hits " + catalog.vehicle(p.target.cardId).name() + " for " + dmg.damage()
+            r.say(p.spec.name() + " hits " + catalog.vehicle(p.target.cardId).name() + " for " + dealt
                     + (dmg.effect() != SpecialEffect.NONE ? " (" + dmg.effect() + ")" : "") + ".");
             if (p.target.hp <= 0) destroy(s, opp, me, p.target, r);
             if (s.phase == GameState.Phase.FINISHED) return;
         }
-        endTurn(s, r);
+        endTurn(s, r, true);
     }
 
     private static void applyEffect(Vehicle target, SpecialEffect effect) {
@@ -476,7 +481,8 @@ public final class GameEngine {
 
     // ── Turn flow ────────────────────────────────────────────────────────────
 
-    private void endTurn(GameState s, ActionResult r) {
+    private void endTurn(GameState s, ActionResult r, boolean attacked) {
+        s.passesInARow = attacked ? 0 : s.passesInARow + 1;
         PlayerState ending = s.player(s.activePlayer);
         for (StrikeGroup g : ending.groups) {
             for (Vehicle v : g.vehicles) {
@@ -484,6 +490,15 @@ public final class GameEngine {
                 v.suppressed = false;
                 v.disabled = false;
             }
+        }
+        if (rules.stalemateRounds > 0 && s.passesInARow >= 2 * rules.stalemateRounds) {
+            s.passesInARow = 0;
+            for (PlayerState p : s.players) {
+                for (StrikeGroup g : p.groups) {
+                    for (Vehicle v : g.vehicles) if (!catalog.vehicle(v.cardId).isResupply()) v.faceUp = true;
+                }
+            }
+            r.say("Stalemate: every vehicle is revealed.");
         }
         s.activePlayer = 1 - s.activePlayer;
         startTurn(s, r);

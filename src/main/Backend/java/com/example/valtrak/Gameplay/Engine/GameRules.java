@@ -31,6 +31,13 @@ public class GameRules {
     public int bonusChipMinVehicles = 4;
     public int bonusChips = 1;
 
+    // optional experiment (0 = off, which is the rulebook): after this many rounds in a row where neither player
+    // attacks, every vehicle except Resupply vehicles is turned face up
+    public int stalemateRounds = 0;
+
+    // optional experiment (100 = the numbers on the cards): scales every attack's damage
+    public int damagePercent = 100;
+
     // resources
     public int designationsPerTurn = 1;
     public int fullRepairThreshold = 999;

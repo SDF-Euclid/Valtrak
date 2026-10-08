@@ -26,6 +26,10 @@ List<Action> options = engine.legalActions(state, player);          // everythin
 - The game screen, and pushing updates to the other player.
 - The old `CombatService` (and its tests) are no longer used by the game; `DamageCalculator` replaces it.
 
+## Experiment rules (off by default)
+`GameRules.stalemateRounds` (reveal everything after N passive rounds) and `GameRules.damagePercent` exist so the simulator
+can measure candidate changes. With the default values the engine plays exactly the rulebook. See `docs/SIMULATION.md`.
+
 ## Choices the engine makes where the rulebook is silent
 - Resources are spent smallest card first, so big crates are kept for later.
 - When a Leader dies, the pool cards the owner loses are the ones with the least left on them.

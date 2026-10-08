@@ -16,6 +16,8 @@ public class GameState {
     public String endReason;
     public long nextId = 1;
     public int turnCount;
+    /** Turns in a row that ended without an attack (used by the optional stalemate rule). */
+    public int passesInARow;
 
     public PlayerState player(int index) {
         return players.get(index);
@@ -31,6 +33,7 @@ public class GameState {
         s.endReason = endReason;
         s.nextId = nextId;
         s.turnCount = turnCount;
+        s.passesInARow = passesInARow;
         return s;
     }
 }
