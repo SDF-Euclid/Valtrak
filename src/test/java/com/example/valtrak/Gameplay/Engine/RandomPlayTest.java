@@ -81,6 +81,13 @@ class RandomPlayTest {
                 assertThat(g.vehicles).as("a group is never empty" + where).isNotEmpty();
                 assertThat(g.vehicles.size()).as("group size" + where).isLessThanOrEqualTo(w.rules.maxGroupSize);
                 assertThat(((VehicleSpec) w.catalog.find(g.leader().cardId)).isTank()).as("leaders are tanks" + where).isTrue();
+                int leaderLevel = ((VehicleSpec) w.catalog.find(g.leader().cardId)).level().ordinal();
+                for (Vehicle v : g.vehicles) {
+                    VehicleSpec spec = (VehicleSpec) w.catalog.find(v.cardId);
+                    if (spec.isTank()) {
+                        assertThat(spec.level().ordinal()).as("the Leader is the highest-rarity tank" + where).isLessThanOrEqualTo(leaderLevel);
+                    }
+                }
                 int specialists = 0, resupply = 0, line = 0;
                 for (int i = 1; i < g.vehicles.size(); i++) {
                     VehicleSpec spec = (VehicleSpec) w.catalog.find(g.vehicles.get(i).cardId);

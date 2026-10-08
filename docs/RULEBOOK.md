@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.10
+# Valtrak Rulebook: DRAFT v0.11
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -23,7 +23,7 @@ A strike group is up to **5** vehicles with these slots:
 
 | Slot | Count | Allowed vehicles |
 |---|---|---|
-| Leader | exactly 1 | a tank: Light, Medium, Heavy or Main Battle Tank |
+| Leader | exactly 1 | the **highest-rarity tank** in the group (Light, Medium, Heavy or Main Battle Tank). On a tie, the tank that has been in the group longest leads |
 | Line | up to 2 | any vehicle that is **not** a Specialist and **not** a Resupply vehicle |
 | Specialist | up to 1 | Specialist class vehicle |
 | Resupply | up to 1 | Supply class vehicle (the convoy, see §5) |
@@ -34,10 +34,11 @@ A strike group is up to **5** vehicles with these slots:
 - **Facing:** every vehicle is **face down** (hidden) or **face up** (revealed). Face-down vehicles can't attack or be attacked.
   A group is "revealed" when its attacking vehicles are face up. New vehicles are played face down.
 - **Leaders can't leave:** a Leader stays in the group it leads for as long as it lives. Groups never merge.
+  When a better tank joins, it becomes the Leader and the old Leader becomes an ordinary Line tank (which can then be moved).
 - **Moving a vehicle** to another group (or, for a tank, out to lead a new group of one if you are under your limit) costs **Fuel**
   by its rarity, taken from the pool of the group it leaves (§7). This costs the same whether the vehicle is face up or face down.
   Playing a vehicle from your hand into a group is free; vehicles can't go back to your hand voluntarily (assumed).
-- **Forming a multi-vehicle group:** when a second vehicle first joins a lone tank, spend **Supply** from your Depot by the Leader's rarity:
+- **Forming a multi-vehicle group:** when a second vehicle first joins a lone tank, spend **Supply** from your Depot by the rarity of the Leader the group will have (so adding a Legendary tank to a Common tank costs the Legendary price):
   Common/Uncommon **[1]**, Rare/Epic **[2]**, Legendary/Commander **[3]** (assumed).
 
 ## 5. Resources

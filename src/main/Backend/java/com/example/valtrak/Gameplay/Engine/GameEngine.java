@@ -214,12 +214,13 @@ public final class GameEngine {
         }
         StrikeGroup g = group(me, a.groupId());
         requireRoom(g, spec);
-        int cost = formationCost(g);
+        int cost = formationCost(g, spec);
         requireSupply(me, cost);
         me.hand.remove(Long.valueOf(a.cardId()));
         spend(me, me.depot, ResourceKind.SUPPLY, null, cost);
         g.vehicles.add(newVehicle(s, spec));
         if (g.vehicles.size() >= 2) g.formed = true;
+        electLeader(g);
         r.say("Player " + (me.index + 1) + " deploys a vehicle into a strike group" + (cost > 0 ? " (formation cost " + cost + " Supply)." : "."));
     }
 
@@ -323,7 +324,7 @@ public final class GameEngine {
         }
         int fuel = rules.moveFuel(spec.level());
         requireFuel(loc.group, fuel);
-        int supply = dest == null ? 0 : formationCost(dest);
+        int supply = dest == null ? 0 : formationCost(dest, spec);
         requireSupply(me, supply);
 
         spend(me, loc.group.pool, ResourceKind.FUEL, null, fuel);
@@ -336,6 +337,7 @@ public final class GameEngine {
         } else {
             dest.vehicles.add(loc.vehicle);
             if (dest.vehicles.size() >= 2) dest.formed = true;
+            electLeader(dest);
         }
         r.say("A vehicle moves to another strike group (" + fuel + " Fuel).");
     }
@@ -687,10 +689,32 @@ public final class GameEngine {
         }
     }
 
-    /** Supply needed to turn a lone tank into a multi-vehicle group (0 once it has been formed). */
-    private int formationCost(StrikeGroup g) {
+    /**
+     * Supply needed to turn a lone tank into a multi-vehicle group (0 once it has been formed). It is based on the
+     * Leader the group will have, so adding a better tank costs more than adding a worse one.
+     */
+    private int formationCost(StrikeGroup g, VehicleSpec joining) {
         if (g.formed || g.vehicles.size() != 1) return 0;
-        return rules.formationSupply(catalog.vehicle(g.leader().cardId).level());
+        com.example.valtrak.Data.CardLibrary.CardLevel level = catalog.vehicle(g.leader().cardId).level();
+        if (joining.isTank() && joining.level().compareTo(level) > 0) level = joining.level();
+        return rules.formationSupply(level);
+    }
+
+    /**
+     * The Leader is the highest-rarity tank in the group; on a tie, the one that has been in the group longest
+     * (it stays first in the list). Moves that tank to the front.
+     */
+    private void electLeader(StrikeGroup g) {
+        int best = 0;
+        VehicleSpec bestSpec = catalog.vehicle(g.vehicles.get(0).cardId);
+        for (int i = 1; i < g.vehicles.size(); i++) {
+            VehicleSpec spec = catalog.vehicle(g.vehicles.get(i).cardId);
+            if (spec.isTank() && spec.level().compareTo(bestSpec.level()) > 0) {
+                best = i;
+                bestSpec = spec;
+            }
+        }
+        if (best != 0) g.vehicles.add(0, g.vehicles.remove(best));
     }
 
     private void requireSupply(PlayerState me, int amount) {
