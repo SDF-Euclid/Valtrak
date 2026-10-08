@@ -51,7 +51,7 @@ public enum RussianVehicles implements GroundVehicleCardInterface {
             List.of(
                     new VehicleAttackDefinition("Coax MG", AttackSlot.ATTACK_1, Weapon.PKT_762MM, 12, 1, 0, SpecialEffect.SUPPRESSION),
                     new VehicleAttackDefinition("Cannon fire", AttackSlot.ATTACK_2, Weapon.SMOOTHBORE_CANNON_125MM, 50, 2, 0, SpecialEffect.NONE),
-                    new VehicleAttackDefinition("Sabo barrage", AttackSlot.ATTACK_3, Weapon.SMOOTHBORE_CANNON_125MM, 85, 3, 1, SpecialEffect.PIERCE)
+                    new VehicleAttackDefinition("Sabot barrage", AttackSlot.ATTACK_3, Weapon.SMOOTHBORE_CANNON_125MM, 85, 3, 1, SpecialEffect.PIERCE)
             )
     );
     /*===========================================================*/

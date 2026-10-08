@@ -11,7 +11,7 @@ public enum Weapon {
 
     /*==================== SMOOTHBORE CANNONS ====================*/
 
-    SMOOTHBORE_CANNON_120MM(List.of(Ammunition.APFSDS_120MM, Ammunition.HEAT_120MM)),
+    SMOOTHBORE_CANNON_120MM(List.of(Ammunition.APFSDS_120MM, Ammunition.HEAT_120MM, Ammunition.HE_120MM)),
     SMOOTHBORE_CANNON_125MM(List.of(Ammunition.APFSDS_125MM, Ammunition.HEAT_125MM)),
 
     /*============================================================*/

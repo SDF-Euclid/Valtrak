@@ -33,7 +33,7 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
             45, //Review
             175,
             List.of(
-                    new VehicleAttackDefinition("Autocannon", AttackSlot.ATTACK_1, Weapon.BROWNING_50CAL, 20, 1, 0, SpecialEffect.SUPPRESSION),
+                    new VehicleAttackDefinition("Autocannon", AttackSlot.ATTACK_1, Weapon.BUSHMASTER_25MM, 20, 1, 0, SpecialEffect.SUPPRESSION),
                     new VehicleAttackDefinition("TOW missile", AttackSlot.ATTACK_2, Weapon.TOW_ATGM, 55, 2, 1, SpecialEffect.NONE),
                     new VehicleAttackDefinition("Missile Barrage", AttackSlot.ATTACK_3, Weapon.TOW_ATGM, 85, 3, 2, SpecialEffect.DISABLE)
             )
@@ -59,7 +59,7 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
 
     M60_PATTON("M60 Patton",
             "United States",
-            "A older medium tank.",
+            "An older medium tank.",
             CardLevel.RARE,
             VehicleType.GROUND,
             VehicleClass.MEDIUM_TANK,

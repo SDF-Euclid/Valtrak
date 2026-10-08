@@ -34,8 +34,8 @@ public final class EnumCardCatalog implements CardCatalog {
     }
 
     /**
-     * @param fillMissingAmmo add a synthetic "5x" crate for every ammunition type that has no card yet (the .50 cal,
-     *                        105mm, TOW and 40mm HE have none). Only for simulations: it lets every tank fire.
+     * @param fillMissingAmmo add a synthetic "5x" crate for every ammunition type that has no card. Every type has cards
+     *                        today, so this adds nothing; it is kept for trying out new weapons before their cards exist.
      */
     public EnumCardCatalog(boolean fillMissingAmmo) {
         long id = 1;

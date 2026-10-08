@@ -4,7 +4,7 @@ package com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo;
 public enum SpecialItemEffect {
     /** Attached to a vehicle: it takes less CHEMICAL damage until it is destroyed. */
     ERA_PROTECTION,
-    /** True damage to enemy vehicles. */
+    /** Damage to enemy vehicles, worked out with the armor rules (see GameRules.artilleryDamageType). */
     ARTILLERY_STRIKE,
     /** Look through your deck for resource cards. */
     SEARCH_RESOURCES,

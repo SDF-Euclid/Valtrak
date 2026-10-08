@@ -39,7 +39,7 @@ public enum ReconVehicles implements GroundVehicleCardInterface {
             new VehicleAbilityDefinition(AbilityType.REVEAL_ENEMY, 1, 1)),
 
     FENNEK("Fennek", "Germany",
-            "A quiet, fast reconnaissance vehicle with a masts-mounted sensor suite.",
+            "A quiet, fast reconnaissance vehicle with a mast-mounted sensor suite.",
             CardLevel.RARE, VehicleType.GROUND, VehicleClass.RECON, 25, 80,
             List.of(new VehicleAttackDefinition("MG Fire", AttackSlot.ATTACK_1, Weapon.MG3_762MM, 12, 1, 0, SpecialEffect.SUPPRESSION)),
             new VehicleAbilityDefinition(AbilityType.REVEAL_ENEMY, 2, 1));

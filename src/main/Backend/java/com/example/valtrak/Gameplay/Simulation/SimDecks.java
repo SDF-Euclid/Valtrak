@@ -25,54 +25,67 @@ public final class SimDecks {
         return standard(catalog, all, size, rng, scouts, 0);
     }
 
-    /** @param items copies of each item card (ERA, Artillery, Search, Draw) to include (0 = none) */
+    /** Item effects GreedyBot knows how to play; the others would only clog its hand. */
+    private static final java.util.Set<ItemEffect> BOT_ITEMS = java.util.EnumSet.of(ItemEffect.ERA, ItemEffect.ARTILLERY,
+            ItemEffect.SEARCH, ItemEffect.DRAW, ItemEffect.SABOTAGE, ItemEffect.RECYCLE, ItemEffect.RAPID_DEPLOY);
+
+    /**
+     * @param items copies (up to 3) of each item card the bots can play, using at most a quarter of the deck. They replace filler
+     *              Ammo, never the Ammo each weapon needs.
+     */
     public static List<Long> standard(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts, int items) {
         List<Long> itemCards = new ArrayList<>();
-        for (CardSpec spec : all) if (spec instanceof ItemSpec) addCopies(itemCards, spec.cardId(), items);
-        while (itemCards.size() > size / 2) itemCards.remove(itemCards.size() - 1);   // never more than half a deck
-        // item cards replace some of the usual cards (mostly extra Ammo), so they don't change how many cards a deck has
-        List<Long> deck = new ArrayList<>(standardWithoutItems(catalog, all, size - itemCards.size(), rng, scouts));
+        for (CardSpec spec : all) {
+            if (spec instanceof ItemSpec i && BOT_ITEMS.contains(i.effect())) addCopies(itemCards, spec.cardId(), Math.min(3, items));
+        }
+        while (itemCards.size() > size / 4) itemCards.remove(itemCards.size() - 1);
+        List<Long> deck = new ArrayList<>(standardWithoutItems(catalog, all, size - itemCards.size(), rng, Math.min(3, scouts)));
         deck.addAll(itemCards);
         return deck;
     }
 
+    /**
+     * In order of importance, so a small deck loses the least important cards: tanks, Ammo for every weapon, Fuel, Supply,
+     * Repair, UAV/Recon vehicles, then more Ammo up to the size.
+     */
     private static List<Long> standardWithoutItems(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts) {
-        List<Long> deck = new ArrayList<>();
+        List<Long> tanks = new ArrayList<>(), fuel = new ArrayList<>(), supply = new ArrayList<>(), repair = new ArrayList<>(), scoutCards = new ArrayList<>();
         List<ResourceSpec> ammo = new ArrayList<>();
         java.util.Set<com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon> weapons =
                 java.util.EnumSet.noneOf(com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon.class);
         for (CardSpec spec : all) {
             if (spec instanceof VehicleSpec v && v.isTank()) {
-                addCopies(deck, spec.cardId(), 3);
+                addCopies(tanks, spec.cardId(), 3);
                 v.attacks().forEach(a -> weapons.add(a.weapon()));
             } else if (spec instanceof VehicleSpec v && v.ability() != null) {
-                addCopies(deck, spec.cardId(), scouts);       // UAV teams and Recon vehicles
-                v.attacks().forEach(a -> weapons.add(a.weapon()));
+                addCopies(scoutCards, spec.cardId(), scouts);       // UAV teams and Recon vehicles
+                if (scouts > 0) v.attacks().forEach(a -> weapons.add(a.weapon()));
             } else if (spec instanceof ResourceSpec r) {
                 switch (r.kind()) {
                     case AMMO -> { if (r.amount() == 5 || r.amount() == 10) ammo.add(r); }
-                    case FUEL -> { if (r.amount() == 5 || r.amount() == 10) addCopies(deck, r.cardId(), 3); }
-                    case SUPPLY -> { if (r.amount() <= 3) addCopies(deck, r.cardId(), 3); }
-                    case REPAIR -> { if (r.amount() <= 75) addCopies(deck, r.cardId(), 3); }
+                    case FUEL -> { if (r.amount() == 5 || r.amount() == 10) addCopies(fuel, r.cardId(), 3); }
+                    case SUPPLY -> { if (r.amount() <= 3) addCopies(supply, r.cardId(), 3); }
+                    case REPAIR -> { if (r.amount() <= 75) addCopies(repair, r.cardId(), 2); }
                 }
             }
         }
         Collections.shuffle(ammo, rng);
-        // first, ammo for every weapon
-        for (var weapon : weapons) {
+        List<Long> deck = new ArrayList<>(tanks);
+        for (var weapon : weapons) {                                   // Ammo for every weapon, so every attack can be paid for
             ammo.stream().filter(r -> weapon.getCompatibleAmmunition().contains(r.ammunition())).findFirst()
-                    .ifPresent(r -> {
-                        if (Collections.frequency(deck, r.cardId()) == 0 && deck.size() < size) addCopies(deck, r.cardId(), Math.min(2, size - deck.size()));
-                    });
+                    .ifPresent(r -> { if (!deck.contains(r.cardId())) addCopies(deck, r.cardId(), 2); });
         }
-        // then fill up with more ammo
-        for (int pass = 0; deck.size() < size && pass < 10; pass++) {
+        deck.addAll(fuel);
+        deck.addAll(supply);
+        deck.addAll(repair);
+        deck.addAll(scoutCards);
+        for (int pass = 0; deck.size() < size && pass < 10; pass++) {  // then more Ammo
             for (ResourceSpec r : ammo) {
                 if (deck.size() >= size) break;
                 if (Collections.frequency(deck, r.cardId()) < 3) deck.add(r.cardId());
             }
         }
-        while (deck.size() > size) deck.remove(deck.size() - 1);     // many scouts in a small deck: drop the last cards
+        while (deck.size() > size) deck.remove(deck.size() - 1);     // a small deck: drop the least important cards
         return deck;
     }
 
