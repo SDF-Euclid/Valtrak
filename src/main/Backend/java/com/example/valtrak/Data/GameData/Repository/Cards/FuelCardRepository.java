@@ -7,5 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FuelCardRepository extends JpaRepository<FuelCard, Long> {
 
+    java.util.Optional<FuelCard> findByName(String name);
+
     boolean existsByName(String name);
 }

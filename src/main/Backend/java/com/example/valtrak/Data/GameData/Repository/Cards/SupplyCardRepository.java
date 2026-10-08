@@ -7,5 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SupplyCardRepository extends JpaRepository<SupplyCard, Long> {
 
+    java.util.Optional<SupplyCard> findByName(String name);
+
     boolean existsByName(String name);
 }

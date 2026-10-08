@@ -30,6 +30,8 @@ import com.example.valtrak.Data.GameData.Repository.Cards.RepairCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.SupplyCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.*;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Items.ItemCardInterface;
+import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
 import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
@@ -44,6 +46,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Bootstraps the Valtrak database with all static game data on application startup.
@@ -253,11 +256,7 @@ public class DataLoader implements CommandLineRunner {
             var existing = vehicleRepo.findByName(vehicle.getVehicleName());
 
             if (existing.isPresent()) {
-                GroundVehicleCard card = existing.get();
-                if (card.getVehicleHP() == null) {
-                    card.setVehicleHP(vehicle.getVehicleHP());
-                    vehicleRepo.save(card);
-                }
+                syncVehicle(existing.get(), vehicle);
                 continue;
             }
 
@@ -308,7 +307,15 @@ public class DataLoader implements CommandLineRunner {
      */
     private void loadAmmunitionCards(AmmunitionItemInterface[] crates) {
         for (AmmunitionItemInterface crate : crates) {
-            if (ammunitionCardRepo.existsByName(crate.getItemName())) continue;
+            var existing = ammunitionCardRepo.findByName(crate.getItemName());
+            if (existing.isPresent()) {
+                AmmunitionCard card = existing.get();
+                boolean changed = syncItem(card, crate);
+                if (!Objects.equals(card.getAmmunition(), crate.getAmmunition())) { card.setAmmunition(crate.getAmmunition()); changed = true; }
+                if (!Objects.equals(card.getCount(), crate.getCount())) { card.setCount(crate.getCount()); changed = true; }
+                if (changed) { ammunitionCardRepo.save(card); logger.info("Updated card from the card library: {}", card.getName()); }
+                continue;
+            }
             ammunitionCardRepo.save(new AmmunitionCard(crate));
         }
     }
@@ -319,7 +326,14 @@ public class DataLoader implements CommandLineRunner {
      */
     private void loadFuelCards(FuelItemInterface[] drums) {
         for (FuelItemInterface drum : drums) {
-            if (fuelCardRepo.existsByName(drum.getItemName())) continue;
+            var existing = fuelCardRepo.findByName(drum.getItemName());
+            if (existing.isPresent()) {
+                FuelCard card = existing.get();
+                boolean changed = syncItem(card, drum);
+                if (!Objects.equals(card.getCount(), drum.getCount())) { card.setCount(drum.getCount()); changed = true; }
+                if (changed) { fuelCardRepo.save(card); logger.info("Updated card from the card library: {}", card.getName()); }
+                continue;
+            }
             fuelCardRepo.save(new FuelCard(drum));
         }
     }
@@ -330,7 +344,15 @@ public class DataLoader implements CommandLineRunner {
      */
     private void loadRepairCards(RepairItemInterface[] kits) {
         for (RepairItemInterface kit : kits) {
-            if (repairCardRepo.existsByName(kit.getItemName())) continue;
+            var existing = repairCardRepo.findByName(kit.getItemName());
+            if (existing.isPresent()) {
+                RepairCard card = existing.get();
+                boolean changed = syncItem(card, kit);
+                if (!Objects.equals(card.getCount(), kit.getCount())) { card.setCount(kit.getCount()); changed = true; }
+                if (!Objects.equals(card.getRepairAmount(), kit.getRepairAmount())) { card.setRepairAmount(kit.getRepairAmount()); changed = true; }
+                if (changed) { repairCardRepo.save(card); logger.info("Updated card from the card library: {}", card.getName()); }
+                continue;
+            }
             repairCardRepo.save(new RepairCard(kit));
         }
     }
@@ -341,8 +363,84 @@ public class DataLoader implements CommandLineRunner {
      */
     private void loadSupplyCards(SupplyItemInterface[] crates) {
         for (SupplyItemInterface crate : crates) {
-            if (supplyCardRepo.existsByName(crate.getItemName())) continue;
+            var existing = supplyCardRepo.findByName(crate.getItemName());
+            if (existing.isPresent()) {
+                SupplyCard card = existing.get();
+                boolean changed = syncItem(card, crate);
+                if (!Objects.equals(card.getCount(), crate.getCount())) { card.setCount(crate.getCount()); changed = true; }
+                if (changed) { supplyCardRepo.save(card); logger.info("Updated card from the card library: {}", card.getName()); }
+                continue;
+            }
             supplyCardRepo.save(new SupplyCard(crate));
         }
+    }
+
+    // ── keeping existing cards in step with the enums ────────────────────────
+    // Cards are matched by name. Change a card's numbers, rarity or text in its enum and the database follows on the next
+    // start. (Renaming a card creates a new card; the old one stays in the database.)
+
+    /** Copies rarity, description and item type from the enum; returns true if anything changed. */
+    private static boolean syncItem(ItemCard card, ItemCardInterface data) {
+        boolean changed = false;
+        if (card.getLevel() != data.getCardLevel()) { card.setLevel(data.getCardLevel()); changed = true; }
+        if (!Objects.equals(card.getDescription(), data.getItemDescription())) { card.setDescription(data.getItemDescription()); changed = true; }
+        if (card.getItemType() != data.getItemType()) { card.setItemType(data.getItemType()); changed = true; }
+        return changed;
+    }
+
+    private void syncVehicle(GroundVehicleCard card, GroundVehicleCardInterface data) {
+        VehicleTypeEntity type = vehicleTypeRepo.findByName(data.getVehicleType().name())
+                .orElseThrow(() -> new RuntimeException("VehicleType not found: " + data.getVehicleType().name()));
+        VehicleClassEntity vehicleClass = vehicleClassRepo.findByClassName(data.getVehicleClass().name())
+                .orElseThrow(() -> new RuntimeException("VehicleClass not found: " + data.getVehicleClass().name()));
+        var ability = data.getAbility();
+
+        boolean changed = false;
+        if (card.getLevel() != data.getLevel()) { card.setLevel(data.getLevel()); changed = true; }
+        if (!Objects.equals(card.getDescription(), data.getDescription())) { card.setDescription(data.getDescription()); changed = true; }
+        if (!Objects.equals(card.getVehicleNation(), data.getVehicleNation())) { card.setVehicleNation(data.getVehicleNation()); changed = true; }
+        if (!Objects.equals(card.getVehicleArmor(), data.getVehicleArmor())) { card.setVehicleArmor(data.getVehicleArmor()); changed = true; }
+        if (!Objects.equals(card.getVehicleHP(), data.getVehicleHP())) { card.setVehicleHP(data.getVehicleHP()); changed = true; }
+        if (card.getVehicleType() == null || !card.getVehicleType().getId().equals(type.getId())) { card.setVehicleType(type); changed = true; }
+        if (card.getVehicleClass() == null || !card.getVehicleClass().getId().equals(vehicleClass.getId())) { card.setVehicleClass(vehicleClass); changed = true; }
+        var abilityType = ability == null ? null : ability.type();
+        Integer power = ability == null ? null : ability.power();
+        Integer fuel = ability == null ? null : ability.fuelCost();
+        if (card.getAbilityType() != abilityType || !Objects.equals(card.getAbilityPower(), power)
+                || !Objects.equals(card.getAbilityFuelCost(), fuel)) {
+            card.setAbilityType(abilityType);
+            card.setAbilityPower(power);
+            card.setAbilityFuelCost(fuel);
+            changed = true;
+        }
+        if (changed) {
+            vehicleRepo.save(card);
+            logger.info("Updated card from the card library: {}", card.getName());
+        }
+
+        List<VehicleAttackEntity> have = vehicleAttackRepo.findByVehicle(card);
+        List<? extends VehicleAttackInterface> wanted = data.getVehicleAttacks();
+        boolean same = have.size() == wanted.size()
+                && wanted.stream().allMatch(w -> have.stream().anyMatch(h -> attackMatches(h, w)));
+        if (!same) {
+            vehicleAttackRepo.deleteAll(have);
+            for (VehicleAttackInterface attack : wanted) {
+                WeaponEntity weapon = weaponRepo.findByWeaponName(attack.getWeapon().name())
+                        .orElseThrow(() -> new RuntimeException("Weapon not found: " + attack.getWeapon().name()));
+                vehicleAttackRepo.save(new VehicleAttackEntity(card, attack.getAttackName(), attack.getAttackSlot(), weapon,
+                        attack.getBaseDamage(), attack.getAmmoCost(), attack.getFuelCost(), attack.getSpecialEffect()));
+            }
+            logger.info("Updated attacks from the card library: {}", card.getName());
+        }
+    }
+
+    private static boolean attackMatches(VehicleAttackEntity have, VehicleAttackInterface wanted) {
+        return have.getAttackSlot() == wanted.getAttackSlot()
+                && Objects.equals(have.getAttackName(), wanted.getAttackName())
+                && have.getWeapon().getWeaponName().equals(wanted.getWeapon().name())
+                && Objects.equals(have.getBaseDamage(), wanted.getBaseDamage())
+                && Objects.equals(have.getAmmoCost(), wanted.getAmmoCost())
+                && Objects.equals(have.getFuelCost(), wanted.getFuelCost())
+                && have.getSpecialEffect() == wanted.getSpecialEffect();
     }
 }
