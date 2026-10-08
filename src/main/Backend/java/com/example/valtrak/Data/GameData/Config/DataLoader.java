@@ -3,6 +3,7 @@ package com.example.valtrak.Data.GameData.Config;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.AmmoSupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.FuelSupplyDrum;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.RepairSupplyKit;
+import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SpecialItem;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.ArmorBracket;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
@@ -14,6 +15,7 @@ import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.AmmunitionItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.FuelItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.RepairItemInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Items.SpecialItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.SupplyItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.VehicleAttackInterface;
@@ -27,6 +29,7 @@ import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
 import com.example.valtrak.Data.GameData.Repository.Cards.AmmunitionCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.FuelCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.RepairCardRepository;
+import com.example.valtrak.Data.GameData.Repository.Cards.SpecialItemCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.SupplyCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.*;
@@ -36,6 +39,7 @@ import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
 import com.example.valtrak.Gameplay.Cards.Resource.SupplyCard;
+import com.example.valtrak.Gameplay.Cards.Special.SpecialItemCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import com.example.valtrak.Gameplay.Engine.DamageMatchups;
 import lombok.RequiredArgsConstructor;
@@ -76,6 +80,7 @@ public class DataLoader implements CommandLineRunner {
     private final FuelCardRepository fuelCardRepo;
     private final RepairCardRepository repairCardRepo;
     private final SupplyCardRepository supplyCardRepo;
+    private final SpecialItemCardRepository specialItemRepo;
     private final WeaponRepository weaponRepo;
     private final NationRepository nationRepo;
     private final VehicleCardRepository vehicleRepo;
@@ -111,6 +116,7 @@ public class DataLoader implements CommandLineRunner {
         loadFuelCards(FuelSupplyDrum.values());
         loadRepairCards(RepairSupplyKit.values());
         loadSupplyCards(SupplyCrate.values());
+        loadSpecialItems(SpecialItem.values());
         logger.info("Data loaded successfully");
     }
 
@@ -372,6 +378,25 @@ public class DataLoader implements CommandLineRunner {
                 continue;
             }
             supplyCardRepo.save(new SupplyCard(crate));
+        }
+    }
+
+    /** Seeds the {@link SpecialItem} enum constants (ERA, Artillery, Search, Draw) into the special_item_cards table. */
+    private void loadSpecialItems(SpecialItemInterface[] items) {
+        for (SpecialItemInterface item : items) {
+            var existing = specialItemRepo.findByName(item.getItemName());
+            if (existing.isPresent()) {
+                SpecialItemCard card = existing.get();
+                boolean changed = syncItem(card, item);
+                int primary = (int) Math.round(item.getPrimaryEffectValue());
+                int secondary = (int) Math.round(item.getSecondaryEffectValue());
+                if (card.getEffect() != item.getSpecialItemEffect()) { card.setEffect(item.getSpecialItemEffect()); changed = true; }
+                if (!Objects.equals(card.getPrimaryValue(), primary)) { card.setPrimaryValue(primary); changed = true; }
+                if (!Objects.equals(card.getSecondaryValue(), secondary)) { card.setSecondaryValue(secondary); changed = true; }
+                if (changed) { specialItemRepo.save(card); logger.info("Updated card from the card library: {}", card.getName()); }
+                continue;
+            }
+            specialItemRepo.save(new SpecialItemCard(item));
         }
     }
 

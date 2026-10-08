@@ -15,6 +15,7 @@ public final class GameSimulator {
         GameState s = engine.newGame(deck0, deck1, rng);
         int[] attacks = new int[2];
         int destroyed = 0;
+        int itemsPlayed = 0;
         int firstAttackTurn = -1;
         int actions = 0;
         while (s.phase != GameState.Phase.FINISHED && actions++ < maxActions) {
@@ -31,13 +32,14 @@ public final class GameSimulator {
                 attacks[player]++;
                 if (firstAttackTurn < 0) firstAttackTurn = s.turnCount;
             }
+            if (action instanceof Action.PlayItem) itemsPlayed++;
             destroyed += (int) result.log.stream().filter(line -> line.contains("strike group is destroyed")).count();
         }
         int[] chips = {s.player(0).chips, s.player(1).chips};
         if (s.phase != GameState.Phase.FINISHED) {
-            return new GameReport(-1, "LIMIT", s.turnCount, s.firstPlayer, chips, attacks, destroyed, firstAttackTurn);
+            return new GameReport(-1, "LIMIT", s.turnCount, s.firstPlayer, chips, attacks, destroyed, firstAttackTurn, itemsPlayed);
         }
         String endedBy = s.endReason != null && s.endReason.contains("no card to draw") ? "DECK_OUT" : "CHIPS";
-        return new GameReport(s.winner, endedBy, s.turnCount, s.firstPlayer, chips, attacks, destroyed, firstAttackTurn);
+        return new GameReport(s.winner, endedBy, s.turnCount, s.firstPlayer, chips, attacks, destroyed, firstAttackTurn, itemsPlayed);
     }
 }

@@ -82,6 +82,25 @@ public class CardArtRenderer {
         return canvas;
     }
 
+    /** Item cards: an icon for the kind of effect (ERA, Artillery, Search or Draw). */
+    public static Canvas createItemArt(String effect) {
+        Canvas canvas = new Canvas(W, H);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.web("#0d0f1a"));
+        gc.fillRect(0, 0, W, H);
+        drawCrateGrid(gc);
+        String kind = CardTile.itemKind(effect);
+        drawCentered(gc, false, sprite -> {
+            switch (kind) {
+                case "ERA"       -> drawEra(sprite);
+                case "Artillery" -> drawBlast(sprite);
+                case "Search"    -> drawMagnifier(sprite);
+                default          -> drawCardStack(sprite);
+            }
+        });
+        return canvas;
+    }
+
     /**
      * Paints the artwork onto a transparent sprite, finds its visible bounding box,
      * and draws it so that box is centred on the card. Ground vehicles also get a
@@ -476,6 +495,52 @@ public class CardArtRenderer {
     }
 
     // ── Nation accent ─────────────────────────────────────────────────────────
+
+    private static void drawEra(GraphicsContext gc) {
+        gc.setFill(Color.web("#2f3b2a"));
+        gc.fillRoundRect(40, 22, 76, 46, 4, 4);
+        gc.setFill(Color.web("#566b49"));
+        for (int row = 0; row < 2; row++) {
+            for (int col = 0; col < 4; col++) gc.fillRect(44 + col * 18, 26 + row * 20, 14, 16);
+        }
+        gc.setStroke(Color.web("#e8b84b"));
+        gc.setLineWidth(1.5);
+        gc.strokeRoundRect(40, 22, 76, 46, 4, 4);
+    }
+
+    private static void drawBlast(GraphicsContext gc) {
+        gc.setFill(Color.web("#ff8c1a"));
+        double cx = 78, cy = 45;
+        double[] xs = new double[16], ys = new double[16];
+        for (int i = 0; i < 16; i++) {
+            double r = i % 2 == 0 ? 30 : 15, a = Math.PI * 2 * i / 16;
+            xs[i] = cx + Math.cos(a) * r;
+            ys[i] = cy + Math.sin(a) * r;
+        }
+        gc.fillPolygon(xs, ys, 16);
+        gc.setFill(Color.web("#ffe066"));
+        gc.fillOval(cx - 10, cy - 10, 20, 20);
+    }
+
+    private static void drawMagnifier(GraphicsContext gc) {
+        gc.setStroke(Color.web("#9fb4d6"));
+        gc.setLineWidth(5);
+        gc.strokeOval(52, 20, 38, 38);
+        gc.setLineWidth(7);
+        gc.strokeLine(86, 54, 104, 72);
+        gc.setFill(Color.web("#9fb4d633"));
+        gc.fillOval(54, 22, 34, 34);
+    }
+
+    private static void drawCardStack(GraphicsContext gc) {
+        for (int i = 0; i < 3; i++) {
+            gc.setFill(i == 2 ? Color.web("#e8b84b") : Color.web("#3a4666"));
+            gc.fillRoundRect(48 + i * 12, 20 + i * 6, 40, 54, 5, 5);
+            gc.setStroke(Color.web("#0d0f1a"));
+            gc.setLineWidth(1.5);
+            gc.strokeRoundRect(48 + i * 12, 20 + i * 6, 40, 54, 5, 5);
+        }
+    }
 
     private static void drawNationAccent(GraphicsContext gc, String nation) {
         if (nation == null) return;

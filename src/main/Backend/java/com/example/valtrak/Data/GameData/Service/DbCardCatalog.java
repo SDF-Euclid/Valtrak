@@ -9,6 +9,7 @@ import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
 import com.example.valtrak.Gameplay.Cards.Resource.SupplyCard;
+import com.example.valtrak.Gameplay.Cards.Special.SpecialItemCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import com.example.valtrak.Gameplay.Engine.*;
 import lombok.RequiredArgsConstructor;
@@ -78,7 +79,22 @@ public class DbCardCatalog implements CardCatalog {
             case FuelCard f -> new ResourceSpec(f.getId(), f.getName(), f.getLevel(), ResourceKind.FUEL, null, f.getCount());
             case SupplyCard s -> new ResourceSpec(s.getId(), s.getName(), s.getLevel(), ResourceKind.SUPPLY, null, s.getCount());
             case RepairCard r -> new ResourceSpec(r.getId(), r.getName(), r.getLevel(), ResourceKind.REPAIR, null, r.getRepairAmount());
+            case SpecialItemCard c -> itemSpec(c);
             default -> null;   // card types the rules don't use yet
+        };
+    }
+
+    /** Turns a stored special item into the engine's {@link ItemSpec}; null if the effect is unknown. */
+    public static ItemSpec itemSpec(SpecialItemCard c) {
+        int power = c.getPrimaryValue() == null ? 0 : c.getPrimaryValue();
+        int second = c.getSecondaryValue() == null ? 0 : c.getSecondaryValue();
+        return switch (c.getEffect()) {
+            case ERA_PROTECTION -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.ERA, power, 0, null);
+            case ARTILLERY_STRIKE -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.ARTILLERY, power, second, null);
+            case SEARCH_RESOURCES -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SEARCH, 0, power, SearchKind.RESOURCE);
+            case SEARCH_TANKS -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SEARCH, 0, power, SearchKind.TANK);
+            case SEARCH_SUPPORT -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SEARCH, 0, power, SearchKind.SUPPORT);
+            case DRAW_CARDS -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.DRAW, 0, power, null);
         };
     }
 

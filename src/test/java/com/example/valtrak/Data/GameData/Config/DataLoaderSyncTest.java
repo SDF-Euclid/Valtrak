@@ -5,6 +5,11 @@ import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.AbilityType;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.VehicleAttackEntity;
 import com.example.valtrak.Data.GameData.Repository.Cards.AmmunitionCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.CardRepository;
+import com.example.valtrak.Data.GameData.Repository.Cards.SpecialItemCardRepository;
+import com.example.valtrak.Data.GameData.Service.DbCardCatalog;
+import com.example.valtrak.Gameplay.Engine.ItemEffect;
+import com.example.valtrak.Gameplay.Engine.ItemSpec;
+import com.example.valtrak.Gameplay.Engine.SearchKind;
 import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.VehicleAttackRepository;
 import org.junit.jupiter.api.Test;
@@ -22,6 +27,8 @@ class DataLoaderSyncTest {
     @Autowired VehicleCardRepository vehicles;
     @Autowired VehicleAttackRepository attacks;
     @Autowired CardRepository cards;
+    @Autowired SpecialItemCardRepository items;
+    @Autowired DbCardCatalog catalog;
 
     @Test
     void anItemCardEditedInTheDatabaseIsPutBackToWhatTheEnumSays() {
@@ -74,6 +81,40 @@ class DataLoaderSyncTest {
         assertThat(fixed.getAbilityType()).isEqualTo(AbilityType.REVEAL_ENEMY);
         assertThat(fixed.getAbilityPower()).isEqualTo(2);
         assertThat(fixed.getAbilityFuelCost()).isEqualTo(1);
+    }
+
+    @Test
+    void itemCardsAreLoadedAndGiveTheEngineTheRightNumbers() {
+        assertThat(items.count()).isEqualTo(24);
+        var era = (ItemSpec) catalog.find(items.findByName("Advanced ERA Suite").orElseThrow().getId());
+        assertThat(era.effect()).isEqualTo(ItemEffect.ERA);
+        assertThat(era.power()).isEqualTo(50);
+        assertThat(era.level()).isEqualTo(CardLevel.LEGENDARY);
+        var artillery = (ItemSpec) catalog.find(items.findByName("Strategic Bombardment").orElseThrow().getId());
+        assertThat(artillery.effect()).isEqualTo(ItemEffect.ARTILLERY);
+        assertThat(artillery.power()).isEqualTo(40);
+        assertThat(artillery.count()).isEqualTo(3);
+        var search = (ItemSpec) catalog.find(items.findByName("Armored Reinforcements").orElseThrow().getId());
+        assertThat(search.effect()).isEqualTo(ItemEffect.SEARCH);
+        assertThat(search.searchKind()).isEqualTo(SearchKind.TANK);
+        assertThat(search.count()).isEqualTo(2);
+        var draw = (ItemSpec) catalog.find(items.findByName("Total Mobilization").orElseThrow().getId());
+        assertThat(draw.effect()).isEqualTo(ItemEffect.DRAW);
+        assertThat(draw.count()).isEqualTo(3);
+    }
+
+    @Test
+    void anItemCardEditedInTheDatabaseGetsItsNumbersBack() {
+        var card = items.findByName("Mortar Strike").orElseThrow();
+        card.setPrimaryValue(999);
+        card.setSecondaryValue(9);
+        card.setLevel(CardLevel.COMMANDER);
+        items.save(card);
+        loader.run();
+        var fixed = items.findByName("Mortar Strike").orElseThrow();
+        assertThat(fixed.getPrimaryValue()).isEqualTo(20);
+        assertThat(fixed.getSecondaryValue()).isEqualTo(1);
+        assertThat(fixed.getLevel()).isEqualTo(CardLevel.COMMON);
     }
 
     @Test

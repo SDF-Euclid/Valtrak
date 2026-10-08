@@ -22,6 +22,20 @@ public final class SimDecks {
 
     /** @param scouts copies of each UAV team / Recon vehicle to include (0 = none) */
     public static List<Long> standard(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts) {
+        return standard(catalog, all, size, rng, scouts, 0);
+    }
+
+    /** @param items copies of each item card (ERA, Artillery, Search, Draw) to include (0 = none) */
+    public static List<Long> standard(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts, int items) {
+        List<Long> itemCards = new ArrayList<>();
+        for (CardSpec spec : all) if (spec instanceof ItemSpec) addCopies(itemCards, spec.cardId(), items);
+        // item cards replace some of the usual cards (mostly extra Ammo), so they don't change how many cards a deck has
+        List<Long> deck = new ArrayList<>(standardWithoutItems(catalog, all, size - itemCards.size(), rng, scouts));
+        deck.addAll(itemCards);
+        return deck;
+    }
+
+    private static List<Long> standardWithoutItems(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts) {
         List<Long> deck = new ArrayList<>();
         List<ResourceSpec> ammo = new ArrayList<>();
         java.util.Set<com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon> weapons =

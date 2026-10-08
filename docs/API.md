@@ -38,6 +38,7 @@ Matches you are not in look exactly like matches that don't exist (404).
 | `RETREAT_GROUP` | `groupId` |
 | `MOVE` | `vehicleId`, `toGroupId` (omit = out to a new group, tanks only) |
 | `USE_ABILITY` | `vehicleId` (the UAV/Recon vehicle), `vehicleIds` (the face-down enemy vehicles to reveal) |
+| `PLAY_ITEM` | `cardId` (the item card in your hand). ERA: `vehicleIds` = one of your vehicles. Artillery: `vehicleIds` = the enemy vehicles to hit (face-up ones; Legendary may also pick face-down ones). Search: `cardIds` = the cards to take from your deck (up to the card's limit, may be empty). Draw: nothing else |
 | `ATTACK` | `groupId`, `choices`: `[{vehicleId, slot, ammo, targetVehicleId}]` (one choice = Skirmish, two or more = Combined Assault) |
 | `END_TURN` | |
 

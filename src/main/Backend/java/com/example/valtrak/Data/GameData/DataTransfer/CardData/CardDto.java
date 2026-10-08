@@ -4,8 +4,8 @@ package com.example.valtrak.Data.GameData.DataTransfer.CardData;
  * Flat, display-ready view of a card sent from the server to clients.
  * Fields that don't apply to a card's category are null.
  *
- * @param category VEHICLE, AMMUNITION, FUEL, SUPPLY, REPAIR or OTHER
- * @param ability  a short description of the vehicle's ability, or null
+ * @param category VEHICLE, AMMUNITION, FUEL, SUPPLY, REPAIR, ITEM (ERA, Artillery, Search, Draw) or OTHER
+ * @param ability  a short description of the vehicle's ability or the item's effect, or null
  */
 public record CardDto(
         Long id,

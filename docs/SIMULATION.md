@@ -80,10 +80,26 @@ enemy Leaders when their group is ready to attack.
 - **Reveal cards fix the stall** without a stalemate rule, as long as the deck has some. A deck without any can still stall.
 - Counting copies is not a clean test: in a fixed-size deck every extra reveal card replaces a tank or a resource card,
   so more copies lowered the share of games decided by chips (24% with 2 copies, 3% with 3). The deck needs a balance.
-- **Leader position is visible.** The first vehicle of an enemy group is its Leader, so a face-down group can be sniped
-  (a UAV that reveals 1 can expose a Leader). Change `GameViewBuilder` if face-down order should be hidden.
+- **Leader position was visible** (the first vehicle of an enemy group is its Leader). It is hidden now: see Round 4 and `docs/ENGINE.md`.
+
+## Round 4: item cards (ERA, Artillery, Search, Draw)
+
+Aggressive vs aggressive bots, 100-card decks, 1 copy of each of the 24 item cards (they replace extra Ammo and other filler), 200 games.
+The bots play Draw and Search whenever the deck is over 12 cards, ERA on their best tank, and Artillery at the Leader first.
+
+| rules | items | turns in a game (both players) | decided by chips |
+|---|---|---|---|
+| 3 chips, 4x damage | none | 36 | 100% |
+| 3 chips, 4x damage | 24 cards | 31 | 100% |
+| 5 chips, 1x damage (as written) | none | 106 | 98% |
+| 5 chips, 1x damage (as written) | 24 cards | 115 | 62% (38% deck-out) |
+
+- **Items shorten the tuned game from about 18 to about 15 turns per player**, which is right in the 13-15 target.
+- **At the rulebook's current numbers the games are far too long** (about 55 turns per player), so Draw and Search make the bots
+  deck out sooner. This goes away once the game length is tuned, but it is why a Draw card should never be free to spam in a 60-card deck.
+- Two copies of every item (48 of 100 cards) leaves too little Ammo and Fuel for anybody to attack: items need a share of the deck, not most of it.
+- Artillery needs a face-up target (Legendary excepted), so cautious players are mostly safe from it until a UAV or an attack reveals them.
 
 ## Things worth deciding
 - A stalemate rule (or a reliable reveal effect from the start) so the game isn't decided by deck size and turn order.
 - A target game length, then tune chips, damage/HP and deck minimum together (the table above is a starting point).
-- Ammo cards for the .50 cal, 105mm, TOW and 40mm HE weapons: without them those tanks can't attack at all with real cards.

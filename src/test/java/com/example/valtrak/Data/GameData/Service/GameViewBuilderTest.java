@@ -58,19 +58,67 @@ class GameViewBuilderTest {
         GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
         List<VehicleView> seen = view.opponent().groups().get(0).vehicles();
 
-        VehicleView leader = seen.get(0);
+        VehicleView up = seen.get(0);                 // face-up vehicles come first, then the face-down ones
+        VehicleView leader = byId(seen, g.leader().id);
         assertThat(leader.faceUp()).isFalse();
         assertThat(leader.cardId()).isNull();
         assertThat(leader.hp()).isNull();
-        VehicleView down = seen.get(1);
+        VehicleView down = byId(seen, hidden.id);
         assertThat(down.cardId()).isNull();
         assertThat(down.hp()).isNull();
         assertThat(down.stunned()).isNull();
-        VehicleView up = seen.get(2);
         assertThat(up.faceUp()).isTrue();
         assertThat(up.cardId()).isEqualTo(RECON);
         assertThat(up.hp()).isEqualTo(70);
         assertThat(up.id()).isEqualTo(revealed.id);
+    }
+
+    private static VehicleView byId(List<VehicleView> views, long id) {
+        return views.stream().filter(v -> v.id() == id).findFirst().orElseThrow();
+    }
+
+    @Test
+    void anOpponentCannotTellWhichFaceDownVehicleIsTheLeader() {
+        StrikeGroup first = w.group(1, TANK_LEGENDARY, false);
+        Vehicle a = w.add(first, ANTI_AIR, false);
+        Vehicle b = w.add(first, RECON, false);
+        Vehicle shown = w.add(first, UAV, true);
+        List<Long> before = idsOf(GameViewBuilder.build(match(), w.s, 0, w.rules).opponent().groups().get(0).vehicles());
+
+        // the same vehicles with the Leader somewhere else in the list must look exactly the same from outside
+        first.vehicles.remove(0);
+        first.vehicles.add(1, w.vehicle(TANK_LEGENDARY));
+        first.vehicles.set(1, first.vehicles.get(1));
+        java.util.Collections.swap(first.vehicles, 0, 2);
+        List<Long> after = idsOf(GameViewBuilder.build(match(), w.s, 0, w.rules).opponent().groups().get(0).vehicles());
+
+        assertThat(before.get(0)).isEqualTo(shown.id);
+        assertThat(before).hasSize(4);
+        assertThat(after.get(0)).isEqualTo(shown.id);
+        // and the Leader itself is not first among the hidden ones just because it leads
+        assertThat(idsOf(GameViewBuilder.build(match(), w.s, 1, w.rules).you().groups().get(0).vehicles()))
+                .as("you still see your own group in its real order").isEqualTo(first.vehicles.stream().map(v -> v.id).toList());
+        assertThat(a.id).isNotEqualTo(b.id);
+    }
+
+    private static List<Long> idsOf(List<VehicleView> views) {
+        return views.stream().map(VehicleView::id).toList();
+    }
+
+    @Test
+    void eraIsShownOnYourVehiclesAndOnFaceUpEnemiesButNotOnFaceDownOnes() {
+        StrikeGroup mine = w.group(0, TANK_COMMON, false);
+        mine.leader().eraCardId = ERA_20;
+        StrikeGroup theirs = w.group(1, TANK_RARE, true);
+        theirs.leader().eraCardId = ERA_50;
+        Vehicle hidden = w.add(theirs, ANTI_AIR, false);
+        hidden.eraCardId = ERA_20;
+
+        GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
+        assertThat(view.you().groups().get(0).vehicles().get(0).eraCardId()).isEqualTo(ERA_20);
+        assertThat(byId(view.opponent().groups().get(0).vehicles(), theirs.leader().id).eraCardId()).isEqualTo(ERA_50);
+        assertThat(byId(view.opponent().groups().get(0).vehicles(), hidden.id).eraCardId()).isNull();
+        assertThat(json.writeValueAsString(view.opponent().groups().get(0).vehicles().get(1))).doesNotContain("" + ERA_20);
     }
 
     @Test
@@ -84,7 +132,7 @@ class GameViewBuilderTest {
 
         GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
         assertThat(view.you().groups().get(0).vehicles().get(1).abilityUsed()).isTrue();
-        assertThat(view.opponent().groups().get(0).vehicles().get(1).abilityUsed()).isNull();
+        assertThat(view.opponent().groups().get(0).vehicles()).allMatch(v -> v.abilityUsed() == null);
     }
 
     @Test

@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.12
+# Valtrak Rulebook: DRAFT v0.13
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -95,28 +95,26 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
 ## 7b. Abilities (UAV teams and Recon vehicles)
 Some vehicles have an **ability**. A vehicle can use its ability **once per turn**, only while it is **face up** (and not stunned or disabled),
 and it costs **Fuel** from its group's pool. Using one does not end your turn, so you can scout and then attack.
-- **Reveal** (UAV teams and Recon vehicles): turn up to *N* face-down enemy vehicles face up. You choose which ones;
-  the first vehicle of each enemy group is its Leader. Revealed vehicles stay face up until their owner retreats them.
+- **Reveal** (UAV teams and Recon vehicles): turn up to *N* face-down enemy vehicles face up. You choose which ones
+  (you can't tell which face-down vehicle is a Leader). Revealed vehicles stay face up until their owner retreats them.
   A Resupply vehicle can be revealed this way, and then it can be attacked like any other face-up vehicle.
 - **UAV teams** are Specialists (they take the Specialist slot and don't attack): Common and Uncommon reveal 1,
   Rare and Epic reveal 2, Legendary reveals 3. **Recon vehicles** take a Line slot, carry a light MG, and reveal 1 (Rare: 2).
 
-## 7c. Item cards (PROPOSED: not built yet, please review)
-Item cards are played from your hand during your main step.
-- **Cost:** **Supply** from your Depot, by rarity: Common/Uncommon **[1]**, Rare/Epic **[2]**, Legendary/Commander **[3]**
-  (the same table as forming a group). There is no limit on how many you play per turn; Supply is the limit.
-- **Strength scales with rarity** using one *tier* number so power per Supply stays about equal:
-  **Common 1, Uncommon 1, Rare 2, Epic 2, Legendary 3** (the same scale the UAV teams use).
-- Playing an item never ends your turn.
+## 7c. Item cards
+Item cards are played from your hand during your main step, **as many as you like per turn** (like Pokémon trainer cards). Playing one never ends your turn.
+- **Cost:** none. The limit is the cards in your hand and each card's own conditions. (The engine has a per-rarity Supply cost switch, `itemSupply`,
+  set to 0 for now, in case playtesting says items are too easy.)
+- **Strength scales with rarity.** A played item goes to the discard pile, except ERA, which stays on its vehicle.
 
 | Card | What it does | By rarity (C / U / R / E / L) |
 |---|---|---|
-| **ERA** (attached) | Attach to one of your vehicles. Chemical damage (HEAT, TOW) that vehicle takes is reduced. One ERA per vehicle (a new one replaces the old). Stays until the vehicle leaves play; if the vehicle returns to your hand, so does the ERA. | **[20% / 25% / 35% / 40% / 50%]** less chemical damage |
-| **Artillery** | Choose **one** of: (a) one face-up enemy vehicle takes **true damage** (ignores armor), or (b) every face-up vehicle in one enemy strike group takes about a third of that. Needs a face-up target, and **does not expose any vehicle of yours** (so it is cheap to use and strong). Killing a Leader this way takes the chip as usual. | (a) **[15 / 25 / 40 / 55 / 75]**, (b) **[5 / 8 / 13 / 18 / 25]** each |
-| **Search** | Search your deck for up to *N* cards of one kind, show them to your opponent, put them in your hand, shuffle. Variants by kind (names to come): resource cards, tanks, support vehicles. | *N* = **1 / 1 / 2 / 2 / 3** |
-| **Draw** | Draw *N* cards. (Drawing from an empty deck still loses the game, which keeps draw cards honest.) | *N* = **1 / 1 / 2 / 2 / 3** |
+| **ERA** (attached) | Attach to one of your vehicles. Chemical damage (HEAT, TOW, and other CHEMICAL ammo) that vehicle takes is reduced by a **steady percentage**. It is removed **only when the vehicle is destroyed** (the ERA goes to the discard pile). It stays through moves, retreats and being revealed. If the vehicle returns to your hand (a non-tank whose group was destroyed), the ERA returns with it. One ERA per vehicle: a new one replaces the old (the old one is discarded). Hidden from your opponent while the vehicle is face down. | **[20% / 25% / 35% / 40% / 50%]** |
+| **Artillery** | Choose up to *N* enemy vehicles. Each takes **true damage** (ignores armor and breach). Below Legendary you may only choose **face-up** vehicles. **Legendary can also choose face-down vehicles**; any vehicle it hits is turned face up. It does not expose any vehicle of yours. A destroyed Leader takes the chip as usual (a later target in the same destroyed group is skipped if it is gone or has gone face down). | targets *N* = **1 / 1 / 2 / 2 / 3**, damage each **[20 / 25 / 30 / 35 / 40]** |
+| **Search** | Look through your deck for up to *N* cards of one kind, show them to your opponent, put them in your hand, shuffle your deck. Three kinds: **resources** (Ammo, Fuel, Supply, Repair), **tanks**, **support vehicles** (Specialists, Resupply, Recon and other non-tanks). You may find fewer than *N*. | *N* = **1 / 1 / 2 / 2 / 3** (the cards are Common, Rare and Legendary for each kind) |
+| **Draw** | Draw *N* cards. Condition: your deck must have at least *N* cards (you can't deck yourself with it). | *N* = **1 / 1 / 2 / 2 / 3** |
 
-**Other ideas to consider** (not in the draft yet):
+**Other ideas to consider** (not built; tell me which you want):
 - **Smoke Screen:** your vehicle or group can't be targeted by attacks or Artillery until your next turn (the answer to Artillery).
 - **Jammer (counter-UAV):** an enemy UAV or Recon vehicle can't use its ability until its owner's next turn.
 - **Camouflage** (attached): retreating this vehicle costs no Fuel.
@@ -153,17 +151,16 @@ Item cards are played from your hand during your main step.
 - Your opponent sees how many vehicles you have, which are face up, your Depot, and pool sizes,
   but **not** the identity of face-down cards.
 - Your opponent never sees your hand or deck order, only their sizes.
+- **Everything about a face-down vehicle is hidden**, including which one is the Leader and any ERA attached to it. A vehicle's place in its group is not shown while it is face down.
 
 ---
 
 ## Open questions
-1. **Item cards:** Supply cost by rarity, or free with a limit of one per turn? Does Artillery need a face-up spotter of yours (a UAV or Recon vehicle)?
-   Is ERA a steady percentage or does it get used up (charges)?
-2. **Stalling:** UAV and Recon cards make players fight, but a deck without them can still stall. Do you want a backstop (a minimum number
-   of reveal cards per deck, or a deck-out tiebreak)?
-3. **Leader secrecy:** the Leader is always the first vehicle in a group, so a UAV can pick it out. Hide the order, or keep it public?
-4. Game length (about 3 chips and 4x damage for 13-15 turns per player), convoy capacity, Resupply vehicles, air units.
-5. All bracketed numbers: need playtesting.
+1. **Stalling:** UAV and Recon cards make players fight, but a deck without them can still stall. Do you want a backstop (a minimum number
+   of reveal cards per deck, or a deck-out tiebreak)? Legendary Artillery now also hits face-down vehicles, which helps.
+2. **Items with no cost** can stack (several Artillery in one turn). If that is too strong: a per-turn limit, or turn on the Supply cost.
+3. Game length (about 3 chips and 4x damage for 13-15 turns per player), convoy capacity, Resupply vehicles, air units.
+4. All bracketed numbers: need playtesting.
 
 ## Planned cards (wish list)
 - Capture/seize cards, field-condition cards. (Hand disruption and Recycle are in the item card ideas above.)

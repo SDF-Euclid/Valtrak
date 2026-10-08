@@ -47,6 +47,7 @@ public final class GreedyBot implements Bot {
         if ((a = designate(engine, s, player, me, cat)) != null) return a;
         if ((a = deploy(engine, s, player, me, cat)) != null) return a;
         if ((a = repair(engine, s, player, me, cat)) != null) return a;
+        if ((a = items(engine, s, player, me, opp, cat, rng)) != null) return a;
         if ((a = scout(engine, s, player, me, opp, cat)) != null) return a;
         if ((a = reveal(engine, s, player, me, opp, cat)) != null) return a;
         if ((a = attack(engine, s, player, me, opp, cat)) != null) return a;
@@ -135,6 +136,79 @@ public final class GreedyBot implements Bot {
             if (engine.isLegal(s, player, a)) return a;
         }
         return null;
+    }
+
+    // ── item cards ───────────────────────────────────────────────────────────
+
+    /** Plays the first item card that is worth playing: draw and search for cards, ERA on the best tank, Artillery at what it can hit. */
+    private Action items(GameEngine engine, GameState s, int player, PlayerState me, PlayerState opp, CardCatalog cat, RandomGenerator rng) {
+        for (long id : new LinkedHashSet<>(me.hand)) {
+            if (!(cat.find(id) instanceof ItemSpec item)) continue;
+            Action a = switch (item.effect()) {
+                case DRAW -> me.deck.size() > 12 ? new PlayItem(id, List.of(), List.of()) : null;
+                case SEARCH -> me.deck.size() > 12 ? new PlayItem(id, List.of(), searchPicks(item, me, cat)) : null;
+                case ERA -> eraTarget(me, cat).<Action>map(v -> new PlayItem(id, List.of(v.id), List.of())).orElse(null);
+                case ARTILLERY -> {
+                    List<Long> targets = artilleryTargets(engine, item, opp, cat, rng);
+                    yield targets.isEmpty() ? null : new PlayItem(id, targets, List.of());
+                }
+            };
+            if (a != null && engine.isLegal(s, player, a)) return a;
+        }
+        return null;
+    }
+
+    /** The best cards of the searched kind in the deck: Ammo for the main group's weapons first, scouts before other support vehicles, strongest tanks. */
+    private List<Long> searchPicks(ItemSpec item, PlayerState me, CardCatalog cat) {
+        StrikeGroup main = mainGroup(me, cat);
+        Need need = main == null ? new Need() : needOf(main, cat);
+        List<Long> found = new ArrayList<>();
+        for (long id : me.deck) {
+            CardSpec spec = cat.find(id);
+            boolean fits = switch (item.searchKind()) {
+                case RESOURCE -> spec instanceof ResourceSpec;
+                case TANK -> spec instanceof VehicleSpec v && v.isTank();
+                case SUPPORT -> spec instanceof VehicleSpec v && !v.isTank();
+            };
+            if (fits) found.add(id);
+        }
+        found.sort(Comparator.comparingDouble((Long id) -> -searchScore(cat.find(id), need)));
+        return found.stream().limit(item.count()).toList();
+    }
+
+    private static double searchScore(CardSpec spec, Need need) {
+        if (spec instanceof ResourceSpec r) {
+            return switch (r.kind()) {
+                case AMMO -> need.ammoTypes.contains(r.ammunition()) ? 30 + r.amount() : 5;
+                case FUEL -> 20 + r.amount();
+                case SUPPLY -> 10;
+                case REPAIR -> 2;
+            };
+        }
+        VehicleSpec v = (VehicleSpec) spec;
+        return (v.ability() != null ? 10 : 0) + v.level().ordinal();
+    }
+
+    /** The highest-rarity tank without ERA (the Leader of a group is the one worth protecting). */
+    private java.util.Optional<Vehicle> eraTarget(PlayerState me, CardCatalog cat) {
+        return me.groups.stream().flatMap(g -> g.vehicles.stream())
+                .filter(v -> v.eraCardId == 0 && cat.vehicle(v.cardId).isTank())
+                .max(Comparator.comparingInt(v -> cat.vehicle(v.cardId).level().ordinal()));
+    }
+
+    /** Face-up Leaders first (killing one takes the chip), then the weakest; a Legendary card also fires at random face-down vehicles. */
+    private List<Long> artilleryTargets(GameEngine engine, ItemSpec item, PlayerState opp, CardCatalog cat, RandomGenerator rng) {
+        Set<Vehicle> leaders = new HashSet<>();
+        for (StrikeGroup g : opp.groups) leaders.add(g.leader());
+        List<Vehicle> up = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.faceUp)
+                .sorted(Comparator.comparingInt((Vehicle v) -> leaders.contains(v) ? 0 : 1).thenComparingInt(v -> v.hp)).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        List<Long> out = new ArrayList<>(up.stream().limit(item.count()).map(v -> v.id).toList());
+        if (out.size() < item.count() && item.level().compareTo(engine.rules().artilleryBlindFrom) >= 0) {
+            List<Vehicle> down = new ArrayList<>(opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> !v.faceUp).toList());
+            Collections.shuffle(down, new java.util.Random(rng.nextLong()));
+            down.stream().limit(item.count() - out.size()).forEach(v -> out.add(v.id));
+        }
+        return out;
     }
 
     // ── fighting ─────────────────────────────────────────────────────────────

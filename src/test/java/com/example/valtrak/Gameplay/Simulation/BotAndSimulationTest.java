@@ -26,7 +26,7 @@ class BotAndSimulationTest {
 
     @Test
     void theEnumCatalogHasEveryCardKindWithStableIds() {
-        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 60 + 4 + 4 + 3);   // tanks, recon, UAV teams, ammo, fuel, repair, supply
+        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 60 + 4 + 4 + 3 + 24);   // tanks, recon, UAV teams, ammo, fuel, repair, supply, item cards
         assertThat(catalog.find(1)).isInstanceOf(VehicleSpec.class);
         assertThat(new EnumCardCatalog(true).find(1).name()).isEqualTo(catalog.find(1).name());
         assertThat(catalog.all()).anyMatch(c -> c instanceof ResourceSpec r && r.kind() == ResourceKind.SUPPLY);
@@ -115,6 +115,32 @@ class BotAndSimulationTest {
                     assertThat(r.endedBy()).as(a.name() + " vs " + b.name() + " seed " + seed).isNotEqualTo("LIMIT");
                 }
             }
+        }
+    }
+
+    @Test
+    void decksWithItemCardsStayLegalAndBotsPlayThemWithoutBreakingTheRules() {
+        GameEngine engine = engine(0);
+        int itemsPlayed = 0;
+        for (int seed = 0; seed < 8; seed++) {
+            List<Long> d0 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed), 1, 2);
+            List<Long> d1 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed + 9), 1, 2);
+            assertThat(engine.validateDeck(d0)).isEmpty();
+            assertThat(d0).anyMatch(id -> catalog.find(id) instanceof ItemSpec);
+            GameReport r = GameSimulator.play(engine, d0, d1, new GreedyBot(true), new GreedyBot(false), seed, 20000);
+            assertThat(r.endedBy()).isNotEqualTo("LIMIT");
+            itemsPlayed += r.itemsPlayed();
+        }
+        assertThat(itemsPlayed).as("the bots do play item cards").isGreaterThan(20);
+    }
+
+    @Test
+    void randomBotsCanPlayItemsToo() {
+        GameEngine engine = engine(0);
+        for (int seed = 0; seed < 4; seed++) {
+            List<Long> d0 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed), 1, 3);
+            List<Long> d1 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed + 9), 1, 3);
+            GameSimulator.play(engine, d0, d1, new RandomBot(), new RandomBot(), seed, 20000);
         }
     }
 

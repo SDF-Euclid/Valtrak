@@ -25,6 +25,9 @@ public final class TestWorld {
     // resources
     public static final long APFSDS_5 = 20, HEAT_5 = 21, NATO_10 = 22, FUEL_5 = 23, FUEL_1 = 24, FUEL_10 = 25,
             SUPPLY_1 = 26, SUPPLY_3 = 27, REPAIR_25 = 28, REPAIR_FULL = 29;
+    // item cards
+    public static final long ERA_20 = 40, ERA_50 = 41, ARTILLERY_1 = 42, ARTILLERY_2 = 43, ARTILLERY_BLIND = 44,
+            SEARCH_RESOURCES_2 = 45, SEARCH_TANK_1 = 46, SEARCH_SUPPORT_2 = 47, DRAW_1 = 48, DRAW_3 = 49;
 
     public final GameRules rules = GameRules.defaults();
     public final MapCardCatalog catalog = buildCatalog();
@@ -64,6 +67,16 @@ public final class TestWorld {
         c.add(new ResourceSpec(SUPPLY_3, "3x Supply", CardLevel.RARE, ResourceKind.SUPPLY, null, 3));
         c.add(new ResourceSpec(REPAIR_25, "Repair 25", CardLevel.COMMON, ResourceKind.REPAIR, null, 25));
         c.add(new ResourceSpec(REPAIR_FULL, "Full Repairs", CardLevel.LEGENDARY, ResourceKind.REPAIR, null, 999));
+        c.add(new ItemSpec(ERA_20, "Light ERA", CardLevel.COMMON, ItemEffect.ERA, 20, 0, null));
+        c.add(new ItemSpec(ERA_50, "Advanced ERA", CardLevel.LEGENDARY, ItemEffect.ERA, 50, 0, null));
+        c.add(new ItemSpec(ARTILLERY_1, "Mortar", CardLevel.COMMON, ItemEffect.ARTILLERY, 20, 1, null));
+        c.add(new ItemSpec(ARTILLERY_2, "Rocket Salvo", CardLevel.RARE, ItemEffect.ARTILLERY, 30, 2, null));
+        c.add(new ItemSpec(ARTILLERY_BLIND, "Bombardment", CardLevel.LEGENDARY, ItemEffect.ARTILLERY, 40, 3, null));
+        c.add(new ItemSpec(SEARCH_RESOURCES_2, "Logistics Request", CardLevel.RARE, ItemEffect.SEARCH, 0, 2, SearchKind.RESOURCE));
+        c.add(new ItemSpec(SEARCH_TANK_1, "Armor Requisition", CardLevel.COMMON, ItemEffect.SEARCH, 0, 1, SearchKind.TANK));
+        c.add(new ItemSpec(SEARCH_SUPPORT_2, "Specialist Call-Up", CardLevel.RARE, ItemEffect.SEARCH, 0, 2, SearchKind.SUPPORT));
+        c.add(new ItemSpec(DRAW_1, "Field Report", CardLevel.COMMON, ItemEffect.DRAW, 0, 1, null));
+        c.add(new ItemSpec(DRAW_3, "Total Mobilization", CardLevel.LEGENDARY, ItemEffect.DRAW, 0, 3, null));
         return c;
     }
 

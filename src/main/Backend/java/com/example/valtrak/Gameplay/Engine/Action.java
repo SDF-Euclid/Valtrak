@@ -38,6 +38,12 @@ public sealed interface Action {
     /** Use a vehicle's ability (REVEAL_ENEMY: turn these face-down enemy vehicles face up). */
     record UseAbility(long vehicleId, List<Long> targetVehicleIds) implements Action {}
 
+    /**
+     * Play an item card from your hand. {@code targetIds}: ERA = one of your vehicles; Artillery = enemy vehicles.
+     * {@code cardIds}: Search = the cards to take from your deck. Draw needs neither.
+     */
+    record PlayItem(long cardId, List<Long> targetIds, List<Long> cardIds) implements Action {}
+
     /** Attack with one vehicle (Skirmish) or several (Combined Assault). Ends your turn. */
     record Attack(long groupId, List<AttackChoice> choices) implements Action {}
 

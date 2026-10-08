@@ -13,6 +13,8 @@ public class Vehicle {
     public boolean disabled;
     /** True once this vehicle has used its ability this turn. */
     public boolean abilityUsed;
+    /** Card id of the ERA attached to this vehicle, or 0 for none. */
+    public long eraCardId;
 
     public Vehicle() {}
 
@@ -32,6 +34,7 @@ public class Vehicle {
         v.suppressed = suppressed;
         v.disabled = disabled;
         v.abilityUsed = abilityUsed;
+        v.eraCardId = eraCardId;
         return v;
     }
 }

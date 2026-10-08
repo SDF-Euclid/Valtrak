@@ -4,6 +4,7 @@ import com.example.valtrak.Data.CardLibrary.CardLevel;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.AmmoSupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.FuelSupplyDrum;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.RepairSupplyKit;
+import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SpecialItem;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition;
@@ -75,6 +76,21 @@ public final class EnumCardCatalog implements CardCatalog {
         }
         for (SupplyCrate c : SupplyCrate.values()) {
             specs.put(id, new ResourceSpec(id, c.getItemName(), c.getCardLevel(), ResourceKind.SUPPLY, null, c.getCount()));
+            id++;
+        }
+        for (SpecialItem c : SpecialItem.values()) {       // last, so the ids of the other cards don't change
+            int power = (int) Math.round(c.getPrimaryEffectValue());
+            int second = (int) Math.round(c.getSecondaryEffectValue());
+            String n = c.getItemName();
+            CardLevel l = c.getCardLevel();
+            specs.put(id, switch (c.getSpecialItemEffect()) {
+                case ERA_PROTECTION -> new ItemSpec(id, n, l, ItemEffect.ERA, power, 0, null);
+                case ARTILLERY_STRIKE -> new ItemSpec(id, n, l, ItemEffect.ARTILLERY, power, second, null);
+                case SEARCH_RESOURCES -> new ItemSpec(id, n, l, ItemEffect.SEARCH, 0, power, SearchKind.RESOURCE);
+                case SEARCH_TANKS -> new ItemSpec(id, n, l, ItemEffect.SEARCH, 0, power, SearchKind.TANK);
+                case SEARCH_SUPPORT -> new ItemSpec(id, n, l, ItemEffect.SEARCH, 0, power, SearchKind.SUPPORT);
+                case DRAW_CARDS -> new ItemSpec(id, n, l, ItemEffect.DRAW, 0, power, null);
+            });
             id++;
         }
     }

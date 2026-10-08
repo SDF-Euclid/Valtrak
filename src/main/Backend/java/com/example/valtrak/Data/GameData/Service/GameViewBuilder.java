@@ -4,6 +4,8 @@ import com.example.valtrak.Data.GameData.DataTransfer.MatchData.MatchDtos.*;
 import com.example.valtrak.Data.GameData.Entity.MatchRecord;
 import com.example.valtrak.Gameplay.Engine.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -40,16 +42,28 @@ public final class GameViewBuilder {
 
     private static GroupView group(StrikeGroup g, boolean isViewer) {
         return new GroupView(g.id, g.formed, isViewer ? g.convoyMoved : 0,
-                g.vehicles.stream().map(v -> vehicle(v, isViewer)).toList(),
+                (isViewer ? g.vehicles : hideOrder(g.vehicles)).stream().map(v -> vehicle(v, isViewer)).toList(),
                 g.pool.stream().map(GameViewBuilder::resource).toList());
+    }
+
+    /**
+     * The first vehicle in a group is its Leader, so an opponent must not see the real order: face-up vehicles keep their order,
+     * then the face-down ones follow in a fixed scrambled order that says nothing about which is the Leader.
+     */
+    private static List<Vehicle> hideOrder(List<Vehicle> vehicles) {
+        List<Vehicle> out = new ArrayList<>(vehicles.stream().filter(v -> v.faceUp).toList());
+        out.addAll(vehicles.stream().filter(v -> !v.faceUp)
+                .sorted(Comparator.comparingLong((Vehicle v) -> v.id * 0x9E3779B97F4A7C15L ^ (v.id >>> 7))).toList());
+        return out;
     }
 
     /** Your own vehicles are shown in full. An enemy vehicle is only shown in full while it is face up. */
     private static VehicleView vehicle(Vehicle v, boolean isViewer) {
         if (!isViewer && !v.faceUp) {
-            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null);
+            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null, null);
         }
-        return new VehicleView(v.id, v.faceUp, v.cardId, v.hp, v.maxHp, v.breachStacks, v.stunned, v.suppressed, v.disabled, v.abilityUsed);
+        return new VehicleView(v.id, v.faceUp, v.cardId, v.hp, v.maxHp, v.breachStacks, v.stunned, v.suppressed, v.disabled, v.abilityUsed,
+                v.eraCardId == 0 ? null : v.eraCardId);
     }
 
     private static ResourceView resource(ResourceStack r) {

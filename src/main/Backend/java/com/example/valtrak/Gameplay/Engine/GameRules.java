@@ -49,6 +49,11 @@ public class GameRules {
     public Map<CardLevel, Integer> convoyCapacity = byLevel(1, 1, 2, 2, 3, 3);
     public int groupRetreatMultiplier = 2;
 
+    // item cards: Supply to play one, by rarity (all 0 = items are free, which is the rulebook), and the rarity from which
+    // Artillery may also choose face-down vehicles
+    public Map<CardLevel, Integer> itemSupply = byLevel(0, 0, 0, 0, 0, 0);
+    public CardLevel artilleryBlindFrom = CardLevel.LEGENDARY;
+
     public static GameRules defaults() {
         return new GameRules();
     }
@@ -60,6 +65,8 @@ public class GameRules {
     public int formationSupply(CardLevel level) { return formationSupply.get(level); }
 
     public int convoyCapacity(CardLevel level) { return convoyCapacity.get(level); }
+
+    public int itemSupply(CardLevel level) { return itemSupply.get(level); }
 
     /** Values in the order COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, COMMANDER. */
     private static Map<CardLevel, Integer> byLevel(int common, int uncommon, int rare, int epic, int legendary, int commander) {

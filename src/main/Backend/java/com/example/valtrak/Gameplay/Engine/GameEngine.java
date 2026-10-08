@@ -2,6 +2,7 @@ package com.example.valtrak.Gameplay.Engine;
 
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.AttackSlot;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.DamageType;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.SpecialEffect;
 import com.example.valtrak.Gameplay.Engine.Action.*;
 
@@ -95,6 +96,7 @@ public final class GameEngine {
         for (int i = 0; i < 2; i++) {
             draw(s.player(i), Math.min(rules.mulliganExtraDrawCap, s.player(1 - i).mulligans));
         }
+        s.rngSeed = rng.nextLong();
         s.firstPlayer = rng.nextInt(2);
         s.activePlayer = s.firstPlayer;
         s.phase = GameState.Phase.SETUP;
@@ -154,6 +156,7 @@ public final class GameEngine {
             case RetreatGroup a -> retreatGroup(me, a, r);
             case Move a -> move(s, me, a, r);
             case UseAbility a -> useAbility(me, opp, a, r);
+            case PlayItem a -> playItem(s, me, opp, a, r);
             case Attack a -> attack(s, me, opp, a, r);
             case EndTurn a -> {
                 r.say("Player " + (player + 1) + " ends their turn.");
@@ -372,6 +375,126 @@ public final class GameEngine {
         r.say(spec.name() + " reveals " + targets.size() + " enemy vehicle(s).");
     }
 
+    // ── Item cards ───────────────────────────────────────────────────────────
+
+    private void playItem(GameState s, PlayerState me, PlayerState opp, PlayItem a, ActionResult r) {
+        requireInHand(me, a.cardId());
+        ItemSpec spec = catalog.item(a.cardId());
+        List<Long> targets = a.targetIds() == null ? List.of() : a.targetIds();
+        List<Long> chosen = a.cardIds() == null ? List.of() : a.cardIds();
+
+        // check everything first; each check returns what to do once the card is paid for
+        Runnable effect = switch (spec.effect()) {
+            case ERA -> prepareEra(me, spec, targets, r);
+            case ARTILLERY -> prepareArtillery(s, me, opp, spec, targets, r);
+            case SEARCH -> prepareSearch(s, me, spec, chosen, r);
+            case DRAW -> prepareDraw(me, spec, r);
+        };
+        int supply = rules.itemSupply(spec.level());
+        requireSupply(me, supply, "Playing " + spec.name());
+
+        me.hand.remove(Long.valueOf(a.cardId()));
+        spend(me, me.depot, ResourceKind.SUPPLY, null, supply);
+        if (spec.effect() != ItemEffect.ERA) me.discard.add(a.cardId());   // ERA stays on its vehicle
+        effect.run();
+    }
+
+    private Runnable prepareEra(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
+        if (targets.size() != 1) throw violation(spec.name() + " attaches to exactly one of your vehicles.");
+        Vehicle v = findVehicle(me, targets.get(0)).vehicle;
+        return () -> {
+            if (v.eraCardId != 0) me.discard.add(v.eraCardId);
+            v.eraCardId = spec.cardId();
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " (-" + spec.power() + "% chemical damage).");
+        };
+    }
+
+    private boolean artilleryHitsHidden(ItemSpec spec) {
+        return spec.level().compareTo(rules.artilleryBlindFrom) >= 0;
+    }
+
+    private Runnable prepareArtillery(GameState s, PlayerState me, PlayerState opp, ItemSpec spec, List<Long> targets, ActionResult r) {
+        if (targets.isEmpty()) throw violation("Choose which enemy vehicles " + spec.name() + " hits.");
+        if (new HashSet<>(targets).size() != targets.size()) throw violation("Each target can only be chosen once.");
+        if (targets.size() > spec.count()) throw violation(spec.name() + " can hit at most " + spec.count() + " vehicle(s).");
+        for (long id : targets) {
+            Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst()
+                    .orElseThrow(() -> violation("Enemy vehicle " + id + " was not found."));
+            if (!t.faceUp && !artilleryHitsHidden(spec)) {
+                throw violation(spec.name() + " can only hit face-up vehicles.");
+            }
+        }
+        return () -> {
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + ".");
+            for (long id : targets) {
+                Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst().orElse(null);
+                if (t == null || (!t.faceUp && !artilleryHitsHidden(spec))) continue;    // gone, or gone face down, since the first hit
+                t.faceUp = true;
+                int dealt = rules.damagePercent == 100 ? spec.power() : Math.max(1, Math.round(spec.power() * rules.damagePercent / 100f));
+                t.hp -= dealt;
+                r.say(spec.name() + " hits " + catalog.vehicle(t.cardId).name() + " for " + dealt + " (true damage).");
+                if (t.hp <= 0) destroy(s, opp, me, t, r);
+                if (s.phase == GameState.Phase.FINISHED) return;
+            }
+        };
+    }
+
+    private Runnable prepareSearch(GameState s, PlayerState me, ItemSpec spec, List<Long> chosen, ActionResult r) {
+        if (chosen.size() > spec.count()) throw violation(spec.name() + " finds at most " + spec.count() + " card(s).");
+        Map<Long, Integer> wanted = new HashMap<>();
+        for (long id : chosen) {
+            if (!matchesKind(catalog.find(id), spec.searchKind())) {
+                throw violation(spec.name() + " only finds " + kindName(spec.searchKind()) + ".");
+            }
+            if (wanted.merge(id, 1, Integer::sum) > Collections.frequency(me.deck, id)) {
+                throw violation("Your deck doesn't have that many copies of card " + id + ".");
+            }
+        }
+        return () -> {
+            List<String> names = new ArrayList<>();
+            for (long id : chosen) {
+                me.deck.remove(Long.valueOf(id));
+                me.hand.add(id);
+                names.add(catalog.spec(id).name());
+            }
+            Random shuffle = new Random(s.rngSeed);
+            s.rngSeed = shuffle.nextLong();
+            Collections.shuffle(me.deck, shuffle);
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " and finds "
+                    + (names.isEmpty() ? "nothing." : String.join(", ", names) + "."));
+        };
+    }
+
+    private Runnable prepareDraw(PlayerState me, ItemSpec spec, ActionResult r) {
+        if (me.deck.size() < spec.count()) {
+            throw violation(spec.name() + " needs at least " + spec.count() + " cards left in your deck.");
+        }
+        return () -> {
+            draw(me, spec.count());
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " and draws " + spec.count() + ".");
+        };
+    }
+
+    private static boolean matchesKind(CardSpec spec, SearchKind kind) {
+        return switch (kind) {
+            case RESOURCE -> spec instanceof ResourceSpec;
+            case TANK -> spec instanceof VehicleSpec v && v.isTank();
+            case SUPPORT -> spec instanceof VehicleSpec v && !v.isTank();
+        };
+    }
+
+    private static String kindName(SearchKind kind) {
+        return switch (kind) {
+            case RESOURCE -> "resource cards";
+            case TANK -> "tanks";
+            case SUPPORT -> "support vehicles";
+        };
+    }
+
+    private int eraPercent(Vehicle v) {
+        return v.eraCardId == 0 ? 0 : catalog.item(v.eraCardId).power();
+    }
+
     // ── Attacking ────────────────────────────────────────────────────────────
 
     private record Plan(Vehicle attacker, VehicleSpec spec, AttackSpec attack, Ammunition ammo, Vehicle target) {}
@@ -444,10 +567,13 @@ public final class GameEngine {
             DamageCalculator.Result dmg = DamageCalculator.calculate(p.attack.baseDamage(), p.attack.effect(),
                     p.ammo, catalog.vehicle(p.target.cardId).armor(), p.target.breachStacks);
             int dealt = rules.damagePercent == 100 ? dmg.damage() : Math.max(1, Math.round(dmg.damage() * rules.damagePercent / 100f));
+            int era = eraPercent(p.target);
+            boolean eraHelped = era > 0 && p.ammo.getDamageType() == DamageType.CHEMICAL;
+            if (eraHelped) dealt = Math.max(1, Math.round(dealt * (100 - era) / 100f));
             p.target.hp -= dealt;
             applyEffect(p.target, dmg.effect());
             r.say(p.spec.name() + " hits " + catalog.vehicle(p.target.cardId).name() + " for " + dealt
-                    + (dmg.effect() != SpecialEffect.NONE ? " (" + dmg.effect() + ")" : "") + ".");
+                    + (dmg.effect() != SpecialEffect.NONE ? " (" + dmg.effect() + ")" : "") + (eraHelped ? " (ERA -" + era + "%)" : "") + ".");
             if (p.target.hp <= 0) destroy(s, opp, me, p.target, r);
             if (s.phase == GameState.Phase.FINISHED) return;
         }
@@ -472,6 +598,7 @@ public final class GameEngine {
         if (g.leader() != target) {
             g.vehicles.remove(target);
             owner.discard.add(target.cardId);
+            if (target.eraCardId != 0) owner.discard.add(target.eraCardId);
             r.say(catalog.vehicle(target.cardId).name() + " is destroyed.");
             return;
         }
@@ -494,6 +621,7 @@ public final class GameEngine {
         g.pool.clear();
 
         owner.discard.add(target.cardId);
+        if (target.eraCardId != 0) owner.discard.add(target.eraCardId);
         owner.groups.remove(g);
         for (Vehicle survivor : g.vehicles) {
             if (survivor == target) continue;
@@ -504,6 +632,7 @@ public final class GameEngine {
                 owner.groups.add(lone);
             } else {
                 owner.hand.add(survivor.cardId);
+                if (survivor.eraCardId != 0) owner.hand.add(survivor.eraCardId);
             }
         }
         if (attacker.chips >= rules.winChips) {
@@ -589,6 +718,8 @@ public final class GameEngine {
             } else if (spec instanceof VehicleSpec) {
                 c.add(new Deploy(id, null));
                 for (StrikeGroup g : me.groups) c.add(new Deploy(id, g.id));
+            } else if (spec instanceof ItemSpec item) {
+                itemCandidates(c, me, opp, id, item);
             }
         }
         for (ResourceStack stack : me.depot) {
@@ -639,6 +770,27 @@ public final class GameEngine {
             if (firstChoices.size() >= 2) c.add(new Attack(g.id, firstChoices));
         }
         return c;
+    }
+
+    private void itemCandidates(List<Action> c, PlayerState me, PlayerState opp, long id, ItemSpec item) {
+        switch (item.effect()) {
+            case DRAW -> c.add(new PlayItem(id, List.of(), List.of()));
+            case SEARCH -> {
+                List<Long> found = new ArrayList<>();
+                for (long deckId : me.deck) {
+                    if (found.size() >= item.count()) break;
+                    if (matchesKind(catalog.find(deckId), item.searchKind())) found.add(deckId);
+                }
+                c.add(new PlayItem(id, List.of(), found));
+            }
+            case ERA -> me.groups.forEach(g -> g.vehicles.forEach(v -> c.add(new PlayItem(id, List.of(v.id), List.of()))));
+            case ARTILLERY -> {
+                List<Long> hittable = opp.groups.stream().flatMap(g -> g.vehicles.stream())
+                        .filter(v -> v.faceUp || artilleryHitsHidden(item)).map(v -> v.id).toList();
+                hittable.forEach(t -> c.add(new PlayItem(id, List.of(t), List.of())));
+                if (hittable.size() >= 2) c.add(new PlayItem(id, hittable.stream().limit(item.count()).toList(), List.of()));
+            }
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -718,9 +870,13 @@ public final class GameEngine {
     }
 
     private void requireSupply(PlayerState me, int amount) {
+        requireSupply(me, amount, "Forming a strike group");
+    }
+
+    private void requireSupply(PlayerState me, int amount, String what) {
         int have = available(me.depot, ResourceKind.SUPPLY, null);
         if (have < amount) {
-            throw violation("Forming a strike group needs " + amount + " Supply in your Depot (you have " + have + ").");
+            throw violation(what + " needs " + amount + " Supply in your Depot (you have " + have + ").");
         }
     }
 

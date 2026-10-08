@@ -14,7 +14,7 @@ import java.util.Random;
  * Runs many bot-vs-bot games and prints what happened. Run it from your IDE. Options are {@code key=value}
  * program arguments:
  * <pre>
- *   games=200  chips=5  deckSize=60  damage=100  designations=1  scouts=1  stalemate=0  fillAmmo=false  matchups=all|aggressive
+ *   games=200  chips=5  deckSize=60  damage=100  designations=1  scouts=1  items=0  stalemate=0  fillAmmo=false  matchups=all|aggressive
  * </pre>
  * With no options it plays 200 games per matchup using the rulebook as written.
  */
@@ -31,6 +31,7 @@ public final class SimulationMain {
         int deckSize = Integer.parseInt(opt.getOrDefault("deckSize", "60"));
         String which = opt.getOrDefault("matchups", "all");
         int scouts = Integer.parseInt(opt.getOrDefault("scouts", "1"));
+        int items = Integer.parseInt(opt.getOrDefault("items", "0"));
 
         GameRules rules = GameRules.defaults();
         rules.stalemateRounds = Integer.parseInt(opt.getOrDefault("stalemate", "0"));
@@ -48,20 +49,25 @@ public final class SimulationMain {
                 new Matchup(new GreedyBot(true), new GreedyBot(false)),
                 new Matchup(new RandomBot(), new RandomBot())));
         if (which.equals("aggressive")) matchups = matchups.subList(0, 1);
-        for (Matchup m : matchups) System.out.println(run(rules, m, games, fillAmmo, deckSize, scouts).describe());
+        for (Matchup m : matchups) System.out.println(run(rules, m, games, fillAmmo, deckSize, scouts, items).describe());
     }
 
     record Matchup(Bot bot0, Bot bot1) {}
 
     /** Plays {@code games} games of the matchup and sums them up. */
     public static SimStats run(GameRules rules, Matchup m, int games, boolean fillAmmo, int deckSize, int scouts) {
+        return run(rules, m, games, fillAmmo, deckSize, scouts, 0);
+    }
+
+    /** @param items copies of each item card in every deck (0 = no item cards) */
+    public static SimStats run(GameRules rules, Matchup m, int games, boolean fillAmmo, int deckSize, int scouts, int items) {
         EnumCardCatalog catalog = new EnumCardCatalog(fillAmmo);
         GameEngine engine = new GameEngine(rules, catalog);
         SimStats stats = new SimStats(m.bot0().name() + " vs " + m.bot1().name());
         for (int i = 0; i < games; i++) {
             Random deckRng = new Random(1000 + i);
-            List<Long> deck0 = SimDecks.standard(catalog, catalog.all(), deckSize, deckRng, scouts);
-            List<Long> deck1 = SimDecks.standard(catalog, catalog.all(), deckSize, deckRng, scouts);
+            List<Long> deck0 = SimDecks.standard(catalog, catalog.all(), deckSize, deckRng, scouts, items);
+            List<Long> deck1 = SimDecks.standard(catalog, catalog.all(), deckSize, deckRng, scouts, items);
             stats.add(GameSimulator.play(engine, deck0, deck1, m.bot0(), m.bot1(), i, 20000));
         }
         return stats;

@@ -17,6 +17,11 @@ public interface CardCatalog {
         throw new RuleViolationException("Card " + cardId + " is not a vehicle.");
     }
 
+    default ItemSpec item(long cardId) {
+        if (spec(cardId) instanceof ItemSpec i) return i;
+        throw new RuleViolationException("Card " + cardId + " is not an item card.");
+    }
+
     default ResourceSpec resource(long cardId) {
         if (spec(cardId) instanceof ResourceSpec r) return r;
         throw new RuleViolationException("Card " + cardId + " is not a resource.");

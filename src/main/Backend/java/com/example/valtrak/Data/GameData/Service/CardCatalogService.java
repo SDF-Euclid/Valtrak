@@ -8,6 +8,7 @@ import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
 import com.example.valtrak.Gameplay.Cards.Resource.SupplyCard;
+import com.example.valtrak.Gameplay.Cards.Special.SpecialItemCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,8 @@ public class CardCatalogService {
                     "SUPPLY", null, null, null, null, null, null, itemType(sc), sc.getCount(), null, null);
             case RepairCard r -> new CardDto(r.getId(), r.getName(), r.getDescription(), level,
                     "REPAIR", null, null, null, null, null, null, itemType(r), r.getCount(), r.getRepairAmount(), null);
+            case SpecialItemCard sp -> new CardDto(sp.getId(), sp.getName(), sp.getDescription(), level,
+                    "ITEM", null, null, null, null, null, null, sp.getEffect().name(), null, null, specialText(sp));
             default -> new CardDto(card.getId(), card.getName(), card.getDescription(), level,
                     "OTHER", null, null, null, null, null, null,
                     card instanceof ItemCard i ? itemType(i) : null, null, null, null);
@@ -59,6 +62,20 @@ public class CardCatalogService {
         return switch (v.getAbilityType()) {
             case REVEAL_ENEMY -> "Reveals up to " + v.getAbilityPower() + " enemy vehicle" + (v.getAbilityPower() == 1 ? "" : "s")
                     + " (" + v.getAbilityFuelCost() + " Fuel, while face up)";
+        };
+    }
+
+    /** The short effect line shown on an item card. */
+    private static String specialText(SpecialItemCard c) {
+        int power = c.getPrimaryValue() == null ? 0 : c.getPrimaryValue();
+        int second = c.getSecondaryValue() == null ? 0 : c.getSecondaryValue();
+        return switch (c.getEffect()) {
+            case ERA_PROTECTION -> "Attached: " + power + "% less chemical damage";
+            case ARTILLERY_STRIKE -> power + " true damage x" + second + " target" + (second == 1 ? "" : "s");
+            case SEARCH_RESOURCES -> "Search: " + power + " resource card" + (power == 1 ? "" : "s");
+            case SEARCH_TANKS -> "Search: " + power + " tank" + (power == 1 ? "" : "s");
+            case SEARCH_SUPPORT -> "Search: " + power + " support vehicle" + (power == 1 ? "" : "s");
+            case DRAW_CARDS -> "Draw " + power + " card" + (power == 1 ? "" : "s");
         };
     }
 

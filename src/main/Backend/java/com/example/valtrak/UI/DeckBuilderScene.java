@@ -248,6 +248,7 @@ public class DeckBuilderScene {
             case "FUEL"       -> "Fuel";
             case "SUPPLY"     -> "Supply";
             case "REPAIR"     -> "Repair";
+            case "ITEM"       -> "Item · " + CardTile.itemKind(c.itemType());
             default           -> "Other Items";
         };
     }

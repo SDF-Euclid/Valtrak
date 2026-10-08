@@ -55,7 +55,7 @@ public class CardTile {
 
         Label abilityLbl = null;
         if (card.ability() != null) {
-            abilityLbl = new Label("Ability: " + card.ability());
+            abilityLbl = new Label(("ITEM".equals(card.category()) ? "Effect: " : "Ability: ") + card.ability());
             abilityLbl.setFont(Font.font("Arial", FontWeight.BOLD, 10));
             abilityLbl.setTextFill(Color.web("#7ab8e8"));
             abilityLbl.setWrapText(true);
@@ -117,6 +117,7 @@ public class CardTile {
             case "FUEL"       -> CardArtRenderer.createFuelArt(card.count() != null ? card.count() : 1);
             case "SUPPLY"     -> CardArtRenderer.createSupplyArt(card.count() != null ? card.count() : 1);
             case "REPAIR"     -> CardArtRenderer.createRepairArt();
+            case "ITEM"       -> CardArtRenderer.createItemArt(card.itemType());
             default           -> CardArtRenderer.createAmmoArt(null);
         };
     }
@@ -126,6 +127,7 @@ public class CardTile {
             case "VEHICLE" -> (card.nation() != null ? card.nation() : "Unknown") + " · "
                     + (card.vehicleClass() != null ? card.vehicleClass().replace("_", " ") : "Vehicle");
             case "AMMUNITION" -> card.ammunition() != null ? "AMMO · " + card.ammunition() : "Ammunition";
+            case "ITEM" -> "ITEM · " + itemKind(card.itemType()).toUpperCase();
             default -> card.itemType() != null ? "ITEM · " + card.itemType() : "Item";
         };
     }
@@ -138,8 +140,19 @@ public class CardTile {
             case "SUPPLY" -> card.count() != null ? "Supply +" + card.count() : "";
             case "REPAIR" -> card.repairAmount() == null ? ""
                     : card.repairAmount() >= 999 ? "Repairs: full HP" : "Repairs " + card.repairAmount() + " HP";
+            case "ITEM" -> "";                                  // the effect is shown on the ability line
             default -> card.description() != null ? card.description() : "";
         };
+    }
+
+    /** ERA, Artillery, Search or Draw, from an item card's effect name. */
+    public static String itemKind(String effect) {
+        if (effect == null) return "Item";
+        if (effect.startsWith("ERA")) return "ERA";
+        if (effect.startsWith("ARTILLERY")) return "Artillery";
+        if (effect.startsWith("SEARCH")) return "Search";
+        if (effect.startsWith("DRAW")) return "Draw";
+        return "Item";
     }
 
     private static int orZero(Integer v) { return v != null ? v : 0; }
