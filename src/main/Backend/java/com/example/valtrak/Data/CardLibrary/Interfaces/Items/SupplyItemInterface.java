@@ -1,3 +1,3 @@
 package com.example.valtrak.Data.CardLibrary.Interfaces.Items;
 
-public interface SupplyItemInterface {}
+public interface SupplyItemInterface extends ItemCardInterface {}

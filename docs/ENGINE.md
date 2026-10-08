@@ -15,11 +15,16 @@ List<Action> options = engine.legalActions(state, player);          // everythin
   (a test enforces this).
 - `GameState` is plain data (public fields), so it serialises to JSON for saving and for the future server API.
 
+## How the server uses it
+- `DbCardCatalog` gives the engine its card data from the database (read once, on first use).
+- `MatchService` runs challenges and moves, saving the whole `GameState` as JSON after every move;
+  `GameViewBuilder` decides what each player may see. See `docs/API.md`.
+
 ## What is not built yet
-- A `CardCatalog` backed by the database (tests use a hand-built catalog) and saving a game's state.
-- Server endpoints and the per-player view that hides the opponent's hand and face-down cards.
-  The old `GameService` / `GameController` still use the previous rules and will be replaced by these.
-- Special item cards, Resupply abilities beyond the convoy, and Supply cards in the card library.
+- Special item cards, Resupply abilities beyond the convoy, and the other new cards (Specialist, Resupply and
+  anti-air vehicles are not in the card library yet, so the convoy and large groups can't be tried in a real game).
+- The game screen, and pushing updates to the other player.
+- The old `CombatService` (and its tests) are no longer used by the game; `DamageCalculator` replaces it.
 
 ## Choices the engine makes where the rulebook is silent
 - Resources are spent smallest card first, so big crates are kept for later.

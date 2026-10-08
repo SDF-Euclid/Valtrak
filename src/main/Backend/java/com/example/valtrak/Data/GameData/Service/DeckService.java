@@ -7,8 +7,7 @@ import com.example.valtrak.Data.GameData.ExceptionHandling.Exceptions.ApiExcepti
 import com.example.valtrak.Data.GameData.Repository.Cards.CardRepository;
 import com.example.valtrak.Data.GameData.Repository.DeckRepository;
 import com.example.valtrak.Data.GameData.Repository.PlayerRepository;
-import com.example.valtrak.Gameplay.Cards.Base.Card;
-import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
+import com.example.valtrak.Gameplay.Engine.GameEngine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,6 +26,7 @@ public class DeckService {
     private final DeckRepository decks;
     private final PlayerRepository players;
     private final CardRepository cards;
+    private final GameEngine engine;
 
     @Transactional(readOnly = true)
     public List<DeckDto> list(Long playerId) {
@@ -67,6 +67,18 @@ public class DeckService {
         decks.delete(require(playerId, deckId));
     }
 
+    /** The deck's cards as a list with one entry per copy, for starting a game. Only the owner can use a deck. */
+    @Transactional(readOnly = true)
+    public List<Long> expandedCards(Long playerId, Long deckId) {
+        return expand(require(playerId, deckId).getCardCounts());
+    }
+
+    private static List<Long> expand(Map<Long, Integer> counts) {
+        List<Long> list = new java.util.ArrayList<>();
+        counts.forEach((id, copies) -> { for (int i = 0; i < copies; i++) list.add(id); });
+        return list;
+    }
+
     /** Someone else's deck looks exactly like a deck that doesn't exist. */
     private Deck require(Long playerId, Long deckId) {
         return decks.findByIdAndPlayerId(deckId, playerId)
@@ -105,23 +117,9 @@ public class DeckService {
         return new LinkedHashMap<>(requested);
     }
 
-    private static boolean isTank(String vehicleClass) {
-        return switch (vehicleClass) {
-            case "LIGHT_TANK", "MEDIUM_TANK", "HEAVY_TANK", "MAIN_BATTLE_TANK" -> true;
-            default -> false;
-        };
-    }
-
     private DeckDto toDto(Deck deck) {
         int total = deck.getCardCounts().values().stream().mapToInt(Integer::intValue).sum();
-        int tanks = 0;
-        for (Card c : cards.findAllById(deck.getCardCounts().keySet())) {
-            if (c instanceof GroundVehicleCard v && v.getVehicleClass() != null && isTank(v.getVehicleClass().getClassName())) {
-                tanks += deck.getCardCounts().get(c.getId());
-            }
-        }
-        boolean playable = total >= DeckRules.MIN_PLAYABLE_DECK_SIZE && total <= DeckRules.MAX_DECK_SIZE
-                && tanks >= DeckRules.MIN_TANKS;
+        boolean playable = engine.validateDeck(expand(deck.getCardCounts())).isEmpty();
         return new DeckDto(deck.getId(), deck.getName(), new LinkedHashMap<>(deck.getCardCounts()),
                 total, playable, deck.getUpdatedAt());
     }

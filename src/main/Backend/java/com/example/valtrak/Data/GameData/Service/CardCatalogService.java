@@ -7,6 +7,7 @@ import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
 import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
+import com.example.valtrak.Gameplay.Cards.Resource.SupplyCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,8 @@ public class CardCatalogService {
                     itemType(a), a.getCount(), null);
             case FuelCard f -> new CardDto(f.getId(), f.getName(), f.getDescription(), level,
                     "FUEL", null, null, null, null, null, null, itemType(f), f.getCount(), null);
+            case SupplyCard sc -> new CardDto(sc.getId(), sc.getName(), sc.getDescription(), level,
+                    "SUPPLY", null, null, null, null, null, null, itemType(sc), sc.getCount(), null);
             case RepairCard r -> new CardDto(r.getId(), r.getName(), r.getDescription(), level,
                     "REPAIR", null, null, null, null, null, null, itemType(r), r.getCount(), r.getRepairAmount());
             default -> new CardDto(card.getId(), card.getName(), card.getDescription(), level,

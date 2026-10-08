@@ -60,6 +60,16 @@ public class CardArtRenderer {
         return canvas;
     }
 
+    public static Canvas createSupplyArt(int count) {
+        Canvas canvas = new Canvas(W, H);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.web("#100f0a"));
+        gc.fillRect(0, 0, W, H);
+        drawCrateGrid(gc);
+        drawCentered(gc, false, sprite -> drawSupplyCrates(sprite, count));
+        return canvas;
+    }
+
     public static Canvas createRepairArt() {
         Canvas canvas = new Canvas(W, H);
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -405,6 +415,22 @@ public class CardArtRenderer {
         gc.fillRoundRect(106, 42, 30, 22, 3, 3);
         gc.setFill(Color.web("#3a5a6a"));
         gc.fillRect(110, 46, 22, 10);
+    }
+
+    private static void drawSupplyCrates(GraphicsContext gc, int count) {
+        int crates = count <= 1 ? 1 : count <= 3 ? 2 : 3;
+        double size = 34;
+        double startX = W / 2.0 - (crates * size + (crates - 1) * 4) / 2.0;
+        for (int i = 0; i < crates; i++) {
+            double x = startX + i * (size + 4);
+            gc.setFill(Color.web("#8a6a3a"));
+            gc.fillRect(x, 40, size, size);
+            gc.setStroke(Color.web("#5c4524"));
+            gc.setLineWidth(2);
+            gc.strokeRect(x + 1, 41, size - 2, size - 2);
+            gc.strokeLine(x, 40, x + size, 40 + size);
+            gc.strokeLine(x + size, 40, x, 40 + size);
+        }
     }
 
     private static void drawRepairKit(GraphicsContext gc) {

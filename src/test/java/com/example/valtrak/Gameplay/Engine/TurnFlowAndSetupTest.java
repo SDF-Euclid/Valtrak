@@ -201,6 +201,15 @@ class TurnFlowAndSetupTest {
         assertThat(w.engine.legalActions(w.s, 1)).isEmpty();        // not player 1's turn
     }
 
+    @Test
+    void resigningGivesTheGameToTheOpponentEvenOutOfTurn() {
+        w.engine.resign(w.s, 1);                                    // it is player 0's turn
+        assertThat(w.s.phase).isEqualTo(GameState.Phase.FINISHED);
+        assertThat(w.s.winner).isZero();
+        assertThat(w.s.endReason).contains("resigned");
+        assertThatThrownBy(() -> w.engine.resign(w.s, 0)).isInstanceOf(RuleViolationException.class);
+    }
+
     private static String snapshot(GameState s) {
         StringBuilder sb = new StringBuilder();
         for (PlayerState p : s.players) {

@@ -104,6 +104,7 @@ public class CardTile {
             case "AMMUNITION" -> CardArtRenderer.createAmmoArt(
                     card.damageType() != null ? DamageType.valueOf(card.damageType()) : null);
             case "FUEL"       -> CardArtRenderer.createFuelArt(card.count() != null ? card.count() : 1);
+            case "SUPPLY"     -> CardArtRenderer.createSupplyArt(card.count() != null ? card.count() : 1);
             case "REPAIR"     -> CardArtRenderer.createRepairArt();
             default           -> CardArtRenderer.createAmmoArt(null);
         };
@@ -123,6 +124,7 @@ public class CardTile {
             case "VEHICLE" -> "HP " + orZero(card.hp()) + "  ·  Armor " + orZero(card.armor());
             case "AMMUNITION" -> card.count() != null ? "Resupply ×" + card.count() : "";
             case "FUEL" -> card.count() != null ? "Fuel +" + card.count() : "";
+            case "SUPPLY" -> card.count() != null ? "Supply +" + card.count() : "";
             case "REPAIR" -> card.repairAmount() == null ? ""
                     : card.repairAmount() >= 999 ? "Repairs: full HP" : "Repairs " + card.repairAmount() + " HP";
             default -> card.description() != null ? card.description() : "";

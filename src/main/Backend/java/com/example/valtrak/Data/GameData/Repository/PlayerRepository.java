@@ -21,4 +21,6 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     Optional<Player> findByEmail(@Email String email);
 
     boolean existsByDisplayNameIgnoreCase(String displayName);
+
+    Optional<Player> findByDisplayNameIgnoreCase(String displayName);
 }

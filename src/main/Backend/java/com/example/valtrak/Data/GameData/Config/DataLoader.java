@@ -3,6 +3,7 @@ package com.example.valtrak.Data.GameData.Config;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.AmmoSupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.FuelSupplyDrum;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.RepairSupplyKit;
+import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.ArmorBracket;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleType;
@@ -13,6 +14,7 @@ import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.AmmunitionItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.FuelItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.RepairItemInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Items.SupplyItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.VehicleAttackInterface;
 import com.example.valtrak.Data.CardLibrary.Nations;
@@ -23,11 +25,13 @@ import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
 import com.example.valtrak.Data.GameData.Repository.Cards.AmmunitionCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.FuelCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.RepairCardRepository;
+import com.example.valtrak.Data.GameData.Repository.Cards.SupplyCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.*;
 import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
+import com.example.valtrak.Gameplay.Cards.Resource.SupplyCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
 import com.example.valtrak.Gameplay.Engine.DamageMatchups;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +70,7 @@ public class DataLoader implements CommandLineRunner {
     private final AmmunitionCardRepository ammunitionCardRepo;
     private final FuelCardRepository fuelCardRepo;
     private final RepairCardRepository repairCardRepo;
+    private final SupplyCardRepository supplyCardRepo;
     private final WeaponRepository weaponRepo;
     private final NationRepository nationRepo;
     private final VehicleCardRepository vehicleRepo;
@@ -98,6 +103,7 @@ public class DataLoader implements CommandLineRunner {
         loadAmmunitionCards(AmmoSupplyCrate.values());
         loadFuelCards(FuelSupplyDrum.values());
         loadRepairCards(RepairSupplyKit.values());
+        loadSupplyCards(SupplyCrate.values());
         logger.info("Data loaded successfully");
     }
 
@@ -322,6 +328,17 @@ public class DataLoader implements CommandLineRunner {
         for (RepairItemInterface kit : kits) {
             if (repairCardRepo.existsByName(kit.getItemName())) continue;
             repairCardRepo.save(new RepairCard(kit));
+        }
+    }
+
+    /**
+     * Seeds all {@link SupplyCrate} enum constants into the supply_cards table.
+     * @param crates an array of {@link SupplyItemInterface} values
+     */
+    private void loadSupplyCards(SupplyItemInterface[] crates) {
+        for (SupplyItemInterface crate : crates) {
+            if (supplyCardRepo.existsByName(crate.getItemName())) continue;
+            supplyCardRepo.save(new SupplyCard(crate));
         }
     }
 }

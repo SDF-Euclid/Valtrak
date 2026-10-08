@@ -246,6 +246,7 @@ public class DeckBuilderScene {
             case "VEHICLE"    -> c.vehicleClass() != null ? title(c.vehicleClass()) : "Vehicles";
             case "AMMUNITION" -> "Ammunition";
             case "FUEL"       -> "Fuel";
+            case "SUPPLY"     -> "Supply";
             case "REPAIR"     -> "Repair";
             default           -> "Other Items";
         };

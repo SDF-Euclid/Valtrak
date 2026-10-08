@@ -104,6 +104,14 @@ public final class GameEngine {
         return applyInPlace(s, player, action);
     }
 
+    /** A player gives up. Allowed at any time, even when it isn't their turn. */
+    public ActionResult resign(GameState s, int player) {
+        if (s.phase == GameState.Phase.FINISHED) throw violation("The game is over.");
+        ActionResult r = new ActionResult();
+        finish(s, 1 - player, "Player " + (player + 1) + " resigned.", r);
+        return r;
+    }
+
     /** True if the action would be accepted right now. */
     public boolean isLegal(GameState s, int player, Action action) {
         try {

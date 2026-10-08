@@ -13,25 +13,25 @@ import java.util.List;
  * A small hand-built card catalog and helpers to set up game situations directly,
  * so each test only describes the situation it cares about.
  */
-final class TestWorld {
+public final class TestWorld {
 
     // tanks
-    static final long TANK_COMMON = 1, TANK_UNCOMMON = 2, TANK_RARE = 3, TANK_RARE_MBT = 4,
+    public static final long TANK_COMMON = 1, TANK_UNCOMMON = 2, TANK_RARE = 3, TANK_RARE_MBT = 4,
             TANK_EPIC = 5, TANK_LEGENDARY = 6, TANK_LEGENDARY_HEAVY = 7, TANK_COMMANDER = 8;
     // other vehicles
-    static final long ANTI_AIR = 10, RECON = 11, SPECIALIST = 12, RESUPPLY = 13, AIR = 14;
+    public static final long ANTI_AIR = 10, RECON = 11, SPECIALIST = 12, RESUPPLY = 13, AIR = 14;
     // resources
-    static final long APFSDS_5 = 20, HEAT_5 = 21, NATO_10 = 22, FUEL_5 = 23, FUEL_1 = 24, FUEL_10 = 25,
+    public static final long APFSDS_5 = 20, HEAT_5 = 21, NATO_10 = 22, FUEL_5 = 23, FUEL_1 = 24, FUEL_10 = 25,
             SUPPLY_1 = 26, SUPPLY_3 = 27, REPAIR_25 = 28, REPAIR_FULL = 29;
 
-    final GameRules rules = GameRules.defaults();
-    final MapCardCatalog catalog = buildCatalog();
-    final GameEngine engine = new GameEngine(rules, catalog);
-    final GameState s = playingState();
+    public final GameRules rules = GameRules.defaults();
+    public final MapCardCatalog catalog = buildCatalog();
+    public final GameEngine engine = new GameEngine(rules, catalog);
+    public final GameState s = playingState();
 
     // ── building the world ───────────────────────────────────────────────────
 
-    static MapCardCatalog buildCatalog() {
+    public static MapCardCatalog buildCatalog() {
         MapCardCatalog c = new MapCardCatalog();
         c.add(tank(TANK_COMMON, "Light Common", CardLevel.COMMON, VehicleClass.LIGHT_TANK, 100, 40));
         c.add(tank(TANK_UNCOMMON, "Light Uncommon", CardLevel.UNCOMMON, VehicleClass.LIGHT_TANK, 120, 45));
@@ -90,14 +90,14 @@ final class TestWorld {
 
     // ── situations ───────────────────────────────────────────────────────────
 
-    PlayerState p(int i) { return s.player(i); }
+    public PlayerState p(int i) { return s.player(i); }
 
-    void hand(int player, long... cardIds) {
+    public void hand(int player, long... cardIds) {
         for (long id : cardIds) p(player).hand.add(id);
     }
 
     /** A new group of one: the tank, face up or down. */
-    StrikeGroup group(int player, long tankCardId, boolean faceUp) {
+    public StrikeGroup group(int player, long tankCardId, boolean faceUp) {
         StrikeGroup g = new StrikeGroup(s.nextId++);
         Vehicle v = vehicle(tankCardId);
         v.faceUp = faceUp;
@@ -107,7 +107,7 @@ final class TestWorld {
     }
 
     /** Adds a vehicle to a group and marks the group as formed. */
-    Vehicle add(StrikeGroup g, long cardId, boolean faceUp) {
+    public Vehicle add(StrikeGroup g, long cardId, boolean faceUp) {
         Vehicle v = vehicle(cardId);
         v.faceUp = faceUp;
         g.vehicles.add(v);
@@ -115,19 +115,19 @@ final class TestWorld {
         return v;
     }
 
-    ResourceStack pool(StrikeGroup g, long cardId) {
+    public ResourceStack pool(StrikeGroup g, long cardId) {
         ResourceStack r = stack(cardId);
         g.pool.add(r);
         return r;
     }
 
-    ResourceStack depot(int player, long cardId) {
+    public ResourceStack depot(int player, long cardId) {
         ResourceStack r = stack(cardId);
         p(player).depot.add(r);
         return r;
     }
 
-    Vehicle vehicle(long cardId) {
+    public Vehicle vehicle(long cardId) {
         VehicleSpec spec = catalog.vehicle(cardId);
         return new Vehicle(s.nextId++, cardId, spec.hp());
     }
@@ -139,19 +139,19 @@ final class TestWorld {
 
     // ── doing things ─────────────────────────────────────────────────────────
 
-    ActionResult act(int player, Action action) {
+    public ActionResult act(int player, Action action) {
         return engine.apply(s, player, action);
     }
 
-    static Action.Attack skirmish(StrikeGroup g, Vehicle attacker, AttackSlot slot, Ammunition ammo, Vehicle target) {
+    public static Action.Attack skirmish(StrikeGroup g, Vehicle attacker, AttackSlot slot, Ammunition ammo, Vehicle target) {
         return new Action.Attack(g.id, List.of(new AttackChoice(attacker.id, slot, ammo, target.id)));
     }
 
-    int fuelIn(StrikeGroup g) {
+    public int fuelIn(StrikeGroup g) {
         return g.pool.stream().filter(x -> x.kind == ResourceKind.FUEL).mapToInt(x -> x.remaining).sum();
     }
 
-    int ammoIn(StrikeGroup g, Ammunition a) {
+    public int ammoIn(StrikeGroup g, Ammunition a) {
         return g.pool.stream().filter(x -> x.kind == ResourceKind.AMMO && x.ammunition == a).mapToInt(x -> x.remaining).sum();
     }
 }
