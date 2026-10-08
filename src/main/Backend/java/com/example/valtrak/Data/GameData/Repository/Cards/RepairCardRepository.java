@@ -7,5 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RepairCardRepository extends JpaRepository<RepairCard, Long> {
 
+    java.util.Optional<RepairCard> findByName(String name);
+
     boolean existsByName(String name);
 }

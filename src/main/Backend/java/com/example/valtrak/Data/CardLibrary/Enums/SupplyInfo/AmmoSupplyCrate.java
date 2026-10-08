@@ -37,9 +37,9 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
     /*=======================*/
 
     /*==========HE==========*/
-    HE_25MM_X1("1x 25mm HE Crate", "Re-supplies 1 25mm he round", CardLevel.COMMON, ItemType.AMMUNITION, Ammunition.HE_25MM, 1),
-    HE_40MM_X1("1x 40mm HE Crate", "Re-supplies 1 40mm he grenade", CardLevel.COMMON, ItemType.AMMUNITION, Ammunition.HE_40MM, 1),
-    HE_120MM_X1("1x 120mm HE Crate", "Re-supplies 1 120mm HE shell", CardLevel.COMMANDER, ItemType.AMMUNITION, Ammunition.HE_120MM, 1),
+    HE_25MM_X1("1x 25mm HE Crate", "Re-supplies 1 25mm HE round", CardLevel.COMMON, ItemType.AMMUNITION, Ammunition.HE_25MM, 1),
+    HE_40MM_X1("1x 40mm HE Crate", "Re-supplies 1 40mm HE grenade", CardLevel.COMMON, ItemType.AMMUNITION, Ammunition.HE_40MM, 1),
+    HE_120MM_X1("1x 120mm HE Crate", "Re-supplies 1 120mm HE shell", CardLevel.COMMON, ItemType.AMMUNITION, Ammunition.HE_120MM, 1),
     /*======================*/
 
     /*==========SQUASH HEAD==========*/
@@ -75,9 +75,9 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
     /*=======================*/
 
     /*==========HE==========*/
-    HE_25MM_X5("5x 25mm HE Crate", "Re-supplies 5 25mm he rounds", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HE_25MM, 5),
-    HE_40MM_X5("5x 40mm HE Crate", "Re-supplies 5 40mm he grenades", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HE_40MM, 5),
-    HE_120MM_X5("5x 120mm HE Crate", "Re-supplies 5 120mm he shells", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HE_120MM, 5),
+    HE_25MM_X5("5x 25mm HE Crate", "Re-supplies 5 25mm HE rounds", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HE_25MM, 5),
+    HE_40MM_X5("5x 40mm HE Crate", "Re-supplies 5 40mm HE grenades", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HE_40MM, 5),
+    HE_120MM_X5("5x 120mm HE Crate", "Re-supplies 5 120mm HE shells", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HE_120MM, 5),
     /*======================*/
 
     /*==========SQUASH HEAD==========*/
@@ -113,9 +113,9 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
     /*=======================*/
 
     /*==========HE==========*/
-    HE_25MM_X10("10x 25mm HE Crate", "Re-supplies 10 25mm he rounds", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.HE_25MM, 10),
-    HE_40MM_X10("10x 40mm HE Crate", "Re-supplies 10 40mm he grenades", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.HE_40MM, 10),
-    HE_120MM_X10("10x 120mm HE Crate", "Re-supplies 10 120mm he shells", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.HE_120MM, 10),
+    HE_25MM_X10("10x 25mm HE Crate", "Re-supplies 10 25mm HE rounds", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.HE_25MM, 10),
+    HE_40MM_X10("10x 40mm HE Crate", "Re-supplies 10 40mm HE grenades", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.HE_40MM, 10),
+    HE_120MM_X10("10x 120mm HE Crate", "Re-supplies 10 120mm HE shells", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.HE_120MM, 10),
     /*======================*/
 
     /*==========SQUASH HEAD==========*/
@@ -151,9 +151,9 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
     /*=======================*/
 
     /*==========HE==========*/
-    HE_25MM_X20("20x 25mm HE Crate", "Re-supplies 20 25mm he rounds", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.HE_25MM, 20),
-    HE_40MM_X20("20x 40mm HE Crate", "Re-supplies 20 40mm he grenades", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.HE_40MM, 20),
-    HE_120MM_X20("20x 120mm HE Crate", "Re-supplies 20 120mm he shells", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.HE_120MM, 20),
+    HE_25MM_X20("20x 25mm HE Crate", "Re-supplies 20 25mm HE rounds", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.HE_25MM, 20),
+    HE_40MM_X20("20x 40mm HE Crate", "Re-supplies 20 40mm HE grenades", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.HE_40MM, 20),
+    HE_120MM_X20("20x 120mm HE Crate", "Re-supplies 20 120mm HE shells", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.HE_120MM, 20),
     /*======================*/
 
     /*==========SQUASH HEAD==========*/
