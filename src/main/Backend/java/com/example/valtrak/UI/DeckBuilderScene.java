@@ -244,7 +244,7 @@ public class DeckBuilderScene {
     private String categoryOf(CardDto c) {
         return switch (c.category()) {
             case "VEHICLE"    -> c.vehicleClass() != null ? title(c.vehicleClass()) : "Vehicles";
-            case "AMMUNITION" -> "Ammunition";
+            case "AMMUNITION" -> c.ammunition() != null ? "Ammo · " + c.ammunition().replace('_', ' ') : "Ammunition";
             case "FUEL"       -> "Fuel";
             case "SUPPLY"     -> "Supply";
             case "REPAIR"     -> "Repair";

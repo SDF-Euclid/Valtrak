@@ -14,7 +14,7 @@ import java.util.Random;
  * Runs many bot-vs-bot games and prints what happened. Run it from your IDE. Options are {@code key=value}
  * program arguments:
  * <pre>
- *   games=200  chips=5  deckSize=60  damage=100  stalemate=0  fillAmmo=true  matchups=all|aggressive
+ *   games=200  chips=5  deckSize=60  damage=100  designations=1  stalemate=0  fillAmmo=false  matchups=all|aggressive
  * </pre>
  * With no options it plays 200 games per matchup using the rulebook as written.
  */
@@ -27,7 +27,7 @@ public final class SimulationMain {
             opt.put(kv[0], kv.length > 1 ? kv[1] : "true");
         }
         int games = Integer.parseInt(opt.getOrDefault("games", "200"));
-        boolean fillAmmo = Boolean.parseBoolean(opt.getOrDefault("fillAmmo", "true"));
+        boolean fillAmmo = Boolean.parseBoolean(opt.getOrDefault("fillAmmo", "false"));
         int deckSize = Integer.parseInt(opt.getOrDefault("deckSize", "60"));
         String which = opt.getOrDefault("matchups", "all");
 
@@ -35,6 +35,7 @@ public final class SimulationMain {
         rules.stalemateRounds = Integer.parseInt(opt.getOrDefault("stalemate", "0"));
         rules.winChips = Integer.parseInt(opt.getOrDefault("chips", "5"));
         rules.damagePercent = Integer.parseInt(opt.getOrDefault("damage", "100"));
+        rules.designationsPerTurn = Integer.parseInt(opt.getOrDefault("designations", "1"));
         System.out.println("Rules: win at " + rules.winChips + " chips, " + deckSize + "-card decks, damage "
                 + rules.damagePercent + "%, stalemate rule "
                 + (rules.stalemateRounds == 0 ? "off" : "after " + rules.stalemateRounds + " passive rounds")

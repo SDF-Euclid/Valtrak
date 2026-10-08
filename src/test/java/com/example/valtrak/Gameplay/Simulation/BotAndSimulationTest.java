@@ -26,12 +26,13 @@ class BotAndSimulationTest {
 
     @Test
     void theEnumCatalogHasEveryCardKindWithStableIds() {
-        assertThat(catalog.all()).hasSizeGreaterThan(30);
+        assertThat(catalog.all()).hasSize(7 + 60 + 4 + 4 + 3);   // vehicles, ammo, fuel, repair, supply
         assertThat(catalog.find(1)).isInstanceOf(VehicleSpec.class);
         assertThat(new EnumCardCatalog(true).find(1).name()).isEqualTo(catalog.find(1).name());
         assertThat(catalog.all()).anyMatch(c -> c instanceof ResourceSpec r && r.kind() == ResourceKind.SUPPLY);
-        assertThat(catalog.all()).anyMatch(c -> c.name().contains("synthetic"));
-        assertThat(new EnumCardCatalog(false).all()).noneMatch(c -> c.name().contains("synthetic"));
+        // every ammunition type has real cards now, so there is nothing for the synthetic fill to add
+        assertThat(catalog.all()).noneMatch(c -> c.name().contains("synthetic"));
+        assertThat(catalog.all()).hasSameSizeAs(new EnumCardCatalog(false).all());
     }
 
     @Test
@@ -44,6 +45,18 @@ class BotAndSimulationTest {
                 assertThat(ammoExists).as(v.name() + " " + a.name()).isTrue();
             }
         }
+    }
+
+    @Test
+    void everyAmmunitionTypeHasCardsInAllFourSizes() {
+        var real = new EnumCardCatalog(false);
+        for (var ammo : com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition.values()) {
+            var sizes = real.all().stream()
+                    .filter(c -> c instanceof ResourceSpec r && r.kind() == ResourceKind.AMMO && r.ammunition() == ammo)
+                    .map(c -> ((ResourceSpec) c).amount()).sorted().toList();
+            assertThat(sizes).as(ammo.name()).containsExactly(1, 5, 10, 20);
+        }
+        assertThat(real.all()).noneMatch(c -> c.name().contains("synthetic"));
     }
 
     @Test

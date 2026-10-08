@@ -12,19 +12,22 @@ public final class SimDecks {
     private SimDecks() {}
 
     /**
-     * All tanks (3 copies each); 2 copies of as many different Ammo cards as fit; the 5x and 10x Fuel cards;
-     * the 1x and 3x Supply cards; and the two smallest Repair cards (3 copies each, 3 copies each of the rest)
-     * - topped up with more Ammo until the deck has {@code size} cards.
+     * All tanks (3 copies each); one 5x or 10x Ammo card (2 copies) for every weapon the tanks carry, so every attack can
+     * be paid for; the 5x and 10x Fuel cards; the 1x and 3x Supply cards; the small Repair cards (3 copies each) - topped up
+     * with more Ammo until the deck has {@code size} cards.
      */
     public static List<Long> standard(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng) {
         List<Long> deck = new ArrayList<>();
         List<ResourceSpec> ammo = new ArrayList<>();
+        java.util.Set<com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon> weapons =
+                java.util.EnumSet.noneOf(com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon.class);
         for (CardSpec spec : all) {
             if (spec instanceof VehicleSpec v && v.isTank()) {
                 addCopies(deck, spec.cardId(), 3);
+                v.attacks().forEach(a -> weapons.add(a.weapon()));
             } else if (spec instanceof ResourceSpec r) {
                 switch (r.kind()) {
-                    case AMMO -> ammo.add(r);
+                    case AMMO -> { if (r.amount() == 5 || r.amount() == 10) ammo.add(r); }
                     case FUEL -> { if (r.amount() == 5 || r.amount() == 10) addCopies(deck, r.cardId(), 3); }
                     case SUPPLY -> { if (r.amount() <= 3) addCopies(deck, r.cardId(), 3); }
                     case REPAIR -> { if (r.amount() <= 75) addCopies(deck, r.cardId(), 3); }
@@ -32,10 +35,14 @@ public final class SimDecks {
             }
         }
         Collections.shuffle(ammo, rng);
-        for (ResourceSpec r : ammo) {
-            if (deck.size() >= size) break;
-            addCopies(deck, r.cardId(), Math.min(2, size - deck.size()));
+        // first, ammo for every weapon
+        for (var weapon : weapons) {
+            ammo.stream().filter(r -> weapon.getCompatibleAmmunition().contains(r.ammunition())).findFirst()
+                    .ifPresent(r -> {
+                        if (Collections.frequency(deck, r.cardId()) == 0 && deck.size() < size) addCopies(deck, r.cardId(), 2);
+                    });
         }
+        // then fill up with more ammo
         for (int pass = 0; deck.size() < size && pass < 10; pass++) {
             for (ResourceSpec r : ammo) {
                 if (deck.size() >= size) break;

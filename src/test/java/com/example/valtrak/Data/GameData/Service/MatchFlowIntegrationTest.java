@@ -43,10 +43,17 @@ class MatchFlowIntegrationTest {
         return players.save(p);
     }
 
-    /** Three copies of every card in the game: 30 kinds, 90 cards, 21 tanks. */
+    /** Every vehicle (3 copies each, 21 tanks) topped up with 3 copies of other cards to exactly 90 cards. */
     private DeckDto playableDeck(Player owner, String name) {
         Map<Long, Integer> counts = new LinkedHashMap<>();
-        cards.findAll().forEach(c -> counts.put(c.getId(), 3));
+        int total = 0;
+        for (var c : cards.findAll()) {
+            if (catalog.find(c.getId()) instanceof VehicleSpec) { counts.put(c.getId(), 3); total += 3; }
+        }
+        for (var c : cards.findAll()) {
+            if (total >= 90) break;
+            if (!counts.containsKey(c.getId())) { counts.put(c.getId(), 3); total += 3; }
+        }
         return decks.create(owner.getId(), new SaveDeckRequest(name, counts));
     }
 

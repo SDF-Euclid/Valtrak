@@ -10,8 +10,9 @@ options are `key=value` program arguments:
 | `chips` | 5 | chips needed to win |
 | `deckSize` | 60 | cards per deck (60-100) |
 | `damage` | 100 | every attack's damage in percent (an experiment knob) |
+| `designations` | 1 | resource cards a player may play per turn |
 | `stalemate` | 0 | experiment: after this many rounds where nobody attacks, every vehicle (except Resupply) is revealed. 0 = off, as in the rulebook |
-| `fillAmmo` | true | add synthetic Ammo cards for weapons that have no Ammo card yet |
+| `fillAmmo` | false | add synthetic Ammo cards for weapons that have no Ammo card (not needed any more: every ammunition type has cards) |
 | `matchups` | all | `all` or `aggressive` (just aggressive vs aggressive) |
 
 **Bots.** `GreedyBot` plays the resource it needs most, deploys tanks into its main group, repairs, reveals when it can afford an attack,
@@ -46,6 +47,25 @@ Doubling damage (or halving HP) cuts a 5-chip game to about 32 turns per player;
 because groups must be built, resourced and revealed before they can hit anything.
 
 **4. Turn order is fair once games are decided by fighting.** First player won 45-50% in every configuration that ended by chips.
+
+## Round 2: all ammo cards added, aiming for 13-15 turns per player
+
+Average turns **per player**, aggressive bots, 100-card decks, real Ammo cards (every ammunition type now has 1x/5x/10x/20x cards),
+reveal-everything rule at 3 passive rounds. The game is tank-only for now, so every destroyed group is worth 1 chip.
+
+| chips \ damage | 100% | 200% | 300% | 400% |
+|---|---|---|---|---|
+| 3 | | 21.5 | 16.3 | **14.4** |
+| 4 | | 28.2 | 21.7 | 19.7 |
+| 5 | 59 | 34.2 | 27.4 | 24.7 |
+
+- **Damage is the main lever.** At 100% a 5-chip game takes about 59 turns per player. *Damage x4 is about the same as HP /4.*
+- **Resource pace is not the limit:** playing 2 resource cards per turn instead of 1 changed nothing (within 1%).
+- **How fast things get revealed is not the limit either:** revealing everything after 1, 2 or 3 passive rounds gave the same game length.
+- **There is a floor.** Even with one-shot kills (damage x10), a 5-chip game still takes about 19 turns per player, because every group has to be
+  rebuilt (tank, Supply, Ammo, Fuel) before it can be killed. That is about 4 turns per player per chip.
+  Bigger groups (4+ vehicles) are worth 2 chips, so once those cards exist, 5 chips will be reached faster than these tank-only numbers show.
+- **Conclusion for 13-15 turns per player with today's cards:** 3 chips and about 4x damage (or about 1/4 HP).
 
 ## Things worth deciding
 - A stalemate rule (or a reliable reveal effect from the start) so the game isn't decided by deck size and turn order.
