@@ -21,7 +21,7 @@ List<Action> options = engine.legalActions(state, player);          // everythin
   `GameViewBuilder` decides what each player may see. See `docs/API.md`.
 
 ## What is not built yet
-- Resupply and anti-air vehicles (not in the card library yet, so the convoy can't be tried in a real game), and the other item ideas in the rulebook (Smoke Screen, Jammer, ...).
+- Anti-air and air vehicles (planned for a later update; the classes exist but have no cards), and the other item ideas in the rulebook (Smoke Screen, Jammer, ...).
 - The game screen, and pushing updates to the other player.
 - The old `CombatService` (and its tests) are no longer used by the game; `DamageCalculator` replaces it.
 

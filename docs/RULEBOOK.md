@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.18
+# Valtrak Rulebook: DRAFT v0.19
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -65,6 +65,10 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
   up to the Resupply vehicle's **capacity** per turn, counted in cards (a number on its card; assumed **[Common 1, Rare 2, Legendary 3]**).
   Without a convoy, cards can't move from the Depot into a pool. Everything beyond the capacity must already be in the pool.
   Example: an attack needs 9 Ammo and the convoy can move one card per turn: move a 5x crate in, and have 4 more already in the pool.
+  **The Resupply vehicles in the game now** (names and stats are placeholders; they have no attacks and no ability):
+  Rare (**convoy capacity 2**): M977 HEMTT Supply Truck (US), Ural-4320 Supply Truck (Russia), MAN SX 8x8 Supply Truck (Germany).
+  Legendary (**capacity 3**): M1075 Palletized Load System (US), KamAZ-5350 Armored Convoy Truck (Russia), Rheinmetall HX Armored Logistics Truck (Germany).
+  Anti-air and air vehicles are left for a later update.
 - There is **one discard pile** for everything, resource cards included (used up, lost with a group, or discarded by an effect).
   A card that goes to the discard pile is a normal card again, with its full amount (assumed).
   A future **Recycle** card will let you search your discard pile for resources (how many is up to that card).
@@ -159,7 +163,7 @@ Cards come in the rarities listed; the number is by rarity: **C / U / R / E / L*
 ## Open questions
 1. **Stalling:** UAV and Recon cards make players fight, but a deck without them can still stall. Do you want a backstop (a minimum number
    of reveal cards per deck, or a deck-out tiebreak)? Legendary Artillery now also hits face-down vehicles, which helps.
-2. Convoy capacity, Resupply vehicles, air units.
+2. Convoy capacity, and (later) anti-air and air units.
 3. All bracketed numbers: need playtesting.
 
 ## Planned cards (wish list)
