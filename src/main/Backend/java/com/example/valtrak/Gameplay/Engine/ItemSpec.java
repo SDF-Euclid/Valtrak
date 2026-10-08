@@ -6,7 +6,7 @@ import com.example.valtrak.Data.CardLibrary.CardLevel;
  * An item card. What {@code power} and {@code count} mean depends on the effect:
  * <ul>
  *   <li>ERA: {@code power} = percent less CHEMICAL damage</li>
- *   <li>ARTILLERY: {@code power} = true damage to each target, {@code count} = how many targets</li>
+ *   <li>ARTILLERY: {@code power} = base damage to each target (worked out with the rules' Artillery damage type), {@code count} = how many targets</li>
  *   <li>SEARCH: {@code count} = how many cards, {@code searchKind} = what kind</li>
  *   <li>DRAW, SABOTAGE, RECYCLE: {@code count} = how many cards</li>
  *   <li>SMOKE: {@code count} = how many vehicles</li>

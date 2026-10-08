@@ -17,10 +17,14 @@ public final class DamageCalculator {
 
     public static Result calculate(int baseDamage, SpecialEffect slotEffect, Ammunition ammo,
                                    int targetBaseArmor, int targetBreachStacks) {
+        return calculate(baseDamage, slotEffect, ammo.getDamageType(), ammo.getCaliber(), targetBaseArmor, targetBreachStacks);
+    }
+
+    /** The same rules for damage that doesn't come from a shell (Artillery): just a damage type and a caliber. */
+    public static Result calculate(int baseDamage, SpecialEffect slotEffect, DamageType type, int caliber,
+                                   int targetBaseArmor, int targetBreachStacks) {
         int armor = ArmorBracketHelper.getEffectiveArmor(targetBaseArmor, targetBreachStacks);
         ArmorBracket bracket = ArmorBracketHelper.getBracket(armor);
-        DamageType type = ammo.getDamageType();
-        int caliber = ammo.getCaliber();
 
         if (ArmorBracketHelper.isOverpressure(type, bracket, caliber, armor)) {
             return new Result(baseDamage, true, false, SpecialEffect.OVERPRESSURE);

@@ -1,6 +1,7 @@
 package com.example.valtrak.Gameplay.Engine;
 
 import com.example.valtrak.Data.CardLibrary.CardLevel;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.DamageType;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -22,6 +23,9 @@ public class GameRules {
     // setup
     public int startingHandSize = 7;
     public int mulliganExtraDrawCap = 3;
+
+    // losing: at the start of your turn (after you draw) with no strike group on the field and no tank in your hand to start one
+    public boolean loseWithNoForces = true;
 
     // strike groups
     public int baseGroupLimit = 3;
@@ -54,6 +58,11 @@ public class GameRules {
     // Artillery may also choose face-down vehicles
     public Map<CardLevel, Integer> itemSupply = byLevel(0, 0, 0, 0, 0, 0);
     public CardLevel artilleryBlindFrom = CardLevel.LEGENDARY;
+    // what kind of damage Artillery does: null = true damage (ignores armor); otherwise that damage type, worked out with the normal
+    // armor rules using artilleryCaliber. EXPLOSIVE with caliber 100: full damage to unarmored and light vehicles (and it stuns them),
+    // but heavily reduced against main battle tanks (armor above about 66), so tanks are hard to kill with Artillery.
+    public DamageType artilleryDamageType = DamageType.EXPLOSIVE;
+    public int artilleryCaliber = 100;
     // how many cards of a limited kind a player may play per turn (kinds not listed have no limit)
     public Map<ItemEffect, Integer> itemLimitPerTurn = new EnumMap<>(Map.of(ItemEffect.ARTILLERY, 1, ItemEffect.SABOTAGE, 1, ItemEffect.AIRDROP, 1));
 

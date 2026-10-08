@@ -76,7 +76,7 @@ public final class SimulationMain {
     /** Totals over many games. */
     public static final class SimStats {
         private final String title;
-        private int games, chipsWins, deckOuts, limits, firstPlayerWins, bot0Wins, bot1Wins;
+        private int games, chipsWins, deckOuts, wipeouts, limits, firstPlayerWins, bot0Wins, bot1Wins;
         private long turns, attacks, destroyed, firstAttackTurn, withAttack;
 
         SimStats(String title) {
@@ -88,6 +88,7 @@ public final class SimulationMain {
             switch (r.endedBy()) {
                 case "CHIPS" -> chipsWins++;
                 case "DECK_OUT" -> deckOuts++;
+                case "WIPEOUT" -> wipeouts++;
                 default -> limits++;
             }
             if (r.winner() == 0) bot0Wins++;
@@ -105,6 +106,7 @@ public final class SimulationMain {
         public int games() { return games; }
         public int chipsWins() { return chipsWins; }
         public int deckOuts() { return deckOuts; }
+        public int wipeouts() { return wipeouts; }
         public int limits() { return limits; }
         public int firstPlayerWins() { return firstPlayerWins; }
         public int bot0Wins() { return bot0Wins; }
@@ -113,10 +115,10 @@ public final class SimulationMain {
 
         public String describe() {
             return String.format(Locale.ROOT,
-                    "%-24s %d games | won by chips %3.0f%%, by deck-out %3.0f%%, unfinished %3.0f%% | "
+                    "%-24s %d games | won by chips %3.0f%%, by wipe-out %3.0f%%, by deck-out %3.0f%%, unfinished %3.0f%% | "
                             + "first player won %3.0f%% | left bot won %3.0f%%, right bot %3.0f%% | "
                             + "avg turns %5.1f, attacks %5.1f, groups destroyed %4.1f, first attack on turn %s",
-                    title, games, pct(chipsWins), pct(deckOuts), pct(limits), pct(firstPlayerWins),
+                    title, games, pct(chipsWins), pct(wipeouts), pct(deckOuts), pct(limits), pct(firstPlayerWins),
                     pct(bot0Wins), pct(bot1Wins), (double) turns / games, (double) attacks / games,
                     (double) destroyed / games,
                     withAttack == 0 ? "never" : String.format(Locale.ROOT, "%.1f", (double) firstAttackTurn / withAttack));

@@ -10,7 +10,7 @@ import lombok.Getter;
  * as you like. Names are placeholders. What the two effect values mean:
  * <ul>
  *   <li>ERA_PROTECTION: primary = percent less CHEMICAL damage</li>
- *   <li>ARTILLERY_STRIKE: primary = true damage to each target, secondary = how many targets (Legendary may also pick face-down ones)</li>
+ *   <li>ARTILLERY_STRIKE: primary = base explosive damage to each target (armor applies: see GameRules.artilleryDamageType), secondary = how many targets (Legendary may also pick face-down ones)</li>
  *   <li>SEARCH_*: primary = how many cards to take</li>
  *   <li>DRAW_CARDS, SABOTAGE, RECYCLE: primary = how many cards</li>
  *   <li>SMOKE_SCREEN, RAPID_DEPLOYMENT: primary = how many vehicles</li>
@@ -31,13 +31,13 @@ public enum SpecialItem implements SpecialItemInterface {
     COMPOSITE_ERA("Composite ERA Array", "Attach to one of your vehicles. It takes 40% less chemical damage until it is destroyed", CardLevel.EPIC, ItemType.SPECIAL, 1, SpecialItemEffect.ERA_PROTECTION, 40.0, 0.0),
     ADVANCED_ERA("Advanced ERA Suite", "Attach to one of your vehicles. It takes 50% less chemical damage until it is destroyed", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.ERA_PROTECTION, 50.0, 0.0),
 
-    /*==================== ARTILLERY (true damage; Legendary also hits face-down vehicles) ====================*/
+    /*==================== ARTILLERY (explosive damage; Legendary also hits face-down vehicles) ====================*/
 
-    MORTAR_STRIKE("Mortar Strike", "Deal 20 true damage to 1 face-up enemy vehicle", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 20.0, 1.0),
-    HOWITZER_FIRE_MISSION("Howitzer Fire Mission", "Deal 25 true damage to 1 face-up enemy vehicle", CardLevel.UNCOMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 25.0, 1.0),
-    ROCKET_SALVO("Rocket Salvo", "Deal 30 true damage to each of up to 2 face-up enemy vehicles", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 30.0, 2.0),
-    HEAVY_ROCKET_BARRAGE("Heavy Rocket Barrage", "Deal 35 true damage to each of up to 2 face-up enemy vehicles", CardLevel.EPIC, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 35.0, 2.0),
-    STRATEGIC_BOMBARDMENT("Strategic Bombardment", "Deal 40 true damage to each of up to 3 enemy vehicles, even face-down ones (they are turned face up)", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 40.0, 3.0),
+    MORTAR_STRIKE("Mortar Strike", "Deal 20 explosive damage to 1 face-up enemy vehicle", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 20.0, 1.0),
+    HOWITZER_FIRE_MISSION("Howitzer Fire Mission", "Deal 25 explosive damage to 1 face-up enemy vehicle", CardLevel.UNCOMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 25.0, 1.0),
+    ROCKET_SALVO("Rocket Salvo", "Deal 30 explosive damage to each of up to 2 face-up enemy vehicles", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 30.0, 2.0),
+    HEAVY_ROCKET_BARRAGE("Heavy Rocket Barrage", "Deal 35 explosive damage to each of up to 2 face-up enemy vehicles", CardLevel.EPIC, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 35.0, 2.0),
+    STRATEGIC_BOMBARDMENT("Strategic Bombardment", "Deal 40 explosive damage to each of up to 3 enemy vehicles, even face-down ones (they are turned face up)", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 40.0, 3.0),
 
     /*==================== SEARCH (find cards of one kind in your deck) ====================*/
 

@@ -596,9 +596,21 @@ public final class GameEngine {
                 Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst().orElse(null);
                 if (t == null || t.smoked || (!t.faceUp && !artilleryHitsHidden(spec))) continue;    // gone, or gone face down, since the first hit
                 t.faceUp = true;
-                int dealt = rules.damagePercent == 100 ? spec.power() : Math.max(1, Math.round(spec.power() * rules.damagePercent / 100f));
+                int base = spec.power();
+                SpecialEffect effect = SpecialEffect.NONE;
+                String kind = "true damage";
+                if (rules.artilleryDamageType != null) {            // worked out with the normal armor rules
+                    DamageCalculator.Result dmg = DamageCalculator.calculate(base, SpecialEffect.NONE, rules.artilleryDamageType,
+                            rules.artilleryCaliber, catalog.vehicle(t.cardId).armor(), t.breachStacks);
+                    base = dmg.damage();
+                    effect = dmg.effect();
+                    kind = rules.artilleryDamageType.name().toLowerCase() + (dmg.trueDamage() ? ", full" : "");
+                }
+                int dealt = rules.damagePercent == 100 ? base : Math.max(1, Math.round(base * rules.damagePercent / 100f));
                 t.hp -= dealt;
-                r.say(spec.name() + " hits " + catalog.vehicle(t.cardId).name() + " for " + dealt + " (true damage).");
+                applyEffect(t, effect);
+                r.say(spec.name() + " hits " + catalog.vehicle(t.cardId).name() + " for " + dealt + " (" + kind
+                        + (effect != SpecialEffect.NONE && effect != SpecialEffect.OVERPRESSURE ? ", " + effect : "") + ").");
                 if (t.hp <= 0) destroy(s, opp, me, t, r);
                 if (s.phase == GameState.Phase.FINISHED) return;
             }
@@ -902,6 +914,9 @@ public final class GameEngine {
             return;
         }
         p.hand.add(p.deck.remove(0));
+        if (rules.loseWithNoForces && p.groups.isEmpty() && !hasTank(p.hand)) {
+            finish(s, 1 - p.index, "Player " + (p.index + 1) + " has no strike group on the field and no tank in hand to start one.", r);
+        }
     }
 
     private void finish(GameState s, int winner, String reason, ActionResult r) {

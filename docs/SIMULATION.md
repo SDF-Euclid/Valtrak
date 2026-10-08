@@ -108,6 +108,18 @@ does much of the killing and the items take the place of Ammo. The bots use Draw
 they don't use Smoke Screen, Jammer or Camouflage yet (the Jammer now only works while its carrier is face up, so it is attackable), so those are untested in bot games (they are covered by unit tests).
 `SimulationMain` now takes its defaults from `GameRules`.
 
+## Round 6: explosive Artillery and the no-forces rule
+
+Aggressive vs aggressive bots, 100-card decks, 200 games, the game's defaults (3 chips, damage x4).
+
+| items in decks | won by chips | won by wipe-out | turns (both players) |
+|---|---|---|---|
+| none | 82% | 18% | 31.5 |
+| 1 copy of each of the 42 item cards | 88% | 12% | 29.6 |
+
+- The wipe-out rule decides 12-18% of bot games; the bots keep only about two groups, so losing both ends the game.
+- Artillery as explosive damage barely scratches main battle tanks (see `docs/RULEBOOK.md`), so games with items are only slightly shorter than without.
+
 ## Things worth deciding
 - A stalemate rule (or a reliable reveal effect from the start) so the game isn't decided by deck size and turn order.
 - A target game length, then tune chips, damage/HP and deck minimum together (the table above is a starting point).

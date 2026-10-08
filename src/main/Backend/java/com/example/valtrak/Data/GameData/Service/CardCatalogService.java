@@ -85,7 +85,7 @@ public class CardCatalogService {
         int second = c.getSecondaryValue() == null ? 0 : c.getSecondaryValue();
         return switch (c.getEffect()) {
             case ERA_PROTECTION -> "Attached: " + power + "% less chemical damage";
-            case ARTILLERY_STRIKE -> power + " true damage x" + second + " target" + (second == 1 ? "" : "s");
+            case ARTILLERY_STRIKE -> power + " explosive damage x" + second + " target" + (second == 1 ? "" : "s");
             case SEARCH_RESOURCES -> "Search: " + power + " resource card" + (power == 1 ? "" : "s");
             case SEARCH_TANKS -> "Search: " + power + " tank" + (power == 1 ? "" : "s");
             case SEARCH_SUPPORT -> "Search: " + power + " support vehicle" + (power == 1 ? "" : "s");

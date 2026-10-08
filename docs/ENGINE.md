@@ -32,7 +32,8 @@ validates and returns what to do), then pays the optional Supply cost (`GameRule
 (ERA stays on its vehicle as `Vehicle.eraCardId`), and runs the effect.
 - **ERA** reduces damage from CHEMICAL ammo by `power` percent (minimum 1). It goes to the discard pile when the vehicle is destroyed and to the
   hand with a non-tank survivor of a destroyed group.
-- **Artillery** is true damage (scaled by `damagePercent`). Cards at or above `GameRules.artilleryBlindFrom` (Legendary) can also pick face-down
+- **Artillery** is worked out like a shell of type `GameRules.artilleryDamageType` (EXPLOSIVE, caliber `artilleryCaliber` 100) against the target's armor, so armor, the
+  damage-type table, overpressure and the automatic STUN apply; set the type to null for plain true damage. It is scaled by `damagePercent`. Cards at or above `GameRules.artilleryBlindFrom` (Legendary) can also pick face-down
   vehicles, which are turned face up. A target that has left the field, or gone face down, since an earlier hit in the same play is skipped.
 - **Search** shuffles with `GameState.rngSeed` (a seed stored in the state and never sent to players), so a saved game replays the same way.
 - **Draw** is refused if the deck has fewer than `count` cards.
@@ -56,6 +57,10 @@ To add an item effect: add it to `ItemEffect`, write a `prepare...` method, add 
 A vehicle card can have an `AbilitySpec` (type, power, Fuel cost). `Action.UseAbility` runs it: once per turn, face up only, Fuel from the
 group's pool. Today there is one type, `REVEAL_ENEMY` (UAV teams, Recon vehicles). To add another: add a value to `AbilityType`,
 handle it in `GameEngine.useAbility`, add tests, then give cards the new ability in the card library.
+
+## Losing with no forces
+At the start of a player's turn, after the draw, `GameRules.loseWithNoForces` makes them lose if they have no strike group on the field and no tank in hand
+(`GameEngine.startTurn`). The simulator reports these games as WIPEOUT.
 
 ## Hidden information
 `GameViewBuilder` shows an opponent's group with its face-up vehicles first and the face-down ones after, in a fixed scrambled order, so the

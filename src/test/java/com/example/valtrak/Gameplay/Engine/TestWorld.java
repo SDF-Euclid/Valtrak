@@ -114,6 +114,7 @@ public final class TestWorld {
         GameRules r = GameRules.defaults();
         r.winChips = 5;
         r.damagePercent = 100;
+        r.artilleryDamageType = null;      // Artillery is plain true damage in these tests (the explosive version has its own tests)
         return r;
     }
 

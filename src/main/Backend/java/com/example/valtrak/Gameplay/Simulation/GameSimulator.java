@@ -39,7 +39,9 @@ public final class GameSimulator {
         if (s.phase != GameState.Phase.FINISHED) {
             return new GameReport(-1, "LIMIT", s.turnCount, s.firstPlayer, chips, attacks, destroyed, firstAttackTurn, itemsPlayed);
         }
-        String endedBy = s.endReason != null && s.endReason.contains("no card to draw") ? "DECK_OUT" : "CHIPS";
+        String endedBy = s.endReason == null ? "CHIPS"
+                : s.endReason.contains("no card to draw") ? "DECK_OUT"
+                : s.endReason.contains("no strike group") ? "WIPEOUT" : "CHIPS";
         return new GameReport(s.winner, endedBy, s.turnCount, s.firstPlayer, chips, attacks, destroyed, firstAttackTurn, itemsPlayed);
     }
 }

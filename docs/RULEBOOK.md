@@ -1,11 +1,13 @@
-# Valtrak Rulebook: DRAFT v0.19
+# Valtrak Rulebook: DRAFT v0.20
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
 
 ## 1. Goal
 Be the first player to take **[3]** Territory Chips. You take chips when you destroy an enemy strike group (see §9). Chips are never lost.
-You also lose if you must draw from an empty deck.
+You also lose if you must draw from an empty deck, **or if at the start of your turn (after you draw) you have no strike group on the field and no tank in
+your hand to start one** (only a tank can stand alone, so a Specialist, Recon or Resupply vehicle in hand doesn't save you). That way nobody is left
+stuck with no vehicles while the opponent snowballs.
 
 ## 2. Decks
 - **[60–100]** cards, at most **3 copies** of any card.
@@ -114,7 +116,7 @@ Cards come in the rarities listed; the number is by rarity: **C / U / R / E / L*
 | Card | What it does | By rarity |
 |---|---|---|
 | **ERA** (attached to a vehicle) | That vehicle takes a **steady percentage** less chemical damage (HEAT, TOW, other CHEMICAL ammo) until it is destroyed (the ERA then goes to the discard pile). It stays through moves, retreats and reveals. If the vehicle returns to your hand (a non-tank whose group was destroyed), the ERA returns with it. One ERA per vehicle: a new one replaces the old. | **[20% / 25% / 35% / 40% / 50%]** |
-| **Artillery** (**1 per turn**) | Choose up to *N* enemy vehicles. Each takes **true damage** (ignores armor and breach). Below Legendary you may only choose **face-up** vehicles. **Legendary can also choose face-down vehicles**; any vehicle it hits turns face up. It does not expose any vehicle of yours. A destroyed Leader takes the chip as usual (a later target in a group that has just been destroyed is skipped). Smoke Screen protects against it. | targets **1 / 1 / 2 / 2 / 3**, damage each **[20 / 25 / 30 / 35 / 40]** (times the damage scale) |
+| **Artillery** (**1 per turn**) | Choose up to *N* enemy vehicles. Each takes **explosive damage**, worked out with the normal armor rules (caliber 100): unarmored and light vehicles (armor up to about 66) take the full damage, a **stun** hits light-armored ones, and **main battle tanks resist it** (a tank with armor 85 takes about 40% of it; armor over 120 almost nothing). So it is the answer to support vehicles, Recon, UAVs, Resupply trucks and light tanks, not a way to kill a Leader. Below Legendary you may only choose **face-up** vehicles. **Legendary can also choose face-down vehicles**; any vehicle it hits turns face up. It does not expose any vehicle of yours. A destroyed Leader takes the chip as usual (a later target in a group that has just been destroyed is skipped). Smoke Screen protects against it. | targets **1 / 1 / 2 / 2 / 3**, base damage each **[20 / 25 / 30 / 35 / 40]** (times the damage scale) |
 | **Search** | Look through your deck for up to *N* cards of one kind, show them to your opponent, put them in your hand, shuffle. Three kinds: **resources** (Ammo, Fuel, Supply, Repair), **tanks**, **support vehicles** (Specialists, Resupply, Recon and other non-tanks). You may find fewer than *N*. | *N* = **1 / 1 / 2 / 2 / 3** (Common, Rare and Legendary cards exist for each kind) |
 | **Draw** | Draw *N* cards. Condition: your deck must have at least *N* cards. | *N* = **1 / 1 / 2 / 2 / 3** |
 | **Smoke Screen** | Choose up to *N* of your vehicles. Until the start of your next turn they **can't be targeted** by attacks or Artillery (Legendary too), **and they can't attack** while they are in the smoke. (Without that cost you could smoke up and then shoot.) Reveals still work on them. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
