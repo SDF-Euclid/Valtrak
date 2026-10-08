@@ -31,7 +31,7 @@ public class CardTile {
     }
 
     public VBox build() {
-        StackPane art = new StackPane(buildArt(), buildStar());
+        StackPane art = new StackPane(artFor(card), buildStar());
         StackPane.setAlignment(art.getChildren().get(1), Pos.TOP_RIGHT);
         art.setMaxSize(CardArtRenderer.W, CardArtRenderer.H);
 
@@ -108,7 +108,8 @@ public class CardTile {
         return star;
     }
 
-    private Canvas buildArt() {
+    /** The picture on a card (a vehicle, a shell, a fuel drum...). */
+    public static Canvas artFor(CardDto card) {
         return switch (card.category()) {
             case "VEHICLE"    -> CardArtRenderer.createVehicleArt(
                     card.vehicleClass() != null ? card.vehicleClass() : "UNKNOWN", card.nation());
@@ -163,7 +164,7 @@ public class CardTile {
 
     private static int orZero(Integer v) { return v != null ? v : 0; }
 
-    private String rarityColor(String levelName) {
+    public static String rarityColor(String levelName) {
         if (levelName == null) return "#555555";
         return switch (CardLevel.valueOf(levelName)) {
             case COMMON    -> "#6c757d";

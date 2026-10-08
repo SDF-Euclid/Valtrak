@@ -12,6 +12,12 @@ public final class MatchDtos {
     public record AcceptRequest(Long deckId) {}
 
     /**
+     * A practice game against the computer. {@code botDeck} is STANDARD (a deck the server builds), MIRROR (a copy of your deck),
+     * or the id of one of your other saved decks. {@code style} is AGGRESSIVE or CAUTIOUS.
+     */
+    public record BotMatchRequest(Long deckId, String botDeck, String style) {}
+
+    /**
      * One move. {@code type} is one of PLACE_STARTING_TANK, DESIGNATE, DEPLOY, CONVOY, REPAIR, REVEAL,
      * REVEAL_GROUP, RETREAT, RETREAT_GROUP, MOVE, USE_ABILITY, PLAY_ITEM, JAMMER_ON, JAMMER_OFF, ATTACK, END_TURN; the other fields are the ones that move needs.
      */
@@ -30,7 +36,7 @@ public final class MatchDtos {
 
     /** @param result WON or LOST once the match is finished, otherwise null */
     public record MatchSummary(Long id, String status, Long opponentId, String opponentName, boolean youChallenged,
-                               boolean yourTurn, String result, LocalDateTime updatedAt) {}
+                               boolean yourTurn, String result, LocalDateTime updatedAt, boolean vsBot) {}
 
     public record LogLine(int seq, int turn, String text) {}
 
@@ -46,6 +52,7 @@ public final class MatchDtos {
 
     public record PlayerView(Long playerId, String displayName, String nation, int deckSize, int handSize,
                              List<Long> hand,                 // null for the opponent
+                             List<Long> deckCards,            // the cards left in your deck, sorted (order hidden); null for the opponent
                              List<Long> discard, List<ResourceView> depot, List<GroupView> groups,
                              int chips, int groupLimit, int designationsLeft, boolean placedStartingTank) {}
 

@@ -16,8 +16,10 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class MainMenuScene {
@@ -54,7 +56,6 @@ public class MainMenuScene {
         Button settingsBtn  = createButton("SETTINGS",     true);
         Button quitBtn      = createButton("QUIT",         false);
 
-        playBtn.setOnAction(e -> onPlay());
         Label status = new Label();
         status.setFont(Font.font("Arial", 12));
         status.setTextFill(Color.web("#ff6b6b"));
@@ -63,6 +64,7 @@ public class MainMenuScene {
         status.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
         status.setAlignment(Pos.CENTER);
 
+        playBtn.setOnAction(e -> onPlay(playBtn, status));
         deckBtn.setOnAction(e -> openDeckBuilder(deckBtn, status));
         accountBtn.setOnAction(e -> stage.setScene(AccountSession.isSignedIn()
                 ? new ProfileScene(stage).build()
@@ -153,8 +155,36 @@ public class MainMenuScene {
         });
     }
 
-    private void onPlay() {
-        // Placeholder — will open game lobby/setup screen
-        System.out.println("PLAY GAME clicked");
+    /** Opens the lobby (practice games, challenges, your games). Needs an account: matches belong to players. */
+    private void onPlay(Button playBtn, Label status) {
+        if (!AccountSession.isSignedIn()) {
+            status.setTextFill(Color.web("#ff6b6b"));
+            status.setText("Sign in (or register) to play. Games are saved to your account.");
+            return;
+        }
+        playBtn.setDisable(true);
+        status.setTextFill(Color.web(TEXT_COLOR));
+        status.setText("Loading your decks and cards...");
+        Ui.async(() -> {
+            List<CardDto> all = ServerApi.fetchCards();
+            List<DeckDto> mine = new ArrayList<>(ServerApi.fetchDecks());
+            Map<Long, CardDto> byId = new HashMap<>();
+            for (CardDto c : all) byId.put(c.id(), c);
+            return new Object[]{byId, mine};
+        }, data -> {
+            playBtn.setDisable(false);
+            status.setText("");
+            @SuppressWarnings("unchecked") Map<Long, CardDto> byId = (Map<Long, CardDto>) data[0];
+            @SuppressWarnings("unchecked") List<DeckDto> mine = (List<DeckDto>) data[1];
+            stage.setResizable(true);
+            stage.setScene(new PlayScene(stage, byId, mine).build());
+            stage.sizeToScene();
+            stage.centerOnScreen();
+        }, err -> {
+            playBtn.setDisable(false);
+            if (err instanceof ServerApi.ApiError e && e.status() == 401) AccountSession.signOut();
+            status.setTextFill(Color.web("#ff6b6b"));
+            status.setText(err.getMessage());
+        });
     }
 }

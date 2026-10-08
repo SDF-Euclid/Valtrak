@@ -7,6 +7,7 @@ Errors come back as plain text with an HTTP status (400 = the move or request is
 | Call | What it does |
 |---|---|
 | `POST /matches/challenge` `{opponentName, deckId}` | Invite a player (by display name) using one of your playable decks. Max 5 unanswered invites. |
+| `POST /matches/bot` `{deckId, botDeck, style}` | A **practice game against the computer**: starts at once (no invite). `botDeck` is `STANDARD` (a 100-card deck the server builds), `MIRROR` (a copy of your deck) or the id of another of your decks; `style` is `AGGRESSIVE` or `CAUTIOUS`. The computer plays its own moves as part of each of yours, so every response is already back at your turn. It plays from the whole game state (it can see your hand), so it is a sparring partner, not a fair opponent. It can't be challenged by name. |
 | `POST /matches/{id}/accept` `{deckId}` | The invited player accepts with one of their decks; the game is dealt and starts in SETUP. |
 | `POST /matches/{id}/decline` | The invited player declines. |
 | `POST /matches/{id}/cancel` | The challenger withdraws a pending invite. |
@@ -15,7 +16,7 @@ Errors come back as plain text with an HTTP status (400 = the move or request is
 ## Playing
 | Call | What it does |
 |---|---|
-| `GET /matches/{id}` | The game as **you** may see it (`GameView`): your hand, but only the size of theirs; face-down enemy vehicles show no identity, and an opponent's group lists its face-up vehicles first, then the face-down ones in a scrambled order (so the Leader can't be picked out). Each vehicle has `eraCardId` and `camoCardId` (hidden on face-down enemies) and `smoked` (public); each group has `jammer` (`id`, `cardId`, `hp`, `maxHp`, `on`): always shown for your own groups, and for an enemy group only while it is on. While on, its `id` can be used as `targetVehicleId` in an `ATTACK` choice. Poll it and compare `version`. |
+| `GET /matches/{id}` | The game as **you** may see it (`GameView`): your hand, but only the size of theirs; face-down enemy vehicles show no identity, and an opponent's group lists its face-up vehicles first, then the face-down ones in a scrambled order (so the Leader can't be picked out). Each vehicle has `eraCardId` and `camoCardId` (hidden on face-down enemies) and `smoked` (public); each group has `jammer` (`id`, `cardId`, `hp`, `maxHp`, `on`): always shown for your own groups, and for an enemy group only while it is on. While on, its `id` can be used as `targetVehicleId` in an `ATTACK` choice. Your own `deckCards` lists the cards left in your deck, sorted (so you can pick for a Search card without seeing the order). Poll it and compare `version`. |
 | `POST /matches/{id}/actions` `ActionRequest` | Make a move. Returns the new `GameView` and the log lines it produced. |
 | `POST /matches/{id}/resign` | Give up (any time, even out of turn). |
 | `GET /matches/{id}/log?after=N` | Game log lines after sequence number N. |

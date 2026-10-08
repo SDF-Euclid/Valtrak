@@ -3,6 +3,7 @@ package com.example.valtrak.UI.net;
 import com.example.valtrak.Data.GameData.DataTransfer.AccountData.AccountDtos.*;
 import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
 import com.example.valtrak.Data.GameData.DataTransfer.DeckData.DeckDtos.*;
+import com.example.valtrak.Data.GameData.DataTransfer.MatchData.MatchDtos.*;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -110,6 +111,49 @@ public class ServerApi {
 
     public static void deleteDeck(long deckId) throws IOException {
         send("DELETE", "/decks/" + deckId, null, null);
+    }
+
+    // ── Matches (signed-in players) ──────────────────────────────────────────
+
+    public static List<MatchSummary> fetchMatches() throws IOException {
+        return send("GET", "/matches", null, new TypeReference<List<MatchSummary>>() {});
+    }
+
+    public static MatchSummary challenge(String opponentName, long deckId) throws IOException {
+        return send("POST", "/matches/challenge", new ChallengeRequest(opponentName, deckId), new TypeReference<MatchSummary>() {});
+    }
+
+    public static MatchSummary acceptChallenge(long matchId, long deckId) throws IOException {
+        return send("POST", "/matches/" + matchId + "/accept", new AcceptRequest(deckId), new TypeReference<MatchSummary>() {});
+    }
+
+    public static MatchSummary declineChallenge(long matchId) throws IOException {
+        return send("POST", "/matches/" + matchId + "/decline", null, new TypeReference<MatchSummary>() {});
+    }
+
+    public static MatchSummary cancelChallenge(long matchId) throws IOException {
+        return send("POST", "/matches/" + matchId + "/cancel", null, new TypeReference<MatchSummary>() {});
+    }
+
+    /** A practice game against the computer. {@code botDeck}: STANDARD, MIRROR or the id of one of your decks. */
+    public static MatchSummary startBotMatch(long deckId, String botDeck, String style) throws IOException {
+        return send("POST", "/matches/bot", new BotMatchRequest(deckId, botDeck, style), new TypeReference<MatchSummary>() {});
+    }
+
+    public static GameView fetchMatch(long matchId) throws IOException {
+        return send("GET", "/matches/" + matchId, null, new TypeReference<GameView>() {});
+    }
+
+    public static List<LogLine> fetchLog(long matchId, int after) throws IOException {
+        return send("GET", "/matches/" + matchId + "/log?after=" + after, null, new TypeReference<List<LogLine>>() {});
+    }
+
+    public static ActionResponse act(long matchId, ActionRequest request) throws IOException {
+        return send("POST", "/matches/" + matchId + "/actions", request, new TypeReference<ActionResponse>() {});
+    }
+
+    public static ActionResponse resign(long matchId) throws IOException {
+        return send("POST", "/matches/" + matchId + "/resign", null, new TypeReference<ActionResponse>() {});
     }
 
     // ── Plumbing ─────────────────────────────────────────────────────────────

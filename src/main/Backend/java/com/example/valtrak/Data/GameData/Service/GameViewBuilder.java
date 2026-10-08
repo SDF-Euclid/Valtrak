@@ -33,6 +33,7 @@ public final class GameViewBuilder {
         return new PlayerView(who.getId(), who.getDisplayName(), who.getDisplayNation(),
                 p.deck.size(), p.hand.size(),
                 isViewer ? List.copyOf(p.hand) : null,
+                isViewer ? p.deck.stream().sorted().toList() : null,        // you know your deck list; only its order is hidden
                 List.copyOf(p.discard),                                   // the discard pile is public
                 p.depot.stream().map(GameViewBuilder::resource).toList(),  // so is the Depot
                 p.groups.stream().map(g -> group(g, isViewer)).toList(),

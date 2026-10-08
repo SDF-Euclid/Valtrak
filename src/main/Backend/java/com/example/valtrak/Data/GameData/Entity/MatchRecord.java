@@ -48,6 +48,9 @@ public class MatchRecord {
     @Lob
     private String stateJson;
 
+    /** AGGRESSIVE or CAUTIOUS for a practice game against the computer (which is always player 1); null for a game between people. */
+    private String botStyle;
+
     private Long winnerId;
 
     private String endReason;

@@ -30,6 +30,13 @@ public class MatchController {
         return matchService.challenge(playerId(auth), request);
     }
 
+    /** A practice game against the computer: it starts right away. */
+    @PostMapping("/bot")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MatchSummary startBotMatch(Authentication auth, @RequestBody BotMatchRequest request) {
+        return matchService.startBotMatch(playerId(auth), request);
+    }
+
     @PostMapping("/{matchId}/accept")
     public MatchSummary accept(Authentication auth, @PathVariable Long matchId, @RequestBody AcceptRequest request) {
         return matchService.accept(playerId(auth), matchId, request);

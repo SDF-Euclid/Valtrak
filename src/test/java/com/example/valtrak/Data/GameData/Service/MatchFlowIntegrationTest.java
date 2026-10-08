@@ -81,6 +81,56 @@ class MatchFlowIntegrationTest {
         return pending.id();
     }
 
+    // ── practice games against the computer ──────────────────────────────────
+
+    @Test
+    void aPracticeGameStartsAtOnceAndTheComputerAnswersEveryMove() {
+        Player me = newPlayer();
+        DeckDto deck = playableDeck(me, "Practice deck");
+        MatchSummary m = matches.startBotMatch(me.getId(), new BotMatchRequest(deck.id(), "STANDARD", "AGGRESSIVE"));
+        assertThat(m.status()).isEqualTo("ACTIVE");
+        assertThat(m.vsBot()).isTrue();
+        assertThat(m.opponentName()).startsWith("Training Bot");
+
+        GameView view = matches.view(me.getId(), m.id());
+        assertThat(view.phase()).isEqualTo("SETUP");
+        assertThat(view.you().deckCards()).isNotNull().isSorted();
+        assertThat(view.opponent().deckCards()).isNull();
+
+        ActionResponse placed = matches.act(me.getId(), m.id(), placeTank(aTankIn(view)));
+        assertThat(placed.view().phase()).isEqualTo("PLAYING");
+        assertThat(placed.view().opponent().placedStartingTank()).as("the computer placed its tank too").isTrue();
+        assertThat(placed.view().yourTurn()).as("it is always your turn again when the computer is done").isTrue();
+
+        for (int i = 0; i < 12 && matches.view(me.getId(), m.id()).phase().equals("PLAYING"); i++) {
+            ActionResponse r = matches.act(me.getId(), m.id(), action("END_TURN"));
+            if (!r.view().phase().equals("FINISHED")) assertThat(r.view().yourTurn()).isTrue();
+        }
+        assertThat(matches.log(me.getId(), m.id(), 0)).anyMatch(l -> l.text().contains("Player 2"));
+        assertThat(matches.list(me.getId())).anyMatch(s -> s.id().equals(m.id()) && s.vsBot());
+
+        assertThat(matches.resign(me.getId(), m.id()).view().phase()).isEqualTo("FINISHED");
+    }
+
+    @Test
+    void thePracticeOpponentCanUseYourDeckOrAnotherOfYourDecksAndCannotBeChallenged() {
+        Player me = newPlayer();
+        DeckDto deck = playableDeck(me, "Mine");
+        DeckDto other = playableDeck(me, "Other");
+        assertThat(matches.startBotMatch(me.getId(), new BotMatchRequest(deck.id(), "MIRROR", "CAUTIOUS")).status()).isEqualTo("ACTIVE");
+        assertThat(matches.startBotMatch(me.getId(), new BotMatchRequest(deck.id(), String.valueOf(other.id()), null)).status()).isEqualTo("ACTIVE");
+
+        assertThatThrownBy(() -> matches.startBotMatch(me.getId(), new BotMatchRequest(deck.id(), "STANDARD", "RECKLESS")))
+                .isInstanceOf(ApiException.class).hasMessageContaining("AGGRESSIVE or CAUTIOUS");
+        assertThatThrownBy(() -> matches.startBotMatch(me.getId(), new BotMatchRequest(deck.id(), "nonsense", null)))
+                .isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> matches.startBotMatch(me.getId(), new BotMatchRequest(null, "STANDARD", null)))
+                .isInstanceOf(ApiException.class);
+        String botName = matches.list(me.getId()).get(0).opponentName();
+        assertThatThrownBy(() -> matches.challenge(me.getId(), new ChallengeRequest(botName, deck.id())))
+                .isInstanceOf(ApiException.class).hasMessageContaining("Play vs Bot");
+    }
+
     @Test
     void theSupplyCardsAreSeededAndKnownToTheEngine() {
         long supply = cards.findAll().stream().filter(c -> c.getName().equals("3x Supply Crate")).findFirst().orElseThrow().getId();

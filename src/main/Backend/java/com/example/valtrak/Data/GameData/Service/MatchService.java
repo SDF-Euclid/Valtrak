@@ -11,6 +11,9 @@ import com.example.valtrak.Data.GameData.Repository.MatchLogRepository;
 import com.example.valtrak.Data.GameData.Repository.MatchRepository;
 import com.example.valtrak.Data.GameData.Repository.PlayerRepository;
 import com.example.valtrak.Gameplay.Engine.*;
+import com.example.valtrak.Gameplay.Simulation.Bot;
+import com.example.valtrak.Gameplay.Simulation.GreedyBot;
+import com.example.valtrak.Gameplay.Simulation.SimDecks;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,8 @@ public class MatchService {
     private final PlayerRepository players;
     private final DeckService decks;
     private final GameEngine engine;
+    private final BotPlayer bot;
+    private final DbCardCatalog catalog;
 
     private final JsonMapper json = JsonMapper.builder().build();
     private final SecureRandom random = new SecureRandom();
@@ -51,6 +56,7 @@ public class MatchService {
         Player opponent = players.findByDisplayNameIgnoreCase(req.opponentName().trim())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No player is called \"" + req.opponentName().trim() + "\"."));
         if (opponent.getId().equals(callerId)) throw bad("You can't challenge yourself.");
+        if (bot.isBot(opponent)) throw bad("Use \"Play vs Bot\" to practise against the computer.");
         if (!opponent.isEmailVerified()) throw new ApiException(HttpStatus.NOT_FOUND, "No player is called \"" + req.opponentName().trim() + "\".");
         Player me = player(callerId);
 
@@ -65,6 +71,50 @@ public class MatchService {
         }
         MatchRecord m = matches.save(new MatchRecord(me, opponent, deck));
         return summary(m, callerId);
+    }
+
+    /** Starts a practice game against the computer. It begins at once; the computer plays its own moves as part of each of yours. */
+    @Transactional
+    public MatchSummary startBotMatch(Long callerId, BotMatchRequest req) {
+        if (req == null || req.deckId() == null) throw bad("Choose one of your decks to play with.");
+        Player me = player(callerId);
+        List<Long> deck = decks.expandedCards(callerId, req.deckId());
+        requirePlayable(deck, "Your deck");
+        if (matches.countForPlayer(callerId, MatchStatus.ACTIVE) >= MAX_ACTIVE_MATCHES) {
+            throw new ApiException(HttpStatus.CONFLICT, "You already have " + MAX_ACTIVE_MATCHES + " games in progress.");
+        }
+        String style = req.style() == null ? "AGGRESSIVE" : req.style().trim().toUpperCase();
+        if (!style.equals("AGGRESSIVE") && !style.equals("CAUTIOUS")) throw bad("The computer's style is AGGRESSIVE or CAUTIOUS.");
+        List<Long> botDeck = botDeck(callerId, req.botDeck(), deck);
+
+        GameState state = engine.newGame(deck, botDeck, random);
+        MatchRecord m = new MatchRecord(me, bot.get(), List.of());
+        m.setStatus(MatchStatus.ACTIVE);
+        m.setBotStyle(style);
+        m.setStateJson(write(state));
+        matches.saveAndFlush(m);
+        List<String> lines = new java.util.ArrayList<>(List.of("The game begins. Place your starting tank."));
+        playBot(m, state, lines);
+        save(m, state, lines);
+        return summary(m, callerId);
+    }
+
+    private List<Long> botDeck(Long callerId, String choice, List<Long> yourDeck) {
+        List<Long> deck;
+        if (choice == null || choice.isBlank() || choice.equalsIgnoreCase("STANDARD")) {
+            deck = SimDecks.standard(catalog, catalog.all().stream().sorted(java.util.Comparator.comparingLong(CardSpec::cardId)).toList(),
+                    100, random, 1, 1);
+        } else if (choice.equalsIgnoreCase("MIRROR")) {
+            deck = new java.util.ArrayList<>(yourDeck);
+        } else {
+            try {
+                deck = decks.expandedCards(callerId, Long.parseLong(choice.trim()));
+            } catch (NumberFormatException e) {
+                throw bad("The computer's deck is STANDARD, MIRROR or the id of one of your decks.");
+            }
+        }
+        requirePlayable(deck, "The computer's deck");
+        return deck;
     }
 
     @Transactional
@@ -151,8 +201,10 @@ public class MatchService {
         } catch (RuleViolationException e) {
             throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        save(m, state, result.log);
-        return new ActionResponse(result.log, GameViewBuilder.build(m, state, me, engine.rules()));
+        List<String> lines = new java.util.ArrayList<>(result.log);
+        playBot(m, state, lines);
+        save(m, state, lines);
+        return new ActionResponse(lines, GameViewBuilder.build(m, state, me, engine.rules()));
     }
 
     @Transactional
@@ -172,6 +224,30 @@ public class MatchService {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /**
+     * In a practice game, lets the computer (player 1) play until it is the human's turn again (or the game ends).
+     * It plays from the full game state, so it knows more than a human would; it is a sparring partner, not a fair opponent.
+     */
+    private void playBot(MatchRecord m, GameState state, List<String> lines) {
+        if (m.getBotStyle() == null) return;
+        Bot brain = new GreedyBot("AGGRESSIVE".equals(m.getBotStyle()));
+        int botIndex = 1;
+        for (int step = 0; step < 500 && state.phase != GameState.Phase.FINISHED; step++) {
+            boolean botToAct = state.phase == GameState.Phase.SETUP
+                    ? !state.player(botIndex).placedStartingTank
+                    : state.activePlayer == botIndex;
+            if (!botToAct) return;
+            ActionResult r;
+            try {
+                r = engine.apply(state, botIndex, brain.choose(engine, state, botIndex, random));
+            } catch (RuntimeException e) {                       // should not happen; never leave the human stuck
+                if (state.phase != GameState.Phase.PLAYING) throw e;
+                r = engine.apply(state, botIndex, new Action.EndTurn());
+            }
+            lines.addAll(r.log);
+        }
+    }
 
     private void save(MatchRecord m, GameState state, List<String> logLines) {
         m.setStateJson(write(state));
@@ -202,7 +278,7 @@ public class MatchService {
         String result = m.getStatus() == MatchStatus.FINISHED
                 ? (callerId.equals(m.getWinnerId()) ? "WON" : "LOST") : null;
         return new MatchSummary(m.getId(), m.getStatus().name(), other.getId(), other.getDisplayName(),
-                me == 0, yourTurn, result, m.getUpdatedAt());
+                me == 0, yourTurn, result, m.getUpdatedAt(), m.getBotStyle() != null);
     }
 
     /** A match you aren't in looks exactly like one that doesn't exist. */

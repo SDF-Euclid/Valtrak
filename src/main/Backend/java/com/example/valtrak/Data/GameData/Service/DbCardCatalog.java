@@ -40,6 +40,11 @@ public class DbCardCatalog implements CardCatalog {
         return specs().get(cardId);
     }
 
+    /** Every card the engine knows, by id. */
+    public java.util.Collection<CardSpec> all() {
+        return specs().values();
+    }
+
     /** Forget the cached cards (they are reloaded on next use). */
     public void refresh() {
         specs = null;
