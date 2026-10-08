@@ -23,6 +23,7 @@ import com.example.valtrak.Data.CardLibrary.Nations;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Germany.GermanVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Russia.RussianVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ReconVehicles;
+import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ResupplyVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Support.UavTeams;
 import com.example.valtrak.Data.CardLibrary.Vehicles.US.USGroundVehicles;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
@@ -116,6 +117,7 @@ public class DataLoader implements CommandLineRunner {
         loadGroundVehicles(GermanVehicles.values());
         loadGroundVehicles(ReconVehicles.values());
         loadGroundVehicles(UavTeams.values());
+        loadGroundVehicles(ResupplyVehicles.values());
         loadAmmunitionCards(AmmoSupplyCrate.values());
         loadFuelCards(FuelSupplyDrum.values());
         loadRepairCards(RepairSupplyKit.values());

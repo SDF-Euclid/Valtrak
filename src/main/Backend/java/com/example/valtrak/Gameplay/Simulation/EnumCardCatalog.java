@@ -12,6 +12,7 @@ import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCard
 import com.example.valtrak.Data.CardLibrary.Vehicles.Germany.GermanVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Russia.RussianVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ReconVehicles;
+import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ResupplyVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Support.UavTeams;
 import com.example.valtrak.Data.CardLibrary.Vehicles.US.USGroundVehicles;
 import com.example.valtrak.Gameplay.Engine.*;
@@ -40,7 +41,7 @@ public final class EnumCardCatalog implements CardCatalog {
         long id = 1;
         for (GroundVehicleCardInterface[] nation : new GroundVehicleCardInterface[][]{
                 USGroundVehicles.values(), RussianVehicles.values(), GermanVehicles.values(),
-                ReconVehicles.values(), UavTeams.values()}) {
+                ReconVehicles.values(), UavTeams.values(), ResupplyVehicles.values()}) {
             for (GroundVehicleCardInterface v : nation) {
                 var attacks = v.getVehicleAttacks().stream()
                         .map(a -> new AttackSpec(a.getAttackSlot(), a.getAttackName(), a.getWeapon(), a.getBaseDamage(),
