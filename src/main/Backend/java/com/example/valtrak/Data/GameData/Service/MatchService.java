@@ -34,6 +34,7 @@ public class MatchService {
 
     static final int MAX_PENDING_CHALLENGES_SENT = 5;
     static final int MAX_ACTIVE_MATCHES = 10;
+    static final int RECENT_FINISHED = 20;
 
     private final MatchRepository matches;
     private final MatchLogRepository logs;
@@ -166,9 +167,15 @@ public class MatchService {
 
     @Transactional(readOnly = true)
     public List<MatchSummary> list(Long callerId) {
-        return matches.findByPlayer0IdOrPlayer1IdOrderByUpdatedAtDesc(callerId, callerId).stream()
-                .filter(m -> m.getStatus() != MatchStatus.DECLINED && m.getStatus() != MatchStatus.CANCELLED)
-                .map(m -> summary(m, callerId)).toList();
+        // games in progress and challenges, then only the most recent finished games (the history only grows)
+        List<MatchRecord> open = matches.findForPlayer(callerId, List.of(MatchStatus.PENDING, MatchStatus.ACTIVE),
+                org.springframework.data.domain.Pageable.unpaged());
+        List<MatchRecord> done = matches.findForPlayer(callerId, List.of(MatchStatus.FINISHED),
+                org.springframework.data.domain.PageRequest.of(0, RECENT_FINISHED));
+        java.util.List<MatchSummary> out = new java.util.ArrayList<>();
+        open.forEach(m -> out.add(summary(m, callerId)));
+        done.forEach(m -> out.add(summary(m, callerId)));
+        return out;
     }
 
     @Transactional(readOnly = true)

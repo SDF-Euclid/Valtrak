@@ -30,8 +30,8 @@ public final class ActionMapper {
             case "MOVE" -> new Action.Move(need(r.vehicleId(), "vehicleId"), r.toGroupId());
             case "USE_ABILITY" -> new Action.UseAbility(need(r.vehicleId(), "vehicleId"), needList(r.vehicleIds(), "vehicleIds"));
             case "PLAY_ITEM" -> new Action.PlayItem(need(r.cardId(), "cardId"),
-                    r.vehicleIds() != null ? r.vehicleIds() : r.groupId() != null ? List.of(r.groupId()) : List.of(),   // Jammer and Rapid Deployment name a group
-                    r.cardIds() == null ? List.of() : r.cardIds());
+                    r.vehicleIds() != null ? noNulls(r.vehicleIds(), "vehicleIds") : r.groupId() != null ? List.of(r.groupId()) : List.of(),   // Jammer and Rapid Deployment name a group
+                    r.cardIds() == null ? List.of() : noNulls(r.cardIds(), "cardIds"));
             case "JAMMER_ON" -> new Action.SetJammer(need(r.groupId(), "groupId"), true);
             case "JAMMER_OFF" -> new Action.SetJammer(need(r.groupId(), "groupId"), false);
             case "ATTACK" -> new Action.Attack(need(r.groupId(), "groupId"), choices(r.choices()));
@@ -43,6 +43,7 @@ public final class ActionMapper {
     private static List<AttackChoice> choices(List<AttackChoiceRequest> requested) {
         if (requested == null || requested.isEmpty()) throw bad("An attack needs at least one choice.");
         return requested.stream().map(c -> {
+            if (c == null) throw bad("An attack choice is missing.");
             AttackSlot slot;
             try {
                 slot = AttackSlot.valueOf(String.valueOf(c.slot()));
@@ -68,6 +69,12 @@ public final class ActionMapper {
 
     private static List<Long> needList(List<Long> value, String field) {
         if (value == null || value.isEmpty()) throw bad("Missing " + field + ".");
+        return noNulls(value, field);
+    }
+
+    /** A list with an empty entry ([null]) is a bad request, not a server error. */
+    private static List<Long> noNulls(List<Long> value, String field) {
+        if (value.stream().anyMatch(java.util.Objects::isNull)) throw bad(field + " contains an empty entry.");
         return value;
     }
 

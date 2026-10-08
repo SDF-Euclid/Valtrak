@@ -8,7 +8,8 @@ public final class AccountDtos {
 
     public record RegisterRequest(String email, String displayName, String password, String nation) {}
 
-    public record VerifyRequest(String email, String code) {}
+    /** The password must match the one given at sign-up, so a second sign-up with the same email can't take the account over. */
+    public record VerifyRequest(String email, String code, String password) {}
 
     public record EmailRequest(String email) {}
 

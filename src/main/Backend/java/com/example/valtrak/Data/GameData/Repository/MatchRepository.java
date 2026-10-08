@@ -27,5 +27,15 @@ public interface MatchRepository extends JpaRepository<MatchRecord, Long> {
     @Query("select count(m) from MatchRecord m where m.status = :status and (m.player0.id = :playerId or m.player1.id = :playerId)")
     long countForPlayer(@Param("playerId") Long playerId, @Param("status") MatchStatus status);
 
+    List<MatchRecord> findByStatus(MatchStatus status);
+
+    @Query("select count(m) from MatchRecord m join m.challengerDeck c where m.status = com.example.valtrak.Data.GameData.Enums.MatchStatus.PENDING and c = :cardId")
+    long countPendingChallengesUsingCard(@Param("cardId") Long cardId);
+
+    /** A player's matches in the given states, newest first (the lobby leaves out declined and cancelled ones). */
+    @Query("select m from MatchRecord m where (m.player0.id = :playerId or m.player1.id = :playerId) and m.status in :statuses order by m.updatedAt desc")
+    List<MatchRecord> findForPlayer(@Param("playerId") Long playerId, @Param("statuses") java.util.Collection<MatchStatus> statuses,
+                                    org.springframework.data.domain.Pageable page);
+
     boolean existsByPlayer0IdAndPlayer1IdAndStatus(Long player0Id, Long player1Id, MatchStatus status);
 }

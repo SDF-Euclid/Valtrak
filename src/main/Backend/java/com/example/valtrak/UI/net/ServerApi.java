@@ -62,8 +62,8 @@ public class ServerApi {
                 new TypeReference<MessageResponse>() {});
     }
 
-    public static LoginResponse verify(String email, String code) throws IOException {
-        return send("POST", "/account/verify", new VerifyRequest(email, code),
+    public static LoginResponse verify(String email, String code, String password) throws IOException {
+        return send("POST", "/account/verify", new VerifyRequest(email, code, password),
                 new TypeReference<LoginResponse>() {});
     }
 

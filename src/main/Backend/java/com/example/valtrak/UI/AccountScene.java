@@ -87,7 +87,7 @@ public class AccountScene {
                     err -> {
                         signIn.setDisable(false);
                         if (err instanceof ApiError api && api.status() == 403) {
-                            showVerify(email.getText().trim(), api.getMessage());
+                            showVerify(email.getText().trim(), password.getText(), api.getMessage());
                         } else {
                             Ui.message(status, err.getMessage(), true);
                         }
@@ -136,7 +136,7 @@ public class AccountScene {
             create.setDisable(true);
             Ui.message(status, "Creating account...", false);
             Ui.async(() -> ServerApi.register(email.getText(), name.getText(), password.getText(), nation.getValue()),
-                    reply -> showVerify(email.getText().trim().toLowerCase(), reply.message()),
+                    reply -> showVerify(email.getText().trim().toLowerCase(), password.getText(), reply.message()),
                     err -> {
                         create.setDisable(false);
                         Ui.message(status, err.getMessage(), true);
@@ -178,7 +178,8 @@ public class AccountScene {
 
     // ── Verify email ─────────────────────────────────────────────────────────
 
-    private void showVerify(String email, String notice) {
+    /** @param password the password the player just typed (the server checks it with the code) */
+    private void showVerify(String email, String password, String notice) {
         stopTimer();
         content.setSpacing(12);
         TextField code = Ui.field("6-digit code");
@@ -199,7 +200,7 @@ public class AccountScene {
         Runnable submit = () -> {
             verify.setDisable(true);
             Ui.message(status, "Checking code...", false);
-            Ui.async(() -> ServerApi.verify(email, code.getText()),
+            Ui.async(() -> ServerApi.verify(email, code.getText(), password),
                     login -> {
                         AccountSession.signIn(login);
                         goHome();

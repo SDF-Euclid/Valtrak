@@ -237,8 +237,8 @@ public final class GameEngine {
         List<Long> ids = a.resourceIds() == null ? List.of() : a.resourceIds();
         if (ids.isEmpty()) throw violation("Choose at least one resource card to move.");
         if (new HashSet<>(ids).size() != ids.size()) throw violation("A resource card can only be moved once.");
-        if (g.convoyMoved + ids.size() > capacity) {
-            throw violation("This convoy can move " + capacity + " card(s) per turn; " + g.convoyMoved + " already moved.");
+        if (resupply.convoyMoved + ids.size() > capacity) {
+            throw violation("This convoy can move " + capacity + " card(s) per turn; " + resupply.convoyMoved + " already moved.");
         }
         List<ResourceStack> moving = new ArrayList<>();
         for (long id : ids) {
@@ -251,7 +251,8 @@ public final class GameEngine {
         }
         me.depot.removeAll(moving);
         g.pool.addAll(moving);
-        g.convoyMoved += moving.size();
+        resupply.convoyMoved += moving.size();
+        g.convoyMoved = resupply.convoyMoved;                     // shown in the view
         r.say("The convoy moves " + moving.size() + " resource card(s) into the pool.");
     }
 
@@ -287,7 +288,7 @@ public final class GameEngine {
             if (!toFlip.contains(v)) toFlip.add(v);
         }
         r.say("Player " + (me.index + 1) + " reveals " + toFlip.size() + " vehicle(s).");
-        for (Vehicle v : toFlip) if (onField(me, v)) flipUp(s, me, opp, v, r);
+        for (Vehicle v : toFlip) if (onField(me, v) && s.phase != GameState.Phase.FINISHED) flipUp(s, me, opp, v, r);
     }
 
     private void revealGroup(GameState s, PlayerState me, PlayerState opp, RevealGroup a, ActionResult r) {
@@ -296,7 +297,7 @@ public final class GameEngine {
                 .filter(v -> !v.faceUp && !catalog.vehicle(v.cardId).isResupply()).toList();
         if (toFlip.isEmpty()) throw violation("Everything in that group is already face up.");
         r.say("Player " + (me.index + 1) + " reveals a strike group.");
-        for (Vehicle v : toFlip) if (onField(me, v)) flipUp(s, me, opp, v, r);
+        for (Vehicle v : toFlip) if (onField(me, v) && s.phase != GameState.Phase.FINISHED) flipUp(s, me, opp, v, r);
     }
 
     private void retreat(PlayerState me, Retreat a, ActionResult r) {
@@ -345,6 +346,7 @@ public final class GameEngine {
             me.groups.add(g);
         } else {
             dest.vehicles.add(loc.vehicle);
+            if (spec.isResupply()) dest.convoyMoved = loc.vehicle.convoyMoved;   // its convoy limit goes with it
             if (dest.vehicles.size() >= 2) dest.formed = true;
             electLeader(dest);
         }
@@ -381,7 +383,7 @@ public final class GameEngine {
         spend(me, loc.group.pool, ResourceKind.FUEL, null, ability.fuelCost());
         loc.vehicle.abilityUsed = true;
         r.say(spec.name() + " reveals " + targets.size() + " enemy vehicle(s).");
-        for (Vehicle t : targets) if (onField(opp, t)) flipUp(s, opp, me, t, r);
+        for (Vehicle t : targets) if (onField(opp, t) && s.phase != GameState.Phase.FINISHED) flipUp(s, opp, me, t, r);
     }
 
     // ── Item cards ───────────────────────────────────────────────────────────
@@ -427,7 +429,7 @@ public final class GameEngine {
         return () -> {
             if (v.eraCardId != 0) me.discard.add(v.eraCardId);
             v.eraCardId = spec.cardId();
-            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " (-" + spec.power() + "% chemical damage).");
+            r.say("Player " + (me.index + 1) + " attaches a card to one of their vehicles.");   // ERA is hidden on a face-down vehicle
         };
     }
 
@@ -461,7 +463,7 @@ public final class GameEngine {
             g.jammerHp = spec.count();
             g.jammerMaxHp = spec.count();
             g.jammerOn = false;                          // it starts switched off
-            r.say("Player " + (me.index + 1) + " attaches " + spec.name() + " to a strike group.");
+            r.say("Player " + (me.index + 1) + " attaches a card to one of their strike groups.");   // a Jammer is hidden while it is off
         };
     }
 
@@ -490,7 +492,7 @@ public final class GameEngine {
         return () -> {
             if (v.camoCardId != 0) me.discard.add(v.camoCardId);
             v.camoCardId = spec.cardId();
-            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " (retreating costs " + spec.power() + " less Fuel).");
+            r.say("Player " + (me.index + 1) + " attaches a card to one of their vehicles.");
         };
     }
 
@@ -809,8 +811,8 @@ public final class GameEngine {
                 shootJammer(opp, p, r);
                 continue;
             }
-            if (p.target.hp <= 0) {
-                r.say(p.spec.name() + "'s target was already destroyed.");
+            if (p.target.hp <= 0 || !onField(opp, p.target) || !p.target.faceUp) {   // destroyed, or its group broke up, earlier in this assault
+                r.say(p.spec.name() + (p.target.hp <= 0 ? "'s target was already destroyed." : "'s target is no longer there."));
                 continue;
             }
             DamageCalculator.Result dmg = DamageCalculator.calculate(p.attack.baseDamage(), p.attack.effect(),
@@ -832,7 +834,7 @@ public final class GameEngine {
     /** An attack on a Jammer: it has no armor and takes the weapon's damage; at 0 HP it is destroyed. */
     private void shootJammer(PlayerState owner, Plan p, ActionResult r) {
         StrikeGroup g = p.jammerOf;
-        if (g.jammerCardId == 0) {
+        if (g.jammerCardId == 0 || !owner.groups.contains(g)) {          // already destroyed, or its group was
             r.say(p.spec.name() + "'s target was already destroyed.");
             return;
         }
@@ -886,6 +888,8 @@ public final class GameEngine {
         owner.discard.add(target.cardId);
         discardAttachments(owner, target);
         if (g.jammerCardId != 0) owner.discard.add(g.jammerCardId);
+        g.jammerCardId = 0;
+        g.jammerOn = false;
         owner.groups.remove(g);
         for (Vehicle survivor : g.vehicles) {
             if (survivor == target) continue;
@@ -941,6 +945,7 @@ public final class GameEngine {
             g.convoyMoved = 0;
             g.vehicles.forEach(v -> {
                 v.abilityUsed = false;
+                v.convoyMoved = 0;
                 v.smoked = false;                       // a Smoke Screen lasts until its owner's next turn starts
             });
             if (g.jammerCardId != 0 && g.jammerOn) {    // a Jammer that is on costs Fuel from the group's pool each turn, or switches itself off

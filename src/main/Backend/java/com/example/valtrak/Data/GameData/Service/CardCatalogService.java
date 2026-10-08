@@ -27,8 +27,21 @@ public class CardCatalogService {
 
     private final CardRepository cardRepo;
 
+    /** Cards don't change while the server runs, so the list is built once (one set of queries) and kept. */
+    private volatile List<CardDto> cache;
+
     public List<CardDto> getAllCards() {
-        return cardRepo.findAll().stream().map(this::toDto).toList();
+        List<CardDto> cards = cache;
+        if (cards == null) {
+            cards = cardRepo.findAll().stream().map(this::toDto).toList();
+            cache = cards;
+        }
+        return cards;
+    }
+
+    /** Forget the cached list (the card loader calls this when it has finished). */
+    public void refresh() {
+        cache = null;
     }
 
     private CardDto toDto(Card card) {

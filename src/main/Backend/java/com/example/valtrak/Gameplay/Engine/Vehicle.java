@@ -13,6 +13,8 @@ public class Vehicle {
     public boolean disabled;
     /** True once this vehicle has used its ability this turn. */
     public boolean abilityUsed;
+    /** Resource cards this (Resupply) vehicle has moved by convoy this turn: the limit belongs to the vehicle, not the group. */
+    public int convoyMoved;
     /** Card id of the ERA attached to this vehicle, or 0 for none. */
     public long eraCardId;
     /** Card id of the Camouflage attached to this vehicle, or 0 for none. */
@@ -43,6 +45,7 @@ public class Vehicle {
         v.suppressed = suppressed;
         v.disabled = disabled;
         v.abilityUsed = abilityUsed;
+        v.convoyMoved = convoyMoved;
         v.eraCardId = eraCardId;
         v.camoCardId = camoCardId;
         v.smoked = smoked;

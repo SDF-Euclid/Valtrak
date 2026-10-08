@@ -225,11 +225,12 @@ public final class GreedyBot implements Bot {
     private List<Long> artilleryTargets(GameEngine engine, ItemSpec item, PlayerState opp, CardCatalog cat, RandomGenerator rng) {
         Set<Vehicle> leaders = new HashSet<>();
         for (StrikeGroup g : opp.groups) leaders.add(g.leader());
-        List<Vehicle> up = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.faceUp)
+        List<Vehicle> up = opp.groups.stream().flatMap(g -> g.vehicles.stream())
+                .filter(v -> v.faceUp && !v.smoked && !cat.vehicle(v.cardId).air())     // the engine refuses smoked vehicles and aircraft
                 .sorted(Comparator.comparingInt((Vehicle v) -> leaders.contains(v) ? 0 : 1).thenComparingInt(v -> v.hp)).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
         List<Long> out = new ArrayList<>(up.stream().limit(item.count()).map(v -> v.id).toList());
         if (out.size() < item.count() && item.level().compareTo(engine.rules().artilleryBlindFrom) >= 0) {
-            List<Vehicle> down = new ArrayList<>(opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> !v.faceUp).toList());
+            List<Vehicle> down = new ArrayList<>(opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> !v.faceUp && !v.smoked).toList());
             Collections.shuffle(down, new java.util.Random(rng.nextLong()));
             down.stream().limit(item.count() - out.size()).forEach(v -> out.add(v.id));
         }
@@ -284,50 +285,50 @@ public final class GreedyBot implements Bot {
         return null;
     }
 
+    /** Attacks the most valuable target it can actually hit: face-up Leaders first, then the weakest vehicle. */
     private Action attack(GameEngine engine, GameState s, int player, PlayerState me, PlayerState opp, CardCatalog cat) {
-        List<Vehicle> targets = targets(opp, cat);
-        if (targets.isEmpty()) return null;
-        Vehicle target = pickTarget(opp, targets);
-        VehicleSpec targetSpec = cat.vehicle(target.cardId);
-        boolean targetIsLeader = opp.groups.stream().anyMatch(g -> g.leader() == target);
-
-        Attack best = null;
-        double bestScore = -1;
-        for (StrikeGroup g : me.groups) {
-            Plan plan = plan(g, target, targetSpec, cat);
-            if (plan == null) continue;
-            double score = plan.damage + (plan.damage >= target.hp ? (targetIsLeader ? 1000 : 100) : 0) + (targetIsLeader ? 50 : 0);
-            Attack candidate = new Attack(g.id, plan.choices);
-            if (score > bestScore && engine.isLegal(s, player, candidate)) {
-                best = candidate;
-                bestScore = score;
+        for (Vehicle target : byPriority(opp, targets(opp, cat))) {
+            VehicleSpec targetSpec = cat.vehicle(target.cardId);
+            boolean targetIsLeader = opp.groups.stream().anyMatch(g -> g.leader() == target);
+            Attack best = null;
+            double bestScore = -1;
+            for (StrikeGroup g : me.groups) {
+                Plan plan = plan(g, target, targetSpec, cat, engine.rules());
+                if (plan == null) continue;
+                double score = plan.damage + (plan.damage >= target.hp ? (targetIsLeader ? 1000 : 100) : 0) + (targetIsLeader ? 50 : 0);
+                Attack candidate = new Attack(g.id, plan.choices);
+                if (score > bestScore && engine.isLegal(s, player, candidate)) {
+                    best = candidate;
+                    bestScore = score;
+                }
             }
+            if (best != null) return best;
         }
-        return best;
+        return null;
     }
 
     /** Enemy vehicles that can be shot right now. */
     private List<Vehicle> targets(PlayerState opp, CardCatalog cat) {
         List<Vehicle> out = new ArrayList<>();
         for (StrikeGroup g : opp.groups) {
-            for (Vehicle v : g.vehicles) if (v.faceUp) out.add(v);
+            for (Vehicle v : g.vehicles) if (v.faceUp && !v.smoked) out.add(v);     // a smoked vehicle can't be targeted
         }
         return out;
     }
 
-    /** A face-up Leader if there is one (killing it takes the chip), the weakest one first; otherwise the weakest vehicle. */
-    private Vehicle pickTarget(PlayerState opp, List<Vehicle> targets) {
+    /** Face-up Leaders first (killing one takes the chip), the weakest first; then the other vehicles, weakest first. */
+    private List<Vehicle> byPriority(PlayerState opp, List<Vehicle> targets) {
         Set<Vehicle> leaders = new HashSet<>();
         for (StrikeGroup g : opp.groups) leaders.add(g.leader());
         return targets.stream()
-                .min(Comparator.comparingInt((Vehicle v) -> leaders.contains(v) ? 0 : 1).thenComparingInt(v -> v.hp))
-                .orElseThrow();
+                .sorted(Comparator.comparingInt((Vehicle v) -> leaders.contains(v) ? 0 : 1).thenComparingInt(v -> v.hp))
+                .toList();
     }
 
     private record Plan(List<AttackChoice> choices, double damage) {}
 
     /** Every able, face-up vehicle in the group fires its best affordable attack at the target. */
-    private Plan plan(StrikeGroup g, Vehicle target, VehicleSpec targetSpec, CardCatalog cat) {
+    private Plan plan(StrikeGroup g, Vehicle target, VehicleSpec targetSpec, CardCatalog cat, GameRules rules) {
         Pool pool = Pool.of(g);
         List<Vehicle> attackers = new ArrayList<>();
         for (Vehicle v : g.vehicles) {
@@ -342,7 +343,7 @@ public final class GreedyBot implements Bot {
         double total = 0;
         for (Vehicle v : attackers) {
             if (total >= target.hp) break;                       // enough already; keep the rest in the pool
-            Choice c = bestChoice(cat.vehicle(v.cardId), v, pool, target, targetSpec);
+            Choice c = bestChoice(cat.vehicle(v.cardId), v, pool, target, targetSpec, cat, rules);
             if (c == null) continue;
             pool.spend(c.ammo, c.attack.ammoCost(), c.attack.fuelCost());
             choices.add(new AttackChoice(v.id, c.attack.slot(), c.ammo, target.id));
@@ -360,13 +361,19 @@ public final class GreedyBot implements Bot {
 
     private record Choice(AttackSpec attack, Ammunition ammo, int damage) {}
 
-    private Choice bestChoice(VehicleSpec spec, Vehicle v, Pool pool, Vehicle target, VehicleSpec targetSpec) {
+    /** The attack and ammunition that hurt the target most, with the damage it would really take (damage scale and ERA included). */
+    private Choice bestChoice(VehicleSpec spec, Vehicle v, Pool pool, Vehicle target, VehicleSpec targetSpec, CardCatalog cat, GameRules rules) {
+        int era = target.eraCardId == 0 ? 0 : cat.item(target.eraCardId).power();
         Choice best = null;
         for (AttackSpec at : spec.attacks()) {
             if (v.suppressed && at.slot() == AttackSlot.ATTACK_1) continue;
             for (Ammunition am : at.weapon().getCompatibleAmmunition()) {
                 if (pool.ammo.getOrDefault(am, 0) < at.ammoCost() || pool.fuel < at.fuelCost()) continue;
                 int dmg = DamageCalculator.calculate(at.baseDamage(), at.effect(), am, targetSpec.armor(), target.breachStacks).damage();
+                dmg = Math.max(1, Math.round(dmg * rules.damagePercent / 100f));
+                if (era > 0 && am.getDamageType() == com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.DamageType.CHEMICAL) {
+                    dmg = Math.max(1, Math.round(dmg * (100 - era) / 100f));
+                }
                 if (best == null || dmg > best.damage) best = new Choice(at, am, dmg);
             }
         }

@@ -72,8 +72,8 @@ public class AccountService {
         validatePassword(req.password());
         NationEntity nation = requireNation(req.nation());
 
-        Player player = players.findByEmail(mail).orElse(null);
-        if (player != null && player.isEmailVerified()) {
+        Player player = players.lockByEmail(mail).orElse(null);
+        if (player != null && (player.isEmailVerified() || isBot(player))) {
             throw new ApiException(HttpStatus.CONFLICT, "An account with this email already exists. Try signing in.");
         }
         boolean nameTaken = players.existsByDisplayNameIgnoreCase(name)
@@ -97,7 +97,8 @@ public class AccountService {
 
     @Transactional(noRollbackFor = ApiException.class)
     public LoginResponse verify(VerifyRequest req) {
-        Player player = players.findByEmail(normalizeEmail(req.email()))
+        Player player = players.lockByEmail(normalizeEmail(req.email()))
+                .filter(p -> !isBot(p))
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid or expired code."));
         if (player.isEmailVerified()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "This email is already verified. Please sign in.");
@@ -110,11 +111,14 @@ public class AccountService {
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Too many incorrect attempts. Request a new code.");
         }
         String code = req.code() == null ? "" : req.code().trim();
-        if (!encoder.matches(code, player.getVerificationCodeHash())) {
+        String password = req.password() == null ? "" : req.password();
+        boolean codeOk = encoder.matches(code, player.getVerificationCodeHash());
+        boolean passwordOk = encoder.matches(password, player.getPassword());   // both are always checked, so timing says nothing
+        if (!codeOk || !passwordOk) {
             player.setVerificationAttempts(player.getVerificationAttempts() + 1);
             players.save(player);
             int left = MAX_CODE_ATTEMPTS - player.getVerificationAttempts();
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Incorrect code. " + left + " attempt(s) left.");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Incorrect code or password. " + left + " attempt(s) left.");
         }
         player.setEmailVerified(true);
         player.setVerificationCodeHash(null);
@@ -128,7 +132,7 @@ public class AccountService {
     @Transactional
     public MessageResponse resendCode(EmailRequest req) {
         players.findByEmail(normalizeEmail(req.email()))
-                .filter(p -> !p.isEmailVerified())
+                .filter(p -> !p.isEmailVerified() && !isBot(p))
                 .ifPresent(p -> sendCode(p, true));
         return new MessageResponse("If that email has a pending sign-up, a new code is on its way.");
     }
@@ -137,7 +141,7 @@ public class AccountService {
 
     @Transactional(noRollbackFor = ApiException.class)
     public LoginResponse login(LoginRequest req) {
-        Player player = players.findByEmail(normalizeEmail(req.email())).orElse(null);
+        Player player = players.lockByEmail(normalizeEmail(req.email())).filter(p -> !isBot(p)).orElse(null);
         String password = req.password() == null ? "" : req.password();
         if (player == null) {
             encoder.matches(password, dummyHash);
@@ -182,9 +186,7 @@ public class AccountService {
     /** @return the player id for a valid, unexpired token */
     @Transactional(readOnly = true)
     public Optional<Long> authenticate(String rawToken) {
-        return sessions.findByTokenHash(hash(rawToken))
-                .filter(s -> s.getExpiresAt().isAfter(LocalDateTime.now()))
-                .map(s -> s.getPlayer().getId());
+        return sessions.findPlayerIdByToken(hash(rawToken), LocalDateTime.now());
     }
 
     // ── Profile & favorites ──────────────────────────────────────────────────
@@ -241,6 +243,11 @@ public class AccountService {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /** The practice opponent's account: nobody may register over it, verify it or sign in as it. */
+    private static boolean isBot(Player p) {
+        return BotPlayer.USER_NAME.equals(p.getUserName());
+    }
 
     private void sendCode(Player player, boolean enforceCooldown) {
         LocalDateTime now = LocalDateTime.now();

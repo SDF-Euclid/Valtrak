@@ -86,6 +86,9 @@ public class DataLoader implements CommandLineRunner {
     private final SpecialItemCardRepository specialItemRepo;
     private final DeckRepository deckRepo;
     private final PlayerRepository playerRepo;
+    private final com.example.valtrak.Data.GameData.Repository.MatchRepository matchRepo;
+    private final com.example.valtrak.Data.GameData.Service.DbCardCatalog engineCatalog;
+    private final com.example.valtrak.Data.GameData.Service.CardCatalogService cardList;
     private final WeaponRepository weaponRepo;
     private final NationRepository nationRepo;
     private final VehicleCardRepository vehicleRepo;
@@ -124,6 +127,8 @@ public class DataLoader implements CommandLineRunner {
         loadSupplyCards(SupplyCrate.values());
         loadSpecialItems(SpecialItem.values());
         retireCards();
+        engineCatalog.refresh();      // anything read while the loader was running may be out of date
+        cardList.refresh();
         logger.info("Data loaded successfully");
     }
 
@@ -417,6 +422,10 @@ public class DataLoader implements CommandLineRunner {
                     logger.warn("Retired card '{}' is still in a saved deck, so it was kept.", name);
                     return;
                 }
+                if (inUnfinishedMatch(card.getId())) {
+                    logger.warn("Retired card '{}' is still in a game or challenge in progress, so it was kept for now.", name);
+                    return;
+                }
                 for (var player : playerRepo.findAll()) {
                     if (player.getFavoriteCardIds().remove(card.getId())) playerRepo.save(player);
                 }
@@ -424,6 +433,24 @@ public class DataLoader implements CommandLineRunner {
                 logger.info("Removed retired card: {}", name);
             });
         }
+    }
+
+    /** True if a pending challenge's deck or a game in progress still holds this card (deleting it would break that game). */
+    private boolean inUnfinishedMatch(long cardId) {
+        if (matchRepo.countPendingChallengesUsingCard(cardId) > 0) return true;
+        tools.jackson.databind.json.JsonMapper json = tools.jackson.databind.json.JsonMapper.builder().build();
+        for (var m : matchRepo.findByStatus(com.example.valtrak.Data.GameData.Enums.MatchStatus.ACTIVE)) {
+            if (m.getStateJson() == null) continue;
+            var s = json.readValue(m.getStateJson(), com.example.valtrak.Gameplay.Engine.GameState.class);
+            for (var p : s.players) {
+                if (p.deck.contains(cardId) || p.hand.contains(cardId) || p.discard.contains(cardId)) return true;
+                for (var g : p.groups) {
+                    if (g.jammerCardId == cardId) return true;
+                    for (var v : g.vehicles) if (v.cardId == cardId || v.eraCardId == cardId || v.camoCardId == cardId) return true;
+                }
+            }
+        }
+        return false;
     }
 
     // ── keeping existing cards in step with the enums ────────────────────────

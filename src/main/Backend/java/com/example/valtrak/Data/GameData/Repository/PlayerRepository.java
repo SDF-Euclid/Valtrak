@@ -20,6 +20,11 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     Optional<Player> findByEmail(@Email String email);
 
+    /** Loads a player and blocks other writers until the transaction ends, so attempt counters can't be raced. */
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select p from Player p where p.email = :email")
+    Optional<Player> lockByEmail(@org.springframework.data.repository.query.Param("email") String email);
+
     boolean existsByDisplayNameIgnoreCase(String displayName);
 
     Optional<Player> findByDisplayNameIgnoreCase(String displayName);
