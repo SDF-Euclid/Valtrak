@@ -159,6 +159,7 @@ public class CardTile {
         if (effect.startsWith("SABOTAGE")) return "Sabotage";
         if (effect.startsWith("RECYCLE")) return "Recycle";
         if (effect.startsWith("RAPID")) return "Rapid Deploy";
+        if (effect.startsWith("AIRDROP")) return "Airdrop";
         return "Item";
     }
 

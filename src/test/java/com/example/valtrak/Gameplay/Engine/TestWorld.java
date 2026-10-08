@@ -29,7 +29,7 @@ public final class TestWorld {
     public static final long ERA_20 = 40, ERA_50 = 41, ARTILLERY_1 = 42, ARTILLERY_2 = 43, ARTILLERY_BLIND = 44,
             SEARCH_RESOURCES_2 = 45, SEARCH_TANK_1 = 46, SEARCH_SUPPORT_2 = 47, DRAW_1 = 48, DRAW_3 = 49,
             SMOKE_1 = 50, SMOKE_2 = 51, JAMMER_2 = 52, JAMMER_1 = 53, CAMO_1 = 54, CAMO_3 = 55, SABOTAGE_1 = 56, SABOTAGE_2 = 57,
-            RECYCLE_1 = 58, RECYCLE_2 = 59, RAPID_1 = 60, RAPID_2 = 61, SABOTAGE_3 = 62;
+            RECYCLE_1 = 58, RECYCLE_2 = 59, RAPID_1 = 60, RAPID_2 = 61, SABOTAGE_3 = 62, AIRDROP_1 = 63, AIRDROP_2 = 64;
 
     /** The tests use the plain numbers on the cards (5 chips, damage x1); the game's own defaults are tested in GameRulesTest. */
     public final GameRules rules = untuned();
@@ -89,6 +89,8 @@ public final class TestWorld {
         c.add(new ItemSpec(SABOTAGE_1, "Sabotage", CardLevel.COMMON, ItemEffect.SABOTAGE, 0, 1, null));
         c.add(new ItemSpec(SABOTAGE_2, "Cyber Intrusion", CardLevel.RARE, ItemEffect.SABOTAGE, 0, 2, null));
         c.add(new ItemSpec(SABOTAGE_3, "Sabotage (3)", CardLevel.RARE, ItemEffect.SABOTAGE, 0, 3, null));
+        c.add(new ItemSpec(AIRDROP_1, "Supply Drop", CardLevel.COMMON, ItemEffect.AIRDROP, 0, 1, null));
+        c.add(new ItemSpec(AIRDROP_2, "Airdrop", CardLevel.RARE, ItemEffect.AIRDROP, 0, 2, null));
         c.add(new ItemSpec(RECYCLE_1, "Salvage", CardLevel.COMMON, ItemEffect.RECYCLE, 0, 1, null));
         c.add(new ItemSpec(RECYCLE_2, "Field Recovery", CardLevel.RARE, ItemEffect.RECYCLE, 0, 2, null));
         c.add(new ItemSpec(RAPID_1, "Rapid Deployment", CardLevel.COMMON, ItemEffect.RAPID_DEPLOY, 0, 1, null));

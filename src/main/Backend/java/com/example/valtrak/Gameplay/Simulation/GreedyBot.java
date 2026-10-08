@@ -151,7 +151,7 @@ public final class GreedyBot implements Bot {
                 case SABOTAGE -> opp.hand.isEmpty() ? null : new PlayItem(id, List.of(), List.of());
                 case RECYCLE -> recyclePicks(item, me, cat);
                 case RAPID_DEPLOY -> rapidDeploy(engine, s, player, id, me, cat);
-                case SMOKE, JAMMER, CAMO -> null;           // the bots don't use these
+                case SMOKE, JAMMER, CAMO, AIRDROP -> null;  // the bots don't use these (they put resources straight into pools)
                 case ARTILLERY -> {
                     List<Long> targets = artilleryTargets(engine, item, opp, cat, rng);
                     yield targets.isEmpty() ? null : new PlayItem(id, targets, List.of());

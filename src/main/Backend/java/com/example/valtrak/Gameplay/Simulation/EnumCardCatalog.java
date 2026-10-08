@@ -95,6 +95,7 @@ public final class EnumCardCatalog implements CardCatalog {
                 case CAMOUFLAGE -> new ItemSpec(id, n, l, ItemEffect.CAMO, power, 0, null);
                 case SABOTAGE -> new ItemSpec(id, n, l, ItemEffect.SABOTAGE, 0, power, null);
                 case RECYCLE -> new ItemSpec(id, n, l, ItemEffect.RECYCLE, 0, power, null);
+                case AIRDROP -> new ItemSpec(id, n, l, ItemEffect.AIRDROP, 0, power, null);
                 case RAPID_DEPLOYMENT -> new ItemSpec(id, n, l, ItemEffect.RAPID_DEPLOY, 0, power, null);
             });
             id++;

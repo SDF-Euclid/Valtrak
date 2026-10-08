@@ -26,7 +26,7 @@ class BotAndSimulationTest {
 
     @Test
     void theEnumCatalogHasEveryCardKindWithStableIds() {
-        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 60 + 4 + 4 + 3 + 39);   // tanks, recon, UAV teams, ammo, fuel, repair, supply, item cards
+        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 60 + 4 + 4 + 3 + 42);   // tanks, recon, UAV teams, ammo, fuel, repair, supply, item cards
         assertThat(catalog.find(1)).isInstanceOf(VehicleSpec.class);
         assertThat(new EnumCardCatalog(true).find(1).name()).isEqualTo(catalog.find(1).name());
         assertThat(catalog.all()).anyMatch(c -> c instanceof ResourceSpec r && r.kind() == ResourceKind.SUPPLY);

@@ -399,6 +399,7 @@ public final class GameEngine {
             case SABOTAGE -> prepareSabotage(s, me, opp, spec, r);
             case RECYCLE -> prepareRecycle(me, spec, chosen, r);
             case RAPID_DEPLOY -> prepareRapidDeploy(s, me, spec, targets, chosen, r);
+            case AIRDROP -> prepareAirdrop(me, spec, targets, chosen, r);
         };
         int limit = rules.itemLimit(spec.effect());
         if (limit > 0 && me.itemUses.getOrDefault(spec.effect(), 0) >= limit) {
@@ -518,6 +519,29 @@ public final class GameEngine {
                 names.add(catalog.spec(id).name());
             }
             r.say("Player " + (me.index + 1) + " plays " + spec.name() + " and returns " + (names.isEmpty() ? "nothing." : String.join(", ", names) + "."));
+        };
+    }
+
+    /** {@code chosen} are the ids of resource cards in your Depot (as shown in the game view), not card ids. */
+    private Runnable prepareAirdrop(PlayerState me, ItemSpec spec, List<Long> targets, List<Long> chosen, ActionResult r) {
+        if (targets.size() != 1) throw violation(spec.name() + " drops into exactly one of your strike groups.");
+        StrikeGroup g = group(me, targets.get(0));
+        if (chosen.isEmpty()) throw violation("Choose which resource cards from your Depot to drop.");
+        if (chosen.size() > spec.count()) throw violation(spec.name() + " drops at most " + spec.count() + " card(s).");
+        if (new HashSet<>(chosen).size() != chosen.size()) throw violation("A resource card can only be moved once.");
+        List<ResourceStack> moving = new ArrayList<>();
+        for (long id : chosen) {
+            ResourceStack stack = me.depot.stream().filter(x -> x.id == id).findFirst()
+                    .orElseThrow(() -> violation("Resource card " + id + " is not in your Depot."));
+            if (stack.kind != ResourceKind.AMMO && stack.kind != ResourceKind.FUEL) {
+                throw violation("Only Ammo and Fuel can be moved into a pool.");
+            }
+            moving.add(stack);
+        }
+        return () -> {
+            me.depot.removeAll(moving);
+            g.pool.addAll(moving);
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " and drops " + moving.size() + " resource card(s) into a pool.");
         };
     }
 
@@ -988,6 +1012,11 @@ public final class GameEngine {
             case SABOTAGE -> c.add(new PlayItem(id, List.of(), List.of()));
             case RECYCLE -> c.add(new PlayItem(id, List.of(), me.discard.stream().filter(x -> catalog.find(x) instanceof ResourceSpec)
                     .limit(item.count()).toList()));
+            case AIRDROP -> {
+                List<Long> movable = me.depot.stream().filter(x -> x.kind == ResourceKind.AMMO || x.kind == ResourceKind.FUEL)
+                        .map(x -> x.id).limit(item.count()).toList();
+                if (!movable.isEmpty()) me.groups.forEach(g -> c.add(new PlayItem(id, List.of(g.id), movable)));
+            }
             case RAPID_DEPLOY -> {
                 for (StrikeGroup g : me.groups) {
                     for (long handId : new LinkedHashSet<>(me.hand)) {

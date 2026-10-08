@@ -95,6 +95,7 @@ public class CardCatalogService {
             case CAMOUFLAGE -> "Attached: retreat costs " + power + " less Fuel";
             case SABOTAGE -> "Opponent discards up to " + power + " at random (1 per turn)";
             case RECYCLE -> "Recycle: " + power + " resource card" + (power == 1 ? "" : "s") + " from the discard pile";
+            case AIRDROP -> "Drop " + power + " Ammo/Fuel card" + (power == 1 ? "" : "s") + " from the Depot into a pool";
             case RAPID_DEPLOYMENT -> "Deploy " + power + " vehicle" + (power == 1 ? "" : "s") + " free of the formation cost";
         };
     }

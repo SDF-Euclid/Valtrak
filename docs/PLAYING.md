@@ -13,7 +13,7 @@ Sign in (practice games and challenges are saved to your account), then press **
 ## The board
 Your opponent is at the top, you are below, and your hand is along the bottom. The log is on the right. Everything you can do is a click:
 - **A card in your hand:** a menu of what it can do (put a resource in the Depot or a group's pool, deploy a vehicle, play an item). Items that need
-  targets (ERA, Camouflage, Smoke Screen, Artillery, Jammer) highlight the valid targets: click them, then **Confirm**. Search, Recycle and Rapid
+  targets (ERA, Camouflage, Smoke Screen, Artillery, Jammer) highlight the valid targets: click them, then **Confirm**. Search, Recycle, Airdrop and Rapid
   Deployment open a list to choose from.
 - **One of your vehicles:** reveal it, retreat it (costs Fuel), use its ability (UAV and Recon: pick the enemy vehicles to reveal), move it to another
   group, or repair it with a card from your Depot.

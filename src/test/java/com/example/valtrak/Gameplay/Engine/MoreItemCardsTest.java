@@ -349,6 +349,48 @@ class MoreItemCardsTest {
         assertThat(w.p(1).discard).containsExactly(FUEL_5);
     }
 
+    // ── airdrop ──────────────────────────────────────────────────────────────
+
+    @Test
+    void anAirdropMovesDepotCardsIntoAPoolWithoutAResupplyVehicle() {
+        ResourceStack fuel = w.depot(0, FUEL_5);
+        ResourceStack ammo = w.depot(0, NATO_10);
+        w.hand(0, AIRDROP_2);
+        assertThat(mine.vehicles).noneMatch(v -> w.catalog.vehicle(v.cardId).isResupply());
+        w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of(fuel.id, ammo.id)));
+        assertThat(w.p(0).depot).isEmpty();
+        assertThat(mine.pool).containsExactlyInAnyOrder(fuel, ammo);
+        assertThat(w.p(0).discard).containsExactly(AIRDROP_2);
+        assertThat(w.s.activePlayer).as("it doesn't end the turn").isZero();
+        assertThat(mine.convoyMoved).as("it doesn't use up the convoy").isZero();
+    }
+
+    @Test
+    void anAirdropChecksWhatItMoves() {
+        ResourceStack fuel = w.depot(0, FUEL_5);
+        ResourceStack fuel2 = w.depot(0, FUEL_1);
+        ResourceStack supply = w.depot(0, SUPPLY_1);
+        ResourceStack repair = w.depot(0, REPAIR_25);
+        w.hand(0, AIRDROP_1, AIRDROP_2);
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_1, List.of(mine.id), List.of(fuel.id, fuel2.id))))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("at most 1");
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of(fuel.id, supply.id))))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("Only Ammo and Fuel");
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of(repair.id))))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("Only Ammo and Fuel");
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of(fuel.id, fuel.id))))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("only be moved once");
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of(999999L))))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("not in your Depot");
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of())))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("Choose which");
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_2, List.of(enemy.id), List.of(fuel.id))))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("strike group");
+        assertThat(w.p(0).depot).hasSize(4);                          // nothing moved by any rejected play
+        assertThat(mine.pool).isEmpty();
+        assertThat(w.p(0).hand).containsExactlyInAnyOrder(AIRDROP_1, AIRDROP_2);
+    }
+
     // ── recycle ──────────────────────────────────────────────────────────────
 
     @Test

@@ -85,7 +85,7 @@ class DataLoaderSyncTest {
 
     @Test
     void itemCardsAreLoadedAndGiveTheEngineTheRightNumbers() {
-        assertThat(items.count()).isEqualTo(39);
+        assertThat(items.count()).isEqualTo(42);
         var era = (ItemSpec) catalog.find(items.findByName("Advanced ERA Suite").orElseThrow().getId());
         assertThat(era.effect()).isEqualTo(ItemEffect.ERA);
         assertThat(era.power()).isEqualTo(50);

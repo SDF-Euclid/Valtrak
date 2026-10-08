@@ -105,6 +105,7 @@ public class DbCardCatalog implements CardCatalog {
             case CAMOUFLAGE -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.CAMO, power, 0, null);
             case SABOTAGE -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SABOTAGE, 0, power, null);
             case RECYCLE -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.RECYCLE, 0, power, null);
+            case AIRDROP -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.AIRDROP, 0, power, null);
             case RAPID_DEPLOYMENT -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.RAPID_DEPLOY, 0, power, null);
         };
     }

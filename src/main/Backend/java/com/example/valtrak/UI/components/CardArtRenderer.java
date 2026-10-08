@@ -101,6 +101,7 @@ public class CardArtRenderer {
                 case "Sabotage"  -> drawSabotage(sprite);
                 case "Recycle"   -> drawRecycle(sprite);
                 case "Rapid Deploy" -> drawRapid(sprite);
+                case "Airdrop"   -> drawAirdrop(sprite);
                 default          -> drawCardStack(sprite);
             }
         });
@@ -584,6 +585,20 @@ public class CardArtRenderer {
         gc.strokeArc(46, 20, 64, 52, 40, 250, javafx.scene.shape.ArcType.OPEN);
         gc.setFill(Color.web("#5ec27a"));
         gc.fillPolygon(new double[]{100, 118, 114}, new double[]{22, 40, 20}, 3);
+    }
+
+    private static void drawAirdrop(GraphicsContext gc) {
+        gc.setFill(Color.web("#e8e8e8"));
+        gc.fillArc(46, 14, 64, 44, 0, 180, javafx.scene.shape.ArcType.ROUND);
+        gc.setStroke(Color.web("#bbbbbb"));
+        gc.setLineWidth(1.2);
+        gc.strokeLine(48, 36, 76, 62);
+        gc.strokeLine(108, 36, 80, 62);
+        gc.strokeLine(78, 36, 78, 62);
+        gc.setFill(Color.web("#8b6b3a"));
+        gc.fillRect(66, 62, 24, 18);
+        gc.setStroke(Color.web("#5a4524"));
+        gc.strokeRect(66, 62, 24, 18);
     }
 
     private static void drawRapid(GraphicsContext gc) {

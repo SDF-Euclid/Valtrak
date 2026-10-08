@@ -44,6 +44,8 @@ validates and returns what to do), then pays the optional Supply cost (`GameRule
   (`targetVehicleId` = `jammerId`); it has no armor, and at 0 HP it goes to the discard pile and the jamming ends (nothing is revealed).
   It is discarded with its group.
 - **Camouflage** sets `Vehicle.camoCardId`: `retreatCost` takes its `power` off the retreat Fuel (a Leader's Camouflage also makes a group retreat cheaper).
+- **Airdrop** moves Depot stacks (by their field ids) into a group's pool; it is separate from the convoy, so it neither needs a Resupply vehicle nor
+  counts against `StrikeGroup.convoyMoved`. Bots don't play it.
 - **Sabotage** and the Search shuffle use `GameState.rngSeed`. **Recycle** and **Rapid Deployment** check their picks against the discard pile / hand;
   Rapid Deployment tries the slot rules on a copy of the group, one vehicle at a time.
 

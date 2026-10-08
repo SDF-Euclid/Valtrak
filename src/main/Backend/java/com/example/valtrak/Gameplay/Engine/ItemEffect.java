@@ -21,5 +21,7 @@ public enum ItemEffect {
     /** Return resource cards from your discard pile to your hand. */
     RECYCLE,
     /** Deploy vehicles from your hand into a group without the formation cost. */
-    RAPID_DEPLOY
+    RAPID_DEPLOY,
+    /** Move Ammo and Fuel cards from your Depot into a group's pool, with no Resupply vehicle needed. */
+    AIRDROP
 }

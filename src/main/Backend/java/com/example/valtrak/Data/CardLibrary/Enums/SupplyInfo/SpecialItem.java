@@ -16,6 +16,7 @@ import lombok.Getter;
  *   <li>SMOKE_SCREEN, RAPID_DEPLOYMENT: primary = how many vehicles</li>
  *   <li>JAMMER: primary = Fuel upkeep each turn while on, secondary = its HP</li>
  *   <li>CAMOUFLAGE: primary = Fuel less to retreat</li>
+ *   <li>AIRDROP: primary = how many Ammo/Fuel cards move from the Depot to a pool</li>
  * </ul>
  */
 @Getter
@@ -76,7 +77,13 @@ public enum SpecialItem implements SpecialItemInterface {
     SUPPLY_RECLAMATION("Supply Reclamation", "Return up to 3 resource cards from your discard pile to your hand", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.RECYCLE, 3.0, 0.0),
     RAPID_DEPLOYMENT("Rapid Deployment", "Deploy 1 vehicle from your hand into one of your strike groups without paying the formation cost", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.RAPID_DEPLOYMENT, 1.0, 0.0),
     FORCED_MARCH("Forced March", "Deploy up to 2 vehicles from your hand into one of your strike groups without paying the formation cost", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.RAPID_DEPLOYMENT, 2.0, 0.0),
-    AIRBORNE_INSERTION("Airborne Insertion", "Deploy up to 3 vehicles from your hand into one of your strike groups without paying the formation cost", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.RAPID_DEPLOYMENT, 3.0, 0.0);
+    AIRBORNE_INSERTION("Airborne Insertion", "Deploy up to 3 vehicles from your hand into one of your strike groups without paying the formation cost", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.RAPID_DEPLOYMENT, 3.0, 0.0),
+
+    /*==================== AIRDROP (Depot to pool without a Resupply vehicle) ====================*/
+
+    SUPPLY_DROP("Supply Drop", "Move 1 Ammo or Fuel card from your Depot into one of your strike group pools. No Resupply vehicle needed", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 1.0, 0.0),
+    AIRDROP_PALLET("Airdrop", "Move up to 2 Ammo or Fuel cards from your Depot into one of your strike group pools. No Resupply vehicle needed", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 2.0, 0.0),
+    EMERGENCY_AIRLIFT("Emergency Airlift", "Move up to 3 Ammo or Fuel cards from your Depot into one of your strike group pools. No Resupply vehicle needed", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 3.0, 0.0);
 
     private final String itemName;
     private final String itemDescription;

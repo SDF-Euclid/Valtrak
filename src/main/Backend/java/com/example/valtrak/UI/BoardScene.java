@@ -478,6 +478,20 @@ public class BoardScene {
                 pickOptions(c.name(), "Take up to " + first + " resource card(s) back into your hand.", options, first,
                         ids -> send(Moves.playItem(c.id(), List.of(), null, ids)));
             }));
+            case "AIRDROP" -> menu.getItems().add(item("Drop Depot cards into a group's pool...", () -> {
+                List<Option> options = new ArrayList<>();
+                for (ResourceView r : view.you().depot()) {
+                    if (!"AMMO".equals(r.kind()) && !"FUEL".equals(r.kind())) continue;
+                    CardDto rc = cards.get(r.cardId());
+                    options.add(new Option(r.id(), (rc == null ? "Card" : rc.name()) + "  (" + r.remaining() + " left)"));
+                }
+                pickOptions(c.name(), "Choose up to " + first + " Ammo or Fuel card(s) from your Depot, then the group that gets them.", options, first,
+                        ids -> {
+                            if (ids.isEmpty()) return;
+                            startPicking("Click the heading of the group that receives the cards", 1, false, t -> t.mine && t.isGroup,
+                                    groups -> send(Moves.playItem(c.id(), null, groups.get(0), ids)));
+                        });
+            }));
             case "RAPID_DEPLOYMENT" -> menu.getItems().add(item("Deploy up to " + first + " vehicle(s) with no formation cost...", () -> rapidDeployDialog(c, first)));
             default -> menu.getItems().add(item("Play " + c.name(), () -> send(Moves.playItem(c.id(), List.of(), null, List.of()))));
         }
