@@ -3,6 +3,7 @@ package com.example.valtrak.Data.GameData.Config;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.AmmoSupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.FuelSupplyDrum;
 import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.RepairSupplyKit;
+import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.ArmorBracket;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleType;
@@ -13,22 +14,28 @@ import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.AmmunitionItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.FuelItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.RepairItemInterface;
+import com.example.valtrak.Data.CardLibrary.Interfaces.Items.SupplyItemInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.VehicleAttackInterface;
 import com.example.valtrak.Data.CardLibrary.Nations;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Germany.GermanVehicles;
 import com.example.valtrak.Data.CardLibrary.Vehicles.Russia.RussianVehicles;
+import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ReconVehicles;
+import com.example.valtrak.Data.CardLibrary.Vehicles.Support.UavTeams;
 import com.example.valtrak.Data.CardLibrary.Vehicles.US.USGroundVehicles;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
 import com.example.valtrak.Data.GameData.Repository.Cards.AmmunitionCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.FuelCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.RepairCardRepository;
+import com.example.valtrak.Data.GameData.Repository.Cards.SupplyCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.*;
 import com.example.valtrak.Gameplay.Cards.Resource.AmmunitionCard;
 import com.example.valtrak.Gameplay.Cards.Resource.FuelCard;
 import com.example.valtrak.Gameplay.Cards.Resource.RepairCard;
+import com.example.valtrak.Gameplay.Cards.Resource.SupplyCard;
 import com.example.valtrak.Gameplay.Cards.Vehicle.GroundVehicleCard;
+import com.example.valtrak.Gameplay.Engine.DamageMatchups;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -65,6 +72,7 @@ public class DataLoader implements CommandLineRunner {
     private final AmmunitionCardRepository ammunitionCardRepo;
     private final FuelCardRepository fuelCardRepo;
     private final RepairCardRepository repairCardRepo;
+    private final SupplyCardRepository supplyCardRepo;
     private final WeaponRepository weaponRepo;
     private final NationRepository nationRepo;
     private final VehicleCardRepository vehicleRepo;
@@ -94,9 +102,12 @@ public class DataLoader implements CommandLineRunner {
         loadGroundVehicles(USGroundVehicles.values());
         loadGroundVehicles(RussianVehicles.values());
         loadGroundVehicles(GermanVehicles.values());
+        loadGroundVehicles(ReconVehicles.values());
+        loadGroundVehicles(UavTeams.values());
         loadAmmunitionCards(AmmoSupplyCrate.values());
         loadFuelCards(FuelSupplyDrum.values());
         loadRepairCards(RepairSupplyKit.values());
+        loadSupplyCards(SupplyCrate.values());
         logger.info("Data loaded successfully");
     }
 
@@ -117,82 +128,20 @@ public class DataLoader implements CommandLineRunner {
      * Seeds the damage type matchup table which defines how each damage type
      * performs against each armor bracket.
      * Each matchup entry contains:
-     * - A damage modifier (e.g. KINETIC vs HEAVY = 1.3x)
+     * - A damage modifier (e.g. KINETIC vs HEAVY = 1.3x), defined in {@link DamageMatchups}
      * - An auto effect that triggers on hit (e.g. EXPLOSIVE vs UNARMORED = STUN)
      * These values drive the core combat damage formula:
      * finalDamage = max(1, round(baseDamage * modifier) - round(armor * 0.15))
      */
     private void loadDamageTypeMatchups() {
-        Map<DamageType, Map<ArmorBracket, Double>> modifiers = Map.of(
-                DamageType.KINETIC, Map.of(
-                        ArmorBracket.UNARMORED,   0.6,
-                        ArmorBracket.LIGHT,       0.8,
-                        ArmorBracket.MEDIUM,      1.0,
-                        ArmorBracket.HEAVY,       1.3,
-                        ArmorBracket.SUPER_HEAVY, 1.5
-                ),
-                DamageType.CHEMICAL, Map.of(
-                        ArmorBracket.UNARMORED,   1.0,
-                        ArmorBracket.LIGHT,       1.0,
-                        ArmorBracket.MEDIUM,      1.0,
-                        ArmorBracket.HEAVY,       1.0,
-                        ArmorBracket.SUPER_HEAVY, 1.0
-                ),
-                DamageType.EXPLOSIVE, Map.of(
-                        ArmorBracket.UNARMORED,   1.8,
-                        ArmorBracket.LIGHT,       1.4,
-                        ArmorBracket.MEDIUM,      0.7,
-                        ArmorBracket.HEAVY,       0.4,
-                        ArmorBracket.SUPER_HEAVY, 0.2
-                ),
-                DamageType.ELECTRIC, Map.of(
-                        ArmorBracket.UNARMORED,   0.0,
-                        ArmorBracket.LIGHT,       0.0,
-                        ArmorBracket.MEDIUM,      0.0,
-                        ArmorBracket.HEAVY,       0.0,
-                        ArmorBracket.SUPER_HEAVY, 0.0
-                )
-        );
-
-        Map<DamageType, Map<ArmorBracket, SpecialEffect>> autoEffects = Map.of(
-                DamageType.KINETIC, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.NONE,
-                        ArmorBracket.LIGHT,       SpecialEffect.NONE,
-                        ArmorBracket.MEDIUM,      SpecialEffect.NONE,
-                        ArmorBracket.HEAVY,       SpecialEffect.NONE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.NONE
-                ),
-                DamageType.CHEMICAL, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.NONE,
-                        ArmorBracket.LIGHT,       SpecialEffect.NONE,
-                        ArmorBracket.MEDIUM,      SpecialEffect.NONE,
-                        ArmorBracket.HEAVY,       SpecialEffect.NONE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.NONE
-                ),
-                DamageType.EXPLOSIVE, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.STUN,
-                        ArmorBracket.LIGHT,       SpecialEffect.STUN,
-                        ArmorBracket.MEDIUM,      SpecialEffect.NONE,
-                        ArmorBracket.HEAVY,       SpecialEffect.NONE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.NONE
-                ),
-                DamageType.ELECTRIC, Map.of(
-                        ArmorBracket.UNARMORED,   SpecialEffect.DISABLE,
-                        ArmorBracket.LIGHT,       SpecialEffect.DISABLE,
-                        ArmorBracket.MEDIUM,      SpecialEffect.DISABLE,
-                        ArmorBracket.HEAVY,       SpecialEffect.DISABLE,
-                        ArmorBracket.SUPER_HEAVY, SpecialEffect.DISABLE
-                )
-        );
-
         for (DamageType dt : DamageType.values()) {
             for (ArmorBracket bracket : ArmorBracket.values()) {
                 if (damageTypeMatchupRepo.findByDamageTypeAndArmorBracket(dt, bracket).isEmpty()) {
                     damageTypeMatchupRepo.save(new DamageTypeMatchupEntity(
                             dt,
                             bracket,
-                            modifiers.get(dt).get(bracket),
-                            autoEffects.get(dt).get(bracket)
+                            DamageMatchups.modifier(dt, bracket),
+                            DamageMatchups.autoEffect(dt, bracket)
                     ));
                 }
             }
@@ -383,6 +332,17 @@ public class DataLoader implements CommandLineRunner {
         for (RepairItemInterface kit : kits) {
             if (repairCardRepo.existsByName(kit.getItemName())) continue;
             repairCardRepo.save(new RepairCard(kit));
+        }
+    }
+
+    /**
+     * Seeds all {@link SupplyCrate} enum constants into the supply_cards table.
+     * @param crates an array of {@link SupplyItemInterface} values
+     */
+    private void loadSupplyCards(SupplyItemInterface[] crates) {
+        for (SupplyItemInterface crate : crates) {
+            if (supplyCardRepo.existsByName(crate.getItemName())) continue;
+            supplyCardRepo.save(new SupplyCard(crate));
         }
     }
 }

@@ -43,7 +43,7 @@ public class SecurityConfiguration {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new TokenAuthenticationFilter(accounts), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/account/me", "/account/me/**", "/account/logout", "/game/**").authenticated()
+                        .requestMatchers("/account/me", "/account/me/**", "/account/logout", "/matches", "/matches/**", "/decks", "/decks/**").authenticated()
                         .anyRequest().permitAll() // card catalog, nations and sign-in stay open to guests
                 )
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

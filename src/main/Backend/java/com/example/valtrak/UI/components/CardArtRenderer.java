@@ -20,7 +20,8 @@ public class CardArtRenderer {
     public static Canvas createVehicleArt(String vehicleClass, String vehicleNation) {
         Canvas canvas = new Canvas(W, H);
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        boolean isAir = vehicleClass.equals("AIR_SUPERIORITY") || vehicleClass.equals("CLOSE_AIR_SUPPORT");
+        boolean isAir = vehicleClass.equals("AIR_SUPERIORITY") || vehicleClass.equals("CLOSE_AIR_SUPPORT")
+                || vehicleClass.equals("SPECIALIST");           // specialists are UAV teams for now
         drawSkyBackground(gc, isAir);
         drawCentered(gc, !isAir, sprite -> {
             switch (vehicleClass) {
@@ -32,6 +33,7 @@ public class CardArtRenderer {
                 case "RECON"             -> drawRecon(sprite);
                 case "AIR_SUPERIORITY"   -> drawJet(sprite, true);
                 case "CLOSE_AIR_SUPPORT" -> drawJet(sprite, false);
+                case "SPECIALIST"        -> drawDrone(sprite);
                 case "SUPPLY"            -> drawSupplyTruck(sprite);
                 default                  -> drawGenericVehicle(sprite);
             }
@@ -57,6 +59,16 @@ public class CardArtRenderer {
         gc.fillRect(0, 0, W, H);
         drawCrateGrid(gc);
         drawCentered(gc, false, sprite -> drawFuel(sprite, count));
+        return canvas;
+    }
+
+    public static Canvas createSupplyArt(int count) {
+        Canvas canvas = new Canvas(W, H);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.web("#100f0a"));
+        gc.fillRect(0, 0, W, H);
+        drawCrateGrid(gc);
+        drawCentered(gc, false, sprite -> drawSupplyCrates(sprite, count));
         return canvas;
     }
 
@@ -275,6 +287,28 @@ public class CardArtRenderer {
         gc.fillOval(cx - 5, cy + 23, 10, 7);
     }
 
+    /** A small fixed-wing UAV seen from above: long straight wings, V tail, a sensor ball in the nose. */
+    private static void drawDrone(GraphicsContext gc) {
+        double cx = W / 2.0;
+        double cy = H / 2.0;
+        gc.setFill(Color.web("#6a7a8a"));
+        double[] wx = {cx - 54, cx - 6, cx + 6, cx + 54, cx + 6, cx - 6};
+        double[] wy = {cy - 2, cy - 7, cy - 7, cy - 2, cy + 3, cy + 3};
+        gc.fillPolygon(wx, wy, 6);
+        gc.setFill(Color.web("#8a98a8"));
+        gc.fillOval(cx - 8, cy - 30, 16, 60);
+        gc.setFill(Color.web("#5a6878"));
+        gc.fillPolygon(new double[]{cx - 2, cx - 22, cx - 19, cx - 1}, new double[]{cy + 22, cy + 32, cy + 36, cy + 28}, 4);
+        gc.fillPolygon(new double[]{cx + 2, cx + 22, cx + 19, cx + 1}, new double[]{cy + 22, cy + 32, cy + 36, cy + 28}, 4);
+        gc.setFill(Color.web("#2e3a48"));
+        gc.fillOval(cx - 5, cy - 31, 10, 10);
+        gc.setFill(Color.web("#7ab8e8"));
+        gc.fillOval(cx - 2, cy - 28, 4, 4);
+        gc.setStroke(Color.web("#d0d8e0"));
+        gc.setLineWidth(1.5);
+        gc.strokeOval(cx - 9, cy + 28, 18, 5);
+    }
+
     private static void drawSupplyTruck(GraphicsContext gc) {
         gc.setFill(Color.web("#1a1a1a"));
         gc.fillOval(14, 56, 22, 22);
@@ -405,6 +439,22 @@ public class CardArtRenderer {
         gc.fillRoundRect(106, 42, 30, 22, 3, 3);
         gc.setFill(Color.web("#3a5a6a"));
         gc.fillRect(110, 46, 22, 10);
+    }
+
+    private static void drawSupplyCrates(GraphicsContext gc, int count) {
+        int crates = count <= 1 ? 1 : count <= 3 ? 2 : 3;
+        double size = 34;
+        double startX = W / 2.0 - (crates * size + (crates - 1) * 4) / 2.0;
+        for (int i = 0; i < crates; i++) {
+            double x = startX + i * (size + 4);
+            gc.setFill(Color.web("#8a6a3a"));
+            gc.fillRect(x, 40, size, size);
+            gc.setStroke(Color.web("#5c4524"));
+            gc.setLineWidth(2);
+            gc.strokeRect(x + 1, 41, size - 2, size - 2);
+            gc.strokeLine(x, 40, x + size, 40 + size);
+            gc.strokeLine(x + size, 40, x, 40 + size);
+        }
     }
 
     private static void drawRepairKit(GraphicsContext gc) {

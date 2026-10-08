@@ -53,6 +53,15 @@ public class CardTile {
         statsLbl.setWrapText(true);
         statsLbl.setMaxWidth(155);
 
+        Label abilityLbl = null;
+        if (card.ability() != null) {
+            abilityLbl = new Label("Ability: " + card.ability());
+            abilityLbl.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+            abilityLbl.setTextFill(Color.web("#7ab8e8"));
+            abilityLbl.setWrapText(true);
+            abilityLbl.setMaxWidth(155);
+        }
+
         Label rarityLbl = new Label(card.level() != null ? card.level() : "");
         rarityLbl.setFont(Font.font("Arial", FontWeight.BOLD, 9));
         rarityLbl.setTextFill(Color.web(rarityColor(card.level())));
@@ -71,7 +80,9 @@ public class CardTile {
         addBtn.setOnMouseExited(e -> addBtn.setStyle(btnBase));
         addBtn.setOnAction(e -> onAdd.run());
 
-        VBox tile = new VBox(5, art, nameLbl, subLbl, statsLbl, rarityLbl, addBtn);
+        VBox tile = new VBox(5, art, nameLbl, subLbl, statsLbl);
+        if (abilityLbl != null) tile.getChildren().add(abilityLbl);
+        tile.getChildren().addAll(rarityLbl, addBtn);
         tile.setPadding(new Insets(8));
         tile.setAlignment(Pos.TOP_CENTER);
         tile.setMinWidth(176);
@@ -104,6 +115,7 @@ public class CardTile {
             case "AMMUNITION" -> CardArtRenderer.createAmmoArt(
                     card.damageType() != null ? DamageType.valueOf(card.damageType()) : null);
             case "FUEL"       -> CardArtRenderer.createFuelArt(card.count() != null ? card.count() : 1);
+            case "SUPPLY"     -> CardArtRenderer.createSupplyArt(card.count() != null ? card.count() : 1);
             case "REPAIR"     -> CardArtRenderer.createRepairArt();
             default           -> CardArtRenderer.createAmmoArt(null);
         };
@@ -123,6 +135,7 @@ public class CardTile {
             case "VEHICLE" -> "HP " + orZero(card.hp()) + "  ·  Armor " + orZero(card.armor());
             case "AMMUNITION" -> card.count() != null ? "Resupply ×" + card.count() : "";
             case "FUEL" -> card.count() != null ? "Fuel +" + card.count() : "";
+            case "SUPPLY" -> card.count() != null ? "Supply +" + card.count() : "";
             case "REPAIR" -> card.repairAmount() == null ? ""
                     : card.repairAmount() >= 999 ? "Repairs: full HP" : "Repairs " + card.repairAmount() + " HP";
             default -> card.description() != null ? card.description() : "";

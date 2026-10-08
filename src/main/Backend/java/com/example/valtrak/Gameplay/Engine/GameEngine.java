@@ -1,0 +1,783 @@
+package com.example.valtrak.Gameplay.Engine;
+
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.AttackSlot;
+import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.SpecialEffect;
+import com.example.valtrak.Gameplay.Engine.Action.*;
+
+import java.util.*;
+import java.util.random.RandomGenerator;
+
+/**
+ * The Valtrak rules (see docs/RULEBOOK.md). It knows nothing about databases or the web:
+ * give it a {@link GameState}, a player and an {@link Action}, and it either changes the state
+ * or throws a {@link RuleViolationException} saying why the move isn't allowed.
+ * Every action checks all of its rules before it changes anything, so a rejected move leaves the state untouched.
+ */
+public final class GameEngine {
+
+    private final GameRules rules;
+    private final CardCatalog catalog;
+
+    public GameEngine(GameRules rules, CardCatalog catalog) {
+        this.rules = rules;
+        this.catalog = catalog;
+    }
+
+    public CardCatalog catalog() {
+        return catalog;
+    }
+
+    public GameRules rules() {
+        return rules;
+    }
+
+    // ── Decks and setup ──────────────────────────────────────────────────────
+
+    /** @return a list of problems; empty means the deck is allowed */
+    public List<String> validateDeck(List<Long> deck) {
+        List<String> problems = new ArrayList<>();
+        if (deck == null || deck.size() < rules.minDeckSize) {
+            problems.add("A deck needs at least " + rules.minDeckSize + " cards.");
+        }
+        if (deck != null && deck.size() > rules.maxDeckSize) {
+            problems.add("A deck can have at most " + rules.maxDeckSize + " cards.");
+        }
+        if (deck == null) return problems;
+        Map<Long, Integer> copies = new HashMap<>();
+        int tanks = 0;
+        for (long id : deck) {
+            CardSpec spec = catalog.find(id);
+            if (spec == null) {
+                problems.add("The deck contains an unknown card (" + id + ").");
+                continue;
+            }
+            if (copies.merge(id, 1, Integer::sum) == rules.maxCopies + 1) {
+                problems.add("A deck can have at most " + rules.maxCopies + " copies of " + spec.name() + ".");
+            }
+            if (spec instanceof VehicleSpec v && v.isTank()) tanks++;
+        }
+        if (tanks < rules.minTanksInDeck) {
+            problems.add("A deck needs at least " + rules.minTanksInDeck + " tanks (it has " + tanks + ").");
+        }
+        return problems;
+    }
+
+    /**
+     * Shuffles the decks, deals opening hands (mulligan if there is no tank; the opponent draws an extra card
+     * per mulligan, up to the cap) and picks who goes first. The game then waits in SETUP for each player's
+     * {@link PlaceStartingTank}.
+     */
+    public GameState newGame(List<Long> deck0, List<Long> deck1, RandomGenerator rng) {
+        for (int i = 0; i < 2; i++) {
+            List<String> problems = validateDeck(i == 0 ? deck0 : deck1);
+            if (!problems.isEmpty()) {
+                throw new RuleViolationException("Player " + (i + 1) + "'s deck isn't allowed: " + String.join(" ", problems));
+            }
+        }
+        GameState s = new GameState();
+        for (int i = 0; i < 2; i++) {
+            PlayerState p = new PlayerState(i);
+            p.deck.addAll(i == 0 ? deck0 : deck1);
+            Collections.shuffle(p.deck, rng);
+            draw(p, rules.startingHandSize);
+            int guard = 0;
+            while (!hasTank(p.hand)) {
+                if (++guard > 200) throw new RuleViolationException("Couldn't deal a hand with a tank.");
+                p.mulligans++;
+                p.deck.addAll(p.hand);
+                p.hand.clear();
+                Collections.shuffle(p.deck, rng);
+                draw(p, rules.startingHandSize);
+            }
+            s.players.add(p);
+        }
+        for (int i = 0; i < 2; i++) {
+            draw(s.player(i), Math.min(rules.mulliganExtraDrawCap, s.player(1 - i).mulligans));
+        }
+        s.firstPlayer = rng.nextInt(2);
+        s.activePlayer = s.firstPlayer;
+        s.phase = GameState.Phase.SETUP;
+        return s;
+    }
+
+    // ── Applying actions ─────────────────────────────────────────────────────
+
+    /** Does the move to {@code s}, or throws {@link RuleViolationException} without changing anything. */
+    public ActionResult apply(GameState s, int player, Action action) {
+        return applyInPlace(s, player, action);
+    }
+
+    /** A player gives up. Allowed at any time, even when it isn't their turn. */
+    public ActionResult resign(GameState s, int player) {
+        if (s.phase == GameState.Phase.FINISHED) throw violation("The game is over.");
+        ActionResult r = new ActionResult();
+        finish(s, 1 - player, "Player " + (player + 1) + " resigned.", r);
+        return r;
+    }
+
+    /** True if the action would be accepted right now. */
+    public boolean isLegal(GameState s, int player, Action action) {
+        try {
+            applyInPlace(s.copy(), player, action);
+            return true;
+        } catch (RuleViolationException e) {
+            return false;
+        }
+    }
+
+    private ActionResult applyInPlace(GameState s, int player, Action action) {
+        if (s.phase == GameState.Phase.FINISHED) throw violation("The game is over.");
+        if (player < 0 || player > 1) throw violation("Unknown player.");
+        ActionResult r = new ActionResult();
+        PlayerState me = s.player(player);
+        PlayerState opp = s.player(1 - player);
+
+        if (s.phase == GameState.Phase.SETUP) {
+            if (!(action instanceof PlaceStartingTank place)) {
+                throw violation("The game is still being set up: place your starting tank.");
+            }
+            placeStartingTank(s, me, place, r);
+            return r;
+        }
+        if (s.activePlayer != player) throw violation("It's not your turn.");
+
+        switch (action) {
+            case PlaceStartingTank a -> throw violation("The game has already started.");
+            case Designate a -> designate(s, me, a, r);
+            case Deploy a -> deploy(s, me, a, r);
+            case Convoy a -> convoy(me, a, r);
+            case Repair a -> repair(me, a, r);
+            case Reveal a -> reveal(me, a, r);
+            case RevealGroup a -> revealGroup(me, a, r);
+            case Retreat a -> retreat(me, a, r);
+            case RetreatGroup a -> retreatGroup(me, a, r);
+            case Move a -> move(s, me, a, r);
+            case UseAbility a -> useAbility(me, opp, a, r);
+            case Attack a -> attack(s, me, opp, a, r);
+            case EndTurn a -> {
+                r.say("Player " + (player + 1) + " ends their turn.");
+                endTurn(s, r, false);
+            }
+        }
+        return r;
+    }
+
+    // ── Setup action ─────────────────────────────────────────────────────────
+
+    private void placeStartingTank(GameState s, PlayerState me, PlaceStartingTank a, ActionResult r) {
+        if (me.placedStartingTank) throw violation("You have already placed your starting tank.");
+        requireInHand(me, a.cardId());
+        VehicleSpec spec = catalog.vehicle(a.cardId());
+        if (!spec.isTank()) throw violation("Your starting vehicle must be a tank.");
+        me.hand.remove(Long.valueOf(a.cardId()));
+        newGroupOf(s, me, spec);
+        me.placedStartingTank = true;
+        r.say("Player " + (me.index + 1) + " places a vehicle face down.");
+        if (s.players.stream().allMatch(p -> p.placedStartingTank)) {
+            s.phase = GameState.Phase.PLAYING;
+            s.activePlayer = s.firstPlayer;
+            startTurn(s, r);
+        }
+    }
+
+    // ── Main-step actions ────────────────────────────────────────────────────
+
+    private void designate(GameState s, PlayerState me, Designate a, ActionResult r) {
+        if (me.designationsLeft <= 0) throw violation("You have already played a resource card this turn.");
+        requireInHand(me, a.cardId());
+        ResourceSpec spec = catalog.resource(a.cardId());
+        List<ResourceStack> destination;
+        if (a.groupId() == null) {
+            destination = me.depot;
+        } else {
+            if (spec.kind() != ResourceKind.AMMO && spec.kind() != ResourceKind.FUEL) {
+                throw violation("Only Ammo and Fuel can go into a strike group's pool.");
+            }
+            destination = group(me, a.groupId()).pool;
+        }
+        me.hand.remove(Long.valueOf(a.cardId()));
+        destination.add(new ResourceStack(s.nextId++, spec.cardId(), spec.kind(), spec.ammunition(), spec.amount()));
+        me.designationsLeft--;
+        r.say("Player " + (me.index + 1) + " plays " + spec.name() + (a.groupId() == null ? " to the Depot." : " to a pool."));
+    }
+
+    private void deploy(GameState s, PlayerState me, Deploy a, ActionResult r) {
+        requireInHand(me, a.cardId());
+        VehicleSpec spec = catalog.vehicle(a.cardId());
+        if (a.groupId() == null) {
+            requireCanStandAlone(me, spec);
+            me.hand.remove(Long.valueOf(a.cardId()));
+            newGroupOf(s, me, spec);
+            r.say("Player " + (me.index + 1) + " deploys a tank face down.");
+            return;
+        }
+        StrikeGroup g = group(me, a.groupId());
+        requireRoom(g, spec);
+        int cost = formationCost(g, spec);
+        requireSupply(me, cost);
+        me.hand.remove(Long.valueOf(a.cardId()));
+        spend(me, me.depot, ResourceKind.SUPPLY, null, cost);
+        g.vehicles.add(newVehicle(s, spec));
+        if (g.vehicles.size() >= 2) g.formed = true;
+        electLeader(g);
+        r.say("Player " + (me.index + 1) + " deploys a vehicle into a strike group" + (cost > 0 ? " (formation cost " + cost + " Supply)." : "."));
+    }
+
+    private void convoy(PlayerState me, Convoy a, ActionResult r) {
+        StrikeGroup g = group(me, a.groupId());
+        Vehicle resupply = g.vehicles.stream()
+                .filter(v -> catalog.vehicle(v.cardId).isResupply()).findFirst()
+                .orElseThrow(() -> violation("That strike group has no Resupply vehicle."));
+        int capacity = rules.convoyCapacity(catalog.vehicle(resupply.cardId).level());
+        List<Long> ids = a.resourceIds() == null ? List.of() : a.resourceIds();
+        if (ids.isEmpty()) throw violation("Choose at least one resource card to move.");
+        if (new HashSet<>(ids).size() != ids.size()) throw violation("A resource card can only be moved once.");
+        if (g.convoyMoved + ids.size() > capacity) {
+            throw violation("This convoy can move " + capacity + " card(s) per turn; " + g.convoyMoved + " already moved.");
+        }
+        List<ResourceStack> moving = new ArrayList<>();
+        for (long id : ids) {
+            ResourceStack stack = me.depot.stream().filter(x -> x.id == id).findFirst()
+                    .orElseThrow(() -> violation("Resource card " + id + " is not in your Depot."));
+            if (stack.kind != ResourceKind.AMMO && stack.kind != ResourceKind.FUEL) {
+                throw violation("Only Ammo and Fuel can be moved into a pool.");
+            }
+            moving.add(stack);
+        }
+        me.depot.removeAll(moving);
+        g.pool.addAll(moving);
+        g.convoyMoved += moving.size();
+        r.say("The convoy moves " + moving.size() + " resource card(s) into the pool.");
+    }
+
+    private void repair(PlayerState me, Repair a, ActionResult r) {
+        ResourceStack card = me.depot.stream().filter(x -> x.id == a.resourceId()).findFirst()
+                .orElseThrow(() -> violation("That Repair card is not in your Depot."));
+        if (card.kind != ResourceKind.REPAIR) throw violation("That is not a Repair card.");
+        Vehicle v = findVehicle(me, a.vehicleId()).vehicle;
+        ResourceSpec spec = catalog.resource(card.cardId);
+        boolean full = spec.amount() >= rules.fullRepairThreshold;
+        if (v.hp >= v.maxHp && v.breachStacks == 0) throw violation("That vehicle doesn't need repairs.");
+        int healed = full ? v.maxHp - v.hp : Math.min(spec.amount(), v.maxHp - v.hp);
+        v.hp += healed;
+        if (full) v.breachStacks = 0;
+        me.depot.remove(card);
+        me.discard.add(card.cardId);
+        r.say("Repairs restore " + healed + " HP" + (full ? " and remove BREACH." : "."));
+    }
+
+    private void reveal(PlayerState me, Reveal a, ActionResult r) {
+        List<Long> ids = a.vehicleIds() == null ? List.of() : a.vehicleIds();
+        if (ids.isEmpty()) throw violation("Choose a vehicle to reveal.");
+        List<Vehicle> toFlip = new ArrayList<>();
+        for (long id : ids) {
+            Vehicle v = findVehicle(me, id).vehicle;
+            if (catalog.vehicle(v.cardId).isResupply()) throw violation("A Resupply vehicle never needs to be revealed.");
+            if (v.faceUp) throw violation("That vehicle is already face up.");
+            if (!toFlip.contains(v)) toFlip.add(v);
+        }
+        toFlip.forEach(v -> v.faceUp = true);
+        r.say("Player " + (me.index + 1) + " reveals " + toFlip.size() + " vehicle(s).");
+    }
+
+    private void revealGroup(PlayerState me, RevealGroup a, ActionResult r) {
+        StrikeGroup g = group(me, a.groupId());
+        List<Vehicle> toFlip = g.vehicles.stream()
+                .filter(v -> !v.faceUp && !catalog.vehicle(v.cardId).isResupply()).toList();
+        if (toFlip.isEmpty()) throw violation("Everything in that group is already face up.");
+        toFlip.forEach(v -> v.faceUp = true);
+        r.say("Player " + (me.index + 1) + " reveals a strike group.");
+    }
+
+    private void retreat(PlayerState me, Retreat a, ActionResult r) {
+        Located loc = findVehicle(me, a.vehicleId());
+        if (!loc.vehicle.faceUp) throw violation("That vehicle is already face down.");
+        int cost = rules.retreatFuel(catalog.vehicle(loc.vehicle.cardId).level());
+        requireFuel(loc.group, cost);
+        spend(me, loc.group.pool, ResourceKind.FUEL, null, cost);
+        loc.vehicle.faceUp = false;
+        r.say("A vehicle retreats face down (" + cost + " Fuel).");
+    }
+
+    private void retreatGroup(PlayerState me, RetreatGroup a, ActionResult r) {
+        StrikeGroup g = group(me, a.groupId());
+        if (g.vehicles.stream().noneMatch(v -> v.faceUp)) throw violation("Everything in that group is already face down.");
+        int cost = rules.retreatFuel(catalog.vehicle(g.leader().cardId).level()) * rules.groupRetreatMultiplier;
+        requireFuel(g, cost);
+        spend(me, g.pool, ResourceKind.FUEL, null, cost);
+        g.vehicles.forEach(v -> v.faceUp = false);
+        r.say("A strike group retreats face down (" + cost + " Fuel).");
+    }
+
+    private void move(GameState s, PlayerState me, Move a, ActionResult r) {
+        Located loc = findVehicle(me, a.vehicleId());
+        if (loc.group.leader() == loc.vehicle) throw violation("A Leader can't leave its strike group.");
+        VehicleSpec spec = catalog.vehicle(loc.vehicle.cardId);
+        StrikeGroup dest = null;
+        if (a.toGroupId() == null) {
+            requireCanStandAlone(me, spec);
+        } else {
+            dest = group(me, a.toGroupId());
+            if (dest == loc.group) throw violation("That vehicle is already in that group.");
+            requireRoom(dest, spec);
+        }
+        int fuel = rules.moveFuel(spec.level());
+        requireFuel(loc.group, fuel);
+        int supply = dest == null ? 0 : formationCost(dest, spec);
+        requireSupply(me, supply);
+
+        spend(me, loc.group.pool, ResourceKind.FUEL, null, fuel);
+        spend(me, me.depot, ResourceKind.SUPPLY, null, supply);
+        loc.group.vehicles.remove(loc.vehicle);
+        if (dest == null) {
+            StrikeGroup g = new StrikeGroup(s.nextId++);
+            g.vehicles.add(loc.vehicle);
+            me.groups.add(g);
+        } else {
+            dest.vehicles.add(loc.vehicle);
+            if (dest.vehicles.size() >= 2) dest.formed = true;
+            electLeader(dest);
+        }
+        r.say("A vehicle moves to another strike group (" + fuel + " Fuel).");
+    }
+
+    // ── Abilities ────────────────────────────────────────────────────────────
+
+    private void useAbility(PlayerState me, PlayerState opp, UseAbility a, ActionResult r) {
+        Located loc = findVehicle(me, a.vehicleId());
+        VehicleSpec spec = catalog.vehicle(loc.vehicle.cardId);
+        AbilitySpec ability = spec.ability();
+        if (ability == null) throw violation(spec.name() + " has no ability.");
+        if (!loc.vehicle.faceUp) throw violation(spec.name() + " has to be face up to use its ability.");
+        if (loc.vehicle.stunned || loc.vehicle.disabled) throw violation(spec.name() + " can't use its ability this turn.");
+        if (loc.vehicle.abilityUsed) throw violation(spec.name() + " has already used its ability this turn.");
+        List<Long> ids = a.targetVehicleIds() == null ? List.of() : a.targetVehicleIds();
+        if (ids.isEmpty()) throw violation("Choose which enemy vehicles to reveal.");
+        if (new HashSet<>(ids).size() != ids.size()) throw violation("Each target can only be chosen once.");
+        if (ids.size() > ability.power()) {
+            throw violation(spec.name() + " can reveal at most " + ability.power() + " vehicle(s).");
+        }
+        List<Vehicle> targets = new ArrayList<>();
+        for (long id : ids) {
+            Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst()
+                    .orElseThrow(() -> violation("Enemy vehicle " + id + " was not found."));
+            if (t.faceUp) throw violation("Enemy vehicle " + id + " is already face up.");
+            targets.add(t);
+        }
+        requireFuel(loc.group, ability.fuelCost());
+        spend(me, loc.group.pool, ResourceKind.FUEL, null, ability.fuelCost());
+        targets.forEach(t -> t.faceUp = true);
+        loc.vehicle.abilityUsed = true;
+        r.say(spec.name() + " reveals " + targets.size() + " enemy vehicle(s).");
+    }
+
+    // ── Attacking ────────────────────────────────────────────────────────────
+
+    private record Plan(Vehicle attacker, VehicleSpec spec, AttackSpec attack, Ammunition ammo, Vehicle target) {}
+
+    private void attack(GameState s, PlayerState me, PlayerState opp, Attack a, ActionResult r) {
+        if (s.firstPlayer == me.index && me.turnsTaken <= 1) {
+            throw violation("The first player can't attack on their first turn.");
+        }
+        StrikeGroup g = group(me, a.groupId());
+        if (a.choices() == null || a.choices().isEmpty()) throw violation("Choose at least one vehicle to attack with.");
+
+        Set<Long> used = new HashSet<>();
+        List<Plan> plans = new ArrayList<>();
+        for (AttackChoice c : a.choices()) {
+            Vehicle attacker = g.vehicles.stream().filter(v -> v.id == c.vehicleId()).findFirst()
+                    .orElseThrow(() -> violation("Vehicle " + c.vehicleId() + " is not in that strike group."));
+            if (!used.add(attacker.id)) throw violation("A vehicle can only attack once per turn.");
+            VehicleSpec spec = catalog.vehicle(attacker.cardId);
+            if (spec.isResupply()) throw violation("A Resupply vehicle never attacks.");
+            if (!attacker.faceUp) throw violation(spec.name() + " is face down and can't attack.");
+            if (attacker.stunned) throw violation(spec.name() + " is stunned and can't attack this turn.");
+            if (attacker.disabled) throw violation(spec.name() + " is disabled and can't attack this turn.");
+            AttackSpec attack = spec.attack(c.slot())
+                    .orElseThrow(() -> violation(spec.name() + " has no " + c.slot() + " attack."));
+            if (attacker.suppressed && c.slot() == AttackSlot.ATTACK_1) {
+                throw violation(spec.name() + " is suppressed and can't use ATTACK_1 this turn.");
+            }
+            List<Ammunition> compatible = attack.weapon().getCompatibleAmmunition();
+            Ammunition ammo = c.ammo();
+            if (ammo == null) {
+                if (compatible.size() != 1) throw violation("Choose which ammunition " + attack.name() + " fires.");
+                ammo = compatible.get(0);
+            } else if (!compatible.contains(ammo)) {
+                throw violation(ammo + " doesn't fit the weapon used by " + attack.name() + ".");
+            }
+            Vehicle target = opp.groups.stream().flatMap(x -> x.vehicles.stream())
+                    .filter(v -> v.id == c.targetVehicleId()).findFirst()
+                    .orElseThrow(() -> violation("Target " + c.targetVehicleId() + " was not found."));
+            if (!target.faceUp) throw violation("You can only attack face-up vehicles.");
+            plans.add(new Plan(attacker, spec, attack, ammo, target));
+        }
+        if (plans.size() >= 2 && !g.leader().faceUp) {
+            throw violation("A Combined Assault needs the Leader to be face up.");
+        }
+
+        // Add up what the attacks cost and check the pool has it.
+        Map<Ammunition, Integer> ammoNeeded = new EnumMap<>(Ammunition.class);
+        int fuelNeeded = 0;
+        for (Plan p : plans) {
+            ammoNeeded.merge(p.ammo, p.attack.ammoCost(), Integer::sum);
+            fuelNeeded += p.attack.fuelCost();
+        }
+        for (var e : ammoNeeded.entrySet()) {
+            int have = available(g.pool, ResourceKind.AMMO, e.getKey());
+            if (have < e.getValue()) {
+                throw violation("Not enough " + e.getKey() + " in the pool: need " + e.getValue() + ", have " + have + ".");
+            }
+        }
+        requireFuel(g, fuelNeeded);
+
+        for (var e : ammoNeeded.entrySet()) spend(me, g.pool, ResourceKind.AMMO, e.getKey(), e.getValue());
+        spend(me, g.pool, ResourceKind.FUEL, null, fuelNeeded);
+
+        r.say("Player " + (me.index + 1) + (plans.size() >= 2 ? " launches a Combined Assault." : " makes a Skirmish attack."));
+        for (Plan p : plans) {
+            if (p.target.hp <= 0) {
+                r.say(p.spec.name() + "'s target was already destroyed.");
+                continue;
+            }
+            DamageCalculator.Result dmg = DamageCalculator.calculate(p.attack.baseDamage(), p.attack.effect(),
+                    p.ammo, catalog.vehicle(p.target.cardId).armor(), p.target.breachStacks);
+            int dealt = rules.damagePercent == 100 ? dmg.damage() : Math.max(1, Math.round(dmg.damage() * rules.damagePercent / 100f));
+            p.target.hp -= dealt;
+            applyEffect(p.target, dmg.effect());
+            r.say(p.spec.name() + " hits " + catalog.vehicle(p.target.cardId).name() + " for " + dealt
+                    + (dmg.effect() != SpecialEffect.NONE ? " (" + dmg.effect() + ")" : "") + ".");
+            if (p.target.hp <= 0) destroy(s, opp, me, p.target, r);
+            if (s.phase == GameState.Phase.FINISHED) return;
+        }
+        endTurn(s, r, true);
+    }
+
+    private static void applyEffect(Vehicle target, SpecialEffect effect) {
+        switch (effect) {
+            case SUPPRESSION -> target.suppressed = true;
+            case DISABLE -> target.disabled = true;
+            case STUN -> target.stunned = true;
+            case BREACH -> target.breachStacks = Math.min(target.breachStacks + 1, 3);
+            default -> { /* NONE, PIERCE, OVERPRESSURE: nothing lasting */ }
+        }
+    }
+
+    // ── Destruction ──────────────────────────────────────────────────────────
+
+    private void destroy(GameState s, PlayerState owner, PlayerState attacker, Vehicle target, ActionResult r) {
+        Located loc = findVehicle(owner, target.id);
+        StrikeGroup g = loc.group;
+        if (g.leader() != target) {
+            g.vehicles.remove(target);
+            owner.discard.add(target.cardId);
+            r.say(catalog.vehicle(target.cardId).name() + " is destroyed.");
+            return;
+        }
+
+        // The Leader is destroyed: the whole strike group is.
+        int size = g.vehicles.size();
+        int chips = 1 + (size >= rules.bonusChipMinVehicles ? rules.bonusChips : 0);
+        attacker.chips += chips;
+        r.say("The strike group is destroyed! Player " + (attacker.index + 1) + " takes " + chips + " Territory Chip(s).");
+
+        int lost = size == 1 ? g.pool.size() : (g.pool.size() + 1) / 2;
+        List<ResourceStack> byValue = new ArrayList<>(g.pool);
+        byValue.sort(Comparator.comparingInt((ResourceStack x) -> x.remaining)); // the owner keeps their fullest cards
+        for (int i = 0; i < lost; i++) {
+            ResourceStack gone = byValue.get(i);
+            g.pool.remove(gone);
+            owner.discard.add(gone.cardId);
+        }
+        owner.depot.addAll(g.pool);
+        g.pool.clear();
+
+        owner.discard.add(target.cardId);
+        owner.groups.remove(g);
+        for (Vehicle survivor : g.vehicles) {
+            if (survivor == target) continue;
+            if (catalog.vehicle(survivor.cardId).isTank()) {
+                survivor.faceUp = false;
+                StrikeGroup lone = new StrikeGroup(s.nextId++);
+                lone.vehicles.add(survivor);
+                owner.groups.add(lone);
+            } else {
+                owner.hand.add(survivor.cardId);
+            }
+        }
+        if (attacker.chips >= rules.winChips) {
+            finish(s, attacker.index, "Player " + (attacker.index + 1) + " took " + attacker.chips + " Territory Chips.", r);
+        }
+    }
+
+    // ── Turn flow ────────────────────────────────────────────────────────────
+
+    private void endTurn(GameState s, ActionResult r, boolean attacked) {
+        s.passesInARow = attacked ? 0 : s.passesInARow + 1;
+        PlayerState ending = s.player(s.activePlayer);
+        for (StrikeGroup g : ending.groups) {
+            for (Vehicle v : g.vehicles) {
+                v.stunned = false;
+                v.suppressed = false;
+                v.disabled = false;
+            }
+        }
+        if (rules.stalemateRounds > 0 && s.passesInARow >= 2 * rules.stalemateRounds) {
+            s.passesInARow = 0;
+            for (PlayerState p : s.players) {
+                for (StrikeGroup g : p.groups) {
+                    for (Vehicle v : g.vehicles) if (!catalog.vehicle(v.cardId).isResupply()) v.faceUp = true;
+                }
+            }
+            r.say("Stalemate: every vehicle is revealed.");
+        }
+        s.activePlayer = 1 - s.activePlayer;
+        startTurn(s, r);
+    }
+
+    private void startTurn(GameState s, ActionResult r) {
+        PlayerState p = s.player(s.activePlayer);
+        s.turnCount++;
+        p.turnsTaken++;
+        p.designationsLeft = rules.designationsPerTurn;
+        p.groups.forEach(g -> {
+            g.convoyMoved = 0;
+            g.vehicles.forEach(v -> v.abilityUsed = false);
+        });
+        if (p.deck.isEmpty()) {
+            finish(s, 1 - p.index, "Player " + (p.index + 1) + " had no card to draw.", r);
+            return;
+        }
+        p.hand.add(p.deck.remove(0));
+    }
+
+    private void finish(GameState s, int winner, String reason, ActionResult r) {
+        s.phase = GameState.Phase.FINISHED;
+        s.winner = winner;
+        s.endReason = reason;
+        r.say("Game over: player " + (winner + 1) + " wins. " + reason);
+    }
+
+    // ── Legal actions (for bots and tests) ───────────────────────────────────
+
+    /** Every action the player may take right now. Enough for a bot to play a full game. */
+    public List<Action> legalActions(GameState s, int player) {
+        List<Action> out = new ArrayList<>();
+        for (Action candidate : candidates(s, player)) {
+            if (isLegal(s, player, candidate)) out.add(candidate);
+        }
+        return out;
+    }
+
+    private List<Action> candidates(GameState s, int player) {
+        List<Action> c = new ArrayList<>();
+        PlayerState me = s.player(player);
+        PlayerState opp = s.player(1 - player);
+        if (s.phase == GameState.Phase.SETUP) {
+            for (long id : new LinkedHashSet<>(me.hand)) c.add(new PlaceStartingTank(id));
+            return c;
+        }
+        if (s.phase != GameState.Phase.PLAYING || s.activePlayer != player) return c;
+        c.add(new EndTurn());
+
+        for (long id : new LinkedHashSet<>(me.hand)) {
+            CardSpec spec = catalog.find(id);
+            if (spec instanceof ResourceSpec) {
+                c.add(new Designate(id, null));
+                for (StrikeGroup g : me.groups) c.add(new Designate(id, g.id));
+            } else if (spec instanceof VehicleSpec) {
+                c.add(new Deploy(id, null));
+                for (StrikeGroup g : me.groups) c.add(new Deploy(id, g.id));
+            }
+        }
+        for (ResourceStack stack : me.depot) {
+            if (stack.kind == ResourceKind.REPAIR) {
+                for (StrikeGroup g : me.groups) for (Vehicle v : g.vehicles) c.add(new Repair(stack.id, v.id));
+            }
+        }
+        for (StrikeGroup g : me.groups) {
+            c.add(new RevealGroup(g.id));
+            c.add(new RetreatGroup(g.id));
+            for (ResourceStack stack : me.depot) c.add(new Convoy(g.id, List.of(stack.id)));
+            for (Vehicle v : g.vehicles) {
+                c.add(new Reveal(List.of(v.id)));
+                c.add(new Retreat(v.id));
+                c.add(new Move(v.id, null));
+                for (StrikeGroup other : me.groups) if (other != g) c.add(new Move(v.id, other.id));
+            }
+        }
+        List<Vehicle> targets = opp.groups.stream().flatMap(g -> g.vehicles.stream())
+                .filter(v -> v.faceUp).toList();
+        List<Vehicle> hidden = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> !v.faceUp).toList();
+        for (StrikeGroup g : me.groups) {
+            for (Vehicle v : g.vehicles) {
+                AbilitySpec ab = catalog.vehicle(v.cardId).ability();
+                if (ab == null || hidden.isEmpty()) continue;
+                c.add(new UseAbility(v.id, hidden.stream().limit(ab.power()).map(x -> x.id).toList()));
+                c.add(new UseAbility(v.id, List.of(hidden.get(hidden.size() - 1).id)));
+            }
+        }
+        for (StrikeGroup g : me.groups) {
+            List<AttackChoice> firstChoices = new ArrayList<>();
+            for (Vehicle v : g.vehicles) {
+                VehicleSpec spec = catalog.vehicle(v.cardId);
+                boolean firstFound = false;
+                for (AttackSpec at : spec.attacks()) {
+                    for (Ammunition ammo : at.weapon().getCompatibleAmmunition()) {
+                        for (Vehicle t : targets) {
+                            AttackChoice choice = new AttackChoice(v.id, at.slot(), ammo, t.id);
+                            c.add(new Attack(g.id, List.of(choice)));
+                            if (!firstFound) {
+                                firstChoices.add(choice);
+                                firstFound = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (firstChoices.size() >= 2) c.add(new Attack(g.id, firstChoices));
+        }
+        return c;
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private record Located(StrikeGroup group, Vehicle vehicle) {}
+
+    private Located findVehicle(PlayerState p, long vehicleId) {
+        for (StrikeGroup g : p.groups) {
+            for (Vehicle v : g.vehicles) if (v.id == vehicleId) return new Located(g, v);
+        }
+        throw violation("You don't have a vehicle " + vehicleId + " on the field.");
+    }
+
+    private StrikeGroup group(PlayerState p, long groupId) {
+        return p.groups.stream().filter(g -> g.id == groupId).findFirst()
+                .orElseThrow(() -> violation("You don't have a strike group " + groupId + "."));
+    }
+
+    private void requireInHand(PlayerState p, long cardId) {
+        if (!p.hand.contains(cardId)) throw violation("Card " + cardId + " is not in your hand.");
+    }
+
+    private int groupLimit(PlayerState p) {
+        return rules.baseGroupLimit + p.chips / rules.chipsPerExtraGroup;
+    }
+
+    private void requireCanStandAlone(PlayerState me, VehicleSpec spec) {
+        if (!spec.isTank()) throw violation(spec.name() + " isn't a tank, so it has to join an existing strike group.");
+        if (me.groups.size() >= groupLimit(me)) {
+            throw violation("You already have " + me.groups.size() + " strike groups (your limit is " + groupLimit(me) + ").");
+        }
+    }
+
+    /** Slot rules from the rulebook: Leader + up to 2 Line + 1 Specialist + 1 Resupply, 5 vehicles at most. */
+    private void requireRoom(StrikeGroup g, VehicleSpec spec) {
+        if (g.vehicles.size() >= rules.maxGroupSize) throw violation("That strike group is full.");
+        int specialists = 0, resupply = 0, line = 0;
+        for (int i = 1; i < g.vehicles.size(); i++) {
+            VehicleSpec other = catalog.vehicle(g.vehicles.get(i).cardId);
+            if (other.isSpecialist()) specialists++;
+            else if (other.isResupply()) resupply++;
+            else line++;
+        }
+        if (spec.isSpecialist() && specialists >= 1) throw violation("That group already has a Specialist.");
+        if (spec.isResupply() && resupply >= 1) throw violation("That group already has a Resupply vehicle.");
+        if (!spec.isSpecialist() && !spec.isResupply() && line >= rules.maxLineVehicles) {
+            throw violation("That group's Line slots are full.");
+        }
+    }
+
+    /**
+     * Supply needed to turn a lone tank into a multi-vehicle group (0 once it has been formed). It is based on the
+     * Leader the group will have, so adding a better tank costs more than adding a worse one.
+     */
+    private int formationCost(StrikeGroup g, VehicleSpec joining) {
+        if (g.formed || g.vehicles.size() != 1) return 0;
+        com.example.valtrak.Data.CardLibrary.CardLevel level = catalog.vehicle(g.leader().cardId).level();
+        if (joining.isTank() && joining.level().compareTo(level) > 0) level = joining.level();
+        return rules.formationSupply(level);
+    }
+
+    /**
+     * The Leader is the highest-rarity tank in the group; on a tie, the one that has been in the group longest
+     * (it stays first in the list). Moves that tank to the front.
+     */
+    private void electLeader(StrikeGroup g) {
+        int best = 0;
+        VehicleSpec bestSpec = catalog.vehicle(g.vehicles.get(0).cardId);
+        for (int i = 1; i < g.vehicles.size(); i++) {
+            VehicleSpec spec = catalog.vehicle(g.vehicles.get(i).cardId);
+            if (spec.isTank() && spec.level().compareTo(bestSpec.level()) > 0) {
+                best = i;
+                bestSpec = spec;
+            }
+        }
+        if (best != 0) g.vehicles.add(0, g.vehicles.remove(best));
+    }
+
+    private void requireSupply(PlayerState me, int amount) {
+        int have = available(me.depot, ResourceKind.SUPPLY, null);
+        if (have < amount) {
+            throw violation("Forming a strike group needs " + amount + " Supply in your Depot (you have " + have + ").");
+        }
+    }
+
+    private void requireFuel(StrikeGroup g, int amount) {
+        int have = available(g.pool, ResourceKind.FUEL, null);
+        if (have < amount) throw violation("Not enough Fuel in the pool: need " + amount + ", have " + have + ".");
+    }
+
+    private static int available(List<ResourceStack> stacks, ResourceKind kind, Ammunition ammo) {
+        int total = 0;
+        for (ResourceStack x : stacks) if (matches(x, kind, ammo)) total += x.remaining;
+        return total;
+    }
+
+    private static boolean matches(ResourceStack x, ResourceKind kind, Ammunition ammo) {
+        return x.kind == kind && (ammo == null || x.ammunition == ammo);
+    }
+
+    /** Spends {@code amount}, using up the smallest cards first. Cards with nothing left go to the discard pile. */
+    private static void spend(PlayerState owner, List<ResourceStack> stacks, ResourceKind kind, Ammunition ammo, int amount) {
+        if (amount <= 0) return;
+        List<ResourceStack> candidates = new ArrayList<>();
+        for (ResourceStack x : stacks) if (matches(x, kind, ammo)) candidates.add(x);
+        candidates.sort(Comparator.comparingInt((ResourceStack x) -> x.remaining));
+        int need = amount;
+        for (ResourceStack x : candidates) {
+            if (need == 0) break;
+            int take = Math.min(x.remaining, need);
+            x.remaining -= take;
+            need -= take;
+            if (x.remaining == 0) {
+                stacks.remove(x);
+                owner.discard.add(x.cardId);
+            }
+        }
+        if (need > 0) throw new IllegalStateException("spend() called without checking availability");
+    }
+
+    private Vehicle newVehicle(GameState s, VehicleSpec spec) {
+        return new Vehicle(s.nextId++, spec.cardId(), spec.hp());
+    }
+
+    private void newGroupOf(GameState s, PlayerState me, VehicleSpec spec) {
+        StrikeGroup g = new StrikeGroup(s.nextId++);
+        g.vehicles.add(newVehicle(s, spec));
+        me.groups.add(g);
+    }
+
+    private boolean hasTank(List<Long> hand) {
+        return hand.stream().anyMatch(id -> catalog.find(id) instanceof VehicleSpec v && v.isTank());
+    }
+
+    private static void draw(PlayerState p, int count) {
+        for (int i = 0; i < count && !p.deck.isEmpty(); i++) p.hand.add(p.deck.remove(0));
+    }
+
+    private static RuleViolationException violation(String message) {
+        return new RuleViolationException(message);
+    }
+}

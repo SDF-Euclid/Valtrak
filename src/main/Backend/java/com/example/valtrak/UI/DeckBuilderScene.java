@@ -1,6 +1,8 @@
 package com.example.valtrak.UI;
 
 import com.example.valtrak.Data.CardLibrary.CardLevel;
+import com.example.valtrak.Data.GameData.Config.DeckRules;
+import com.example.valtrak.Data.GameData.DataTransfer.DeckData.DeckDtos.DeckDto;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
 import com.example.valtrak.UI.components.CardTile;
@@ -15,6 +17,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.util.StringConverter;
 import javafx.stage.Stage;
 
 import java.util.*;
@@ -27,8 +30,8 @@ public class DeckBuilderScene {
     private static final String TEXT   = "#d4d4d4";
     private static final String DIM    = "#555555";
 
-    private static final int MAX_DECK   = 80;
-    private static final int MAX_COPIES = 3;
+    private static final int MAX_DECK   = DeckRules.MAX_DECK_SIZE;
+    private static final int MAX_COPIES = DeckRules.MAX_COPIES;
 
     private enum Filter { ALL, FAVORITES, VEHICLES, ITEMS }
 
@@ -55,9 +58,24 @@ public class DeckBuilderScene {
     private Label deckCountLabel;
     private VBox  deckListBox;
 
-    public DeckBuilderScene(Stage stage, List<CardDto> catalog, Set<Long> favoriteIds) {
+    /** Saved decks of the signed-in player; null for guests. */
+    private final List<DeckDto> savedDecks;
+    private final Map<Long, CardDto> cardsById = new HashMap<>();
+    private Long currentDeckId;          // null = a deck that hasn't been saved yet
+    private boolean dirty;
+    private boolean loading;             // true while we fill the editor programmatically
+    private TextField deckNameField;
+    private ComboBox<DeckDto> deckPicker;
+    private Label deckStatus;
+    private Label problemLabel;
+    private Button saveBtn;
+    private Button deleteBtn;
+
+    public DeckBuilderScene(Stage stage, List<CardDto> catalog, Set<Long> favoriteIds, List<DeckDto> decks) {
         this.stage = stage;
         this.favorites = favoriteIds;
+        this.savedDecks = decks;
+        for (CardDto c : catalog) cardsById.put(c.id(), c);
         List<CardDto> all = new ArrayList<>(catalog);
         // vehicles first, then items; within each group by rarity, then name
         all.sort(Comparator
@@ -88,6 +106,7 @@ public class DeckBuilderScene {
         backBtn.setOnMouseEntered(e -> backBtn.setStyle(btnStyle(true)));
         backBtn.setOnMouseExited(e -> backBtn.setStyle(btnStyle(false)));
         backBtn.setOnAction(e -> {
+            if (!confirmDiscard()) return;
             stage.setResizable(false);
             stage.setScene(new MainMenuScene(stage).build());
             stage.sizeToScene();
@@ -225,10 +244,18 @@ public class DeckBuilderScene {
     private String categoryOf(CardDto c) {
         return switch (c.category()) {
             case "VEHICLE"    -> c.vehicleClass() != null ? title(c.vehicleClass()) : "Vehicles";
-            case "AMMUNITION" -> "Ammunition";
+            case "AMMUNITION" -> c.ammunition() != null ? "Ammo · " + c.ammunition().replace('_', ' ') : "Ammunition";
             case "FUEL"       -> "Fuel";
+            case "SUPPLY"     -> "Supply";
             case "REPAIR"     -> "Repair";
             default           -> "Other Items";
+        };
+    }
+
+    private static boolean isTank(CardDto c) {
+        return isVehicle(c) && switch (String.valueOf(c.vehicleClass())) {
+            case "LIGHT_TANK", "MEDIUM_TANK", "HEAVY_TANK", "MAIN_BATTLE_TANK" -> true;
+            default -> false;
         };
     }
 
@@ -263,9 +290,59 @@ public class DeckBuilderScene {
         title.setFont(Font.font("Arial", FontWeight.BOLD, 15));
         title.setTextFill(Color.web(ACCENT));
 
+        VBox top = new VBox(8, title);
+        if (savedDecks != null) {
+            deckPicker = new ComboBox<>();
+            deckPicker.setPromptText("Load a saved deck...");
+            deckPicker.setMaxWidth(Double.MAX_VALUE);
+            deckPicker.setConverter(new StringConverter<>() {
+                @Override public String toString(DeckDto d) {
+                    return d == null ? "" : d.name() + " (" + d.totalCards() + ")" + (d.playable() ? "" : " ⚠");
+                }
+                @Override public DeckDto fromString(String s) { return null; }
+            });
+            Ui.styleCombo(deckPicker);
+            deckPicker.getItems().setAll(savedDecks);
+            deckPicker.setOnAction(e -> {
+                DeckDto picked = deckPicker.getValue();
+                if (loading || picked == null) return;
+                if (!confirmDiscard()) { syncPicker(); return; }
+                loadDeck(picked);
+            });
+            HBox.setHgrow(deckPicker, Priority.ALWAYS);
+
+            Button newBtn = smallButton("NEW");
+            newBtn.setOnAction(e -> {
+                if (!confirmDiscard()) return;
+                clearEditor();
+            });
+            top.getChildren().add(new HBox(6, deckPicker, newBtn));
+        } else {
+            Label guest = new Label("Guest mode: sign in to save decks.");
+            guest.setFont(Font.font("Arial", 11));
+            guest.setTextFill(Color.web(DIM));
+            top.getChildren().add(guest);
+        }
+
+        deckNameField = Ui.field("Deck name");
+        deckNameField.setMaxWidth(Double.MAX_VALUE);
+        deckNameField.setTextFormatter(new TextFormatter<String>(
+                c -> c.getControlNewText().length() <= DeckRules.MAX_NAME_LENGTH ? c : null));
+        deckNameField.textProperty().addListener((o, was, now) -> { if (!loading) markDirty(); });
+
         deckCountLabel = new Label("0 / " + MAX_DECK + " cards");
         deckCountLabel.setFont(Font.font("Arial", 12));
         deckCountLabel.setTextFill(Color.web(TEXT));
+
+        deckStatus = new Label();
+        deckStatus.setFont(Font.font("Arial", 11));
+        problemLabel = new Label();
+        problemLabel.setFont(Font.font("Arial", 11));
+        problemLabel.setTextFill(Color.web("#e8a04b"));
+        problemLabel.setWrapText(true);
+
+        HBox countRow = new HBox(8, deckCountLabel, deckStatus);
+        countRow.setAlignment(Pos.CENTER_LEFT);
 
         Separator sep = new Separator();
 
@@ -281,24 +358,162 @@ public class DeckBuilderScene {
         copiesHint.setFont(Font.font("Arial", 9));
         copiesHint.setTextFill(Color.web(DIM));
 
-        Button clearBtn = new Button("CLEAR DECK");
-        clearBtn.setMaxWidth(Double.MAX_VALUE);
-        clearBtn.setStyle(
-                "-fx-background-color: #2a0f0f; -fx-text-fill: #ff6b6b; -fx-font-weight: bold; " +
-                "-fx-background-radius: 4; -fx-border-color: #ff6b6b; " +
-                "-fx-border-radius: 4; -fx-border-width: 1;"
-        );
+        saveBtn = Ui.button("SAVE DECK", 100);
+        saveBtn.setMaxWidth(Double.MAX_VALUE);
+        saveBtn.setOnAction(e -> saveDeck());
+        HBox.setHgrow(saveBtn, Priority.ALWAYS);
+
+        deleteBtn = new Button("DELETE");
+        deleteBtn.setStyle(dangerStyle());
+        deleteBtn.setOnAction(e -> deleteDeck());
+
+        Button clearBtn = new Button("CLEAR");
+        clearBtn.setStyle(dangerStyle());
         clearBtn.setOnAction(e -> {
             deckCounts.clear();
             deckNames.clear();
-            refreshDeckList();
+            markDirty();
         });
 
-        VBox panel = new VBox(10, title, deckCountLabel, sep, deckScroll, copiesHint, clearBtn);
+        HBox buttons = new HBox(6, saveBtn, deleteBtn, clearBtn);
+
+        VBox panel = new VBox(8, top, deckNameField, countRow, problemLabel, sep, deckScroll, copiesHint, buttons);
         panel.setPadding(new Insets(16));
         panel.setStyle("-fx-background-color: " + PANEL + ";");
-        panel.setMinWidth(240);
+        panel.setMinWidth(280);
+        refreshDeckList();
         return panel;
+    }
+
+    private static String dangerStyle() {
+        return "-fx-background-color: #2a0f0f; -fx-text-fill: #ff6b6b; -fx-font-weight: bold; "
+                + "-fx-background-radius: 4; -fx-border-color: #ff6b6b; -fx-border-radius: 4; -fx-border-width: 1;";
+    }
+
+    private Button smallButton(String text) {
+        Button b = new Button(text);
+        b.setStyle(btnStyle(false).replace("-fx-padding: 6 14 6 14;", "-fx-padding: 5 10 5 10;"));
+        b.setOnMouseEntered(e -> b.setStyle(btnStyle(true).replace("-fx-padding: 6 14 6 14;", "-fx-padding: 5 10 5 10;")));
+        b.setOnMouseExited(e -> b.setStyle(btnStyle(false).replace("-fx-padding: 6 14 6 14;", "-fx-padding: 5 10 5 10;")));
+        return b;
+    }
+
+    // ── Saving and loading decks ──────────────────────────────────────────────
+
+    private void markDirty() {
+        dirty = true;
+        refreshDeckList();
+    }
+
+    /** Asks before throwing away unsaved work. */
+    private boolean confirmDiscard() {
+        if (!dirty || deckCounts.isEmpty() && deckNameField.getText().isBlank()) return true;
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                "You have unsaved changes to this deck. Discard them?", ButtonType.OK, ButtonType.CANCEL);
+        alert.setHeaderText(null);
+        alert.setTitle("Unsaved changes");
+        alert.initOwner(stage);
+        return alert.showAndWait().filter(b -> b == ButtonType.OK).isPresent();
+    }
+
+    private void clearEditor() {
+        loading = true;
+        deckCounts.clear();
+        deckNames.clear();
+        deckNameField.setText("");
+        currentDeckId = null;
+        dirty = false;
+        loading = false;
+        syncPicker();
+        refreshDeckList();
+    }
+
+    private void loadDeck(DeckDto deck) {
+        loading = true;
+        deckCounts.clear();
+        deckNames.clear();
+        int missing = 0;
+        for (Map.Entry<Long, Integer> e : deck.cardCounts().entrySet()) {
+            CardDto card = cardsById.get(e.getKey());
+            if (card == null) { missing++; continue; }
+            deckCounts.put(card.id(), e.getValue());
+            deckNames.put(card.id(), card.name());
+        }
+        deckNameField.setText(deck.name());
+        currentDeckId = deck.id();
+        dirty = missing > 0;
+        loading = false;
+        syncPicker();
+        refreshDeckList();
+        if (missing > 0) notice(missing + " card(s) in this deck no longer exist and were removed.", true);
+    }
+
+    /** Makes the dropdown show the deck being edited (or nothing for a new deck). */
+    private void syncPicker() {
+        if (deckPicker == null) return;
+        loading = true;
+        deckPicker.getItems().setAll(savedDecks);
+        DeckDto current = savedDecks.stream().filter(d -> d.id().equals(currentDeckId)).findFirst().orElse(null);
+        deckPicker.setValue(current);
+        loading = false;
+    }
+
+    private void saveDeck() {
+        if (savedDecks == null) {
+            notice("Sign in to save decks (MY ACCOUNT on the main menu).", false);
+            return;
+        }
+        String name = deckNameField.getText().trim();
+        if (name.isEmpty()) {
+            notice("Give your deck a name first.", true);
+            deckNameField.requestFocus();
+            return;
+        }
+        Map<Long, Integer> snapshot = new LinkedHashMap<>(deckCounts);
+        Long id = currentDeckId;
+        saveBtn.setDisable(true);
+        Ui.async(() -> id == null ? ServerApi.createDeck(name, snapshot) : ServerApi.updateDeck(id, name, snapshot),
+                saved -> {
+                    saveBtn.setDisable(false);
+                    savedDecks.removeIf(d -> d.id().equals(saved.id()));
+                    savedDecks.add(0, saved);
+                    currentDeckId = saved.id();
+                    dirty = false;
+                    syncPicker();
+                    refreshDeckList();
+                    notice("Saved \"" + saved.name() + "\".", false);
+                },
+                err -> {
+                    saveBtn.setDisable(false);
+                    handleDeckError(err, "Couldn't save the deck: ");
+                });
+    }
+
+    private void deleteDeck() {
+        if (currentDeckId == null || savedDecks == null) return;
+        Long id = currentDeckId;
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                "Delete \"" + deckNameField.getText() + "\"? This can't be undone.", ButtonType.OK, ButtonType.CANCEL);
+        alert.setHeaderText(null);
+        alert.setTitle("Delete deck");
+        alert.initOwner(stage);
+        if (alert.showAndWait().filter(b -> b == ButtonType.OK).isEmpty()) return;
+        Ui.async(() -> { ServerApi.deleteDeck(id); return true; },
+                ok -> {
+                    savedDecks.removeIf(d -> d.id().equals(id));
+                    clearEditor();
+                    notice("Deck deleted.", false);
+                },
+                err -> handleDeckError(err, "Couldn't delete the deck: "));
+    }
+
+    private void handleDeckError(Throwable err, String prefix) {
+        if (err instanceof ServerApi.ApiError api && api.status() == 401) {
+            AccountSession.signOut();
+            notice("Your session expired. Sign in again from the main menu to save decks.", true);
+        } else {
+            notice(prefix + err.getMessage(), true);
+        }
     }
 
     // ── Deck state ────────────────────────────────────────────────────────────
@@ -315,7 +530,7 @@ public class DeckBuilderScene {
         if (!canAdd(id)) return;
         deckCounts.merge(id, 1, Integer::sum);
         deckNames.put(id, name);
-        refreshDeckList();
+        markDirty();
     }
 
     private void removeCard(Long id) {
@@ -326,7 +541,7 @@ public class DeckBuilderScene {
         } else {
             deckCounts.put(id, current - 1);
         }
-        refreshDeckList();
+        markDirty();
     }
 
     private void refreshDeckList() {
@@ -365,6 +580,25 @@ public class DeckBuilderScene {
         int total = deckTotal();
         deckCountLabel.setText(total + " / " + MAX_DECK + " cards");
         deckCountLabel.setTextFill(Color.web(total >= MAX_DECK ? ACCENT : TEXT));
+
+        int tanks = 0;
+        for (Map.Entry<Long, Integer> e : deckCounts.entrySet()) {
+            CardDto card = cardsById.get(e.getKey());
+            if (card != null && isTank(card)) tanks += e.getValue();
+        }
+        List<String> problems = new ArrayList<>();
+        if (total < DeckRules.MIN_PLAYABLE_DECK_SIZE) {
+            problems.add("needs " + (DeckRules.MIN_PLAYABLE_DECK_SIZE - total) + " more card(s) (minimum "
+                    + DeckRules.MIN_PLAYABLE_DECK_SIZE + ")");
+        }
+        if (tanks < DeckRules.MIN_TANKS) {
+            problems.add("needs " + (DeckRules.MIN_TANKS - tanks) + " more tank(s) (minimum " + DeckRules.MIN_TANKS + ")");
+        }
+        problemLabel.setText(total == 0 || problems.isEmpty() ? ""
+                : "⚠ Not playable yet: " + String.join(", ", problems) + ".");
+        deckStatus.setText(dirty ? "● unsaved changes" : currentDeckId != null ? "✓ saved" : "");
+        deckStatus.setTextFill(Color.web(dirty ? ACCENT : Ui.OK));
+        deleteBtn.setDisable(currentDeckId == null);
     }
 
     // ── Favorites ─────────────────────────────────────────────────────────────

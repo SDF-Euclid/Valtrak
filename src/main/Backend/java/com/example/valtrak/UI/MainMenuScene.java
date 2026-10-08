@@ -1,6 +1,7 @@
 package com.example.valtrak.UI;
 
 import com.example.valtrak.Data.GameData.DataTransfer.CardData.CardDto;
+import com.example.valtrak.Data.GameData.DataTransfer.DeckData.DeckDtos.DeckDto;
 import com.example.valtrak.UI.net.AccountSession;
 import com.example.valtrak.UI.net.ServerApi;
 import javafx.geometry.Insets;
@@ -14,6 +15,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,7 +76,7 @@ public class MainMenuScene {
                     + (profile.nationAbbreviation().isEmpty() ? "" : "  [" + profile.nationAbbreviation() + "]"));
             who.setTextFill(Color.web(Ui.OK));
         } else {
-            who.setText("Playing as guest  ·  sign in to save favorites");
+            who.setText("Playing as guest  ·  sign in to save favorites and decks");
             who.setTextFill(Color.web(Ui.DIM));
         }
         quitBtn.setOnAction(e -> stage.close());
@@ -116,7 +118,7 @@ public class MainMenuScene {
     }
 
     /** Cards plus (when signed in) the player's favorites; favorites is null for guests. */
-    private record DeckData(List<CardDto> cards, Set<Long> favorites) {}
+    private record DeckData(List<CardDto> cards, Set<Long> favorites, List<DeckDto> decks) {}
 
     /** Loads the card catalog from the server off the UI thread, then opens the deck builder. */
     private void openDeckBuilder(Button deckBtn, Label status) {
@@ -126,20 +128,22 @@ public class MainMenuScene {
         Ui.async(() -> {
             List<CardDto> cards = ServerApi.fetchCards();
             Set<Long> favorites = null;
+            List<DeckDto> decks = null;
             if (AccountSession.isSignedIn()) {
                 try {
                     favorites = new HashSet<>(ServerApi.fetchFavorites());
+                    decks = new ArrayList<>(ServerApi.fetchDecks());
                 } catch (ServerApi.ApiError e) {
                     if (e.status() == 401) AccountSession.signOut(); // session expired: carry on as a guest
                     else throw e;
                 }
             }
-            return new DeckData(cards, favorites);
+            return new DeckData(cards, favorites, decks);
         }, data -> {
             deckBtn.setDisable(false);
             status.setText("");
             stage.setResizable(true);
-            stage.setScene(new DeckBuilderScene(stage, data.cards(), data.favorites()).build());
+            stage.setScene(new DeckBuilderScene(stage, data.cards(), data.favorites(), data.decks()).build());
             stage.sizeToScene();
             stage.centerOnScreen();
         }, err -> {

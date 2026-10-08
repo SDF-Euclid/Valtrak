@@ -1,5 +1,6 @@
 package com.example.valtrak.Gameplay.Cards.Vehicle;
 
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.AbilityType;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
 import com.example.valtrak.Gameplay.Cards.Base.Card;
@@ -30,6 +31,12 @@ public class GroundVehicleCard extends Card {
 
     private Integer vehicleHP;
 
+    /** The vehicle's activated ability (null if it has none). */
+    @Enumerated(EnumType.STRING)
+    private AbilityType abilityType;
+    private Integer abilityPower;
+    private Integer abilityFuelCost;
+
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<VehicleAttackEntity> attacks;
 
@@ -43,5 +50,10 @@ public class GroundVehicleCard extends Card {
         this.vehicleClass = vehicleClass;
         this.vehicleArmor = data.getVehicleArmor();
         this.vehicleHP = data.getVehicleHP();
+        if (data.getAbility() != null) {
+            this.abilityType = data.getAbility().type();
+            this.abilityPower = data.getAbility().power();
+            this.abilityFuelCost = data.getAbility().fuelCost();
+        }
     }
 }
