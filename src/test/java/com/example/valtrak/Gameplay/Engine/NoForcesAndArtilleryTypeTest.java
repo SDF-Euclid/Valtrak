@@ -122,7 +122,7 @@ class NoForcesAndArtilleryTypeTest {
     }
 
     @Test
-    void artilleryCannotHitAFaceUpAircraftAndWastesItselfOnAHiddenOne() {
+    void artilleryCannotHitAFaceUpAircraft() {
         TestWorld t = explosive();
         StrikeGroup g = t.group(1, TANK_COMMON, false);
         Vehicle uav = t.add(g, UAV, true);
@@ -131,17 +131,6 @@ class NoForcesAndArtilleryTypeTest {
                 .isInstanceOf(RuleViolationException.class).hasMessageContaining("aircraft");
         assertThat(uav.hp).isEqualTo(uav.maxHp);
         assertThat(t.p(0).hand).containsExactly(ARTILLERY_1);
-
-        // a Legendary shell aimed at a hidden aircraft finds nothing: no damage, and the aircraft stays hidden
-        uav.faceUp = false;
-        Vehicle ground = t.add(g, ANTI_AIR, false);
-        t.hand(0, ARTILLERY_BLIND);
-        ActionResult r = t.act(0, new PlayItem(ARTILLERY_BLIND, List.of(uav.id, ground.id), List.of()));
-        assertThat(uav.hp).isEqualTo(uav.maxHp);
-        assertThat(uav.faceUp).isFalse();
-        assertThat(ground.hp).isLessThan(ground.maxHp);
-        assertThat(ground.faceUp).isTrue();
-        assertThat(r.log).anyMatch(l -> l.contains("finds nothing"));
     }
 
     @Test

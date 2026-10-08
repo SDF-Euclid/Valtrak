@@ -37,7 +37,7 @@ public enum SpecialItem implements SpecialItemInterface {
     HOWITZER_FIRE_MISSION("Howitzer Fire Mission", "Deal 14 explosive damage to 1 face-up enemy vehicle. Can't hit aircraft", CardLevel.UNCOMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 14.0, 1.0),
     ROCKET_SALVO("Rocket Salvo", "Deal 20 explosive damage to each of up to 2 face-up enemy vehicles. Can't hit aircraft", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 20.0, 2.0),
     HEAVY_ROCKET_BARRAGE("Heavy Rocket Barrage", "Deal 28 explosive damage to each of up to 2 face-up enemy vehicles. Can't hit aircraft", CardLevel.EPIC, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 28.0, 2.0),
-    STRATEGIC_BOMBARDMENT("Strategic Bombardment", "Deal 36 explosive damage to each of up to 3 enemy vehicles, even face-down ones (they are turned face up). Can't hit aircraft", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 36.0, 3.0),
+    STRATEGIC_BOMBARDMENT("Strategic Bombardment", "Deal 36 explosive damage to each of up to 3 enemy vehicles. It can also target face-down ones: they get a damage counter that resolves when the vehicle is turned face up (aircraft take nothing). Can't hit face-up aircraft", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 36.0, 3.0),
 
     /*==================== SEARCH (find cards of one kind in your deck) ====================*/
 

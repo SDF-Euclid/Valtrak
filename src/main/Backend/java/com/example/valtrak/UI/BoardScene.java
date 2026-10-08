@@ -239,6 +239,7 @@ public class BoardScene {
             down.setTextFill(Color.web(Ui.DIM));
             tile.getChildren().addAll(q, down);
             if (v.smoked()) tile.getChildren().add(mark("SMOKE", "#9aa7b8"));
+            if (v.pendingHits() > 0) tile.getChildren().add(mark("ARTILLERY x" + v.pendingHits(), "#e8b84b"));
             tile.setMinHeight(150);
         } else {
             border = CardTile.rarityColor(c.level());
@@ -272,6 +273,7 @@ public class BoardScene {
             if (Boolean.TRUE.equals(v.disabled())) marks.getChildren().add(mark("DISABLED", "#e05a5a"));
             if (v.breachStacks() != null && v.breachStacks() > 0) marks.getChildren().add(mark("BREACH " + v.breachStacks(), "#e8b84b"));
             if (v.smoked()) marks.getChildren().add(mark("SMOKE", "#9aa7b8"));
+            if (v.pendingHits() > 0) marks.getChildren().add(mark("ARTILLERY x" + v.pendingHits(), "#e8b84b"));
             if (v.eraCardId() != null) marks.getChildren().add(mark("ERA", "#7ab8e8"));
             if (v.camoCardId() != null) marks.getChildren().add(mark("CAMO", "#7ab8e8"));
             if (Boolean.TRUE.equals(v.abilityUsed())) marks.getChildren().add(mark("ability used", Ui.DIM));
@@ -345,7 +347,7 @@ public class BoardScene {
         tile.setStyle("-fx-background-color: #16213e; -fx-background-radius: 5; -fx-border-radius: 5; -fx-border-width: 1.5; -fx-cursor: hand; -fx-border-color: "
                 + CardTile.rarityColor(c.level()) + ";");
         Tooltip.install(tile, new Tooltip(c.name() + "  (" + c.level() + ")\n" + (c.description() == null ? "" : c.description())
-                + ("VEHICLE".equals(c.category()) ? "\n" + vehicleBlurb(c, new VehicleView(0, false, null, null, null, null, null, null, null, null, null, null, false)) : "")));
+                + ("VEHICLE".equals(c.category()) ? "\n" + vehicleBlurb(c, new VehicleView(0, false, null, null, null, null, null, null, null, null, null, null, false, 0)) : "")));
         tile.setOnMouseClicked(e -> onHandClick(c, tile));
         return tile;
     }

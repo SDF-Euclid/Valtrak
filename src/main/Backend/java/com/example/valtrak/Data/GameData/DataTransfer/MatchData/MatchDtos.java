@@ -63,10 +63,14 @@ public final class MatchDtos {
     /** A group's Jammer. {@code id} is what an attack targets while {@code on}. */
     public record JammerView(long id, long cardId, int hp, int maxHp, boolean on) {}
 
-    /** For a face-down enemy vehicle, everything except {@code id}, {@code faceUp} and {@code smoked} is null. */
+    /**
+     * For a face-down enemy vehicle, everything except {@code id}, {@code faceUp}, {@code smoked} and {@code pendingHits} is null.
+     * {@code pendingHits} is how many Artillery damage counters sit on the vehicle (public, like counters on a card on the table);
+     * what they do is worked out when it is turned face up.
+     */
     public record VehicleView(long id, boolean faceUp, Long cardId, Integer hp, Integer maxHp, Integer breachStacks,
                               Boolean stunned, Boolean suppressed, Boolean disabled, Boolean abilityUsed,
-                              Long eraCardId, Long camoCardId, boolean smoked) {}
+                              Long eraCardId, Long camoCardId, boolean smoked, int pendingHits) {}
 
     public record ResourceView(long id, long cardId, String kind, String ammunition, int remaining) {}
 }

@@ -162,6 +162,18 @@ class GameViewBuilderTest {
     }
 
     @Test
+    void artilleryCountersOnAFaceDownEnemyAreVisibleButNothingElseIs() {
+        StrikeGroup theirs = w.group(1, TANK_RARE, false);
+        theirs.leader().hiddenHits.addAll(List.of(40, 40));
+        GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
+        VehicleView seen = view.opponent().groups().get(0).vehicles().get(0);
+        assertThat(seen.pendingHits()).isEqualTo(2);
+        assertThat(seen.cardId()).isNull();
+        assertThat(seen.hp()).isNull();
+        assertThat(json.writeValueAsString(seen)).doesNotContain("40");
+    }
+
+    @Test
     void abilityUseIsShownForYourVehiclesAndHiddenForFaceDownEnemies() {
         StrikeGroup mine = w.group(0, TANK_COMMON, false);
         Vehicle uav = w.add(mine, UAV, true);

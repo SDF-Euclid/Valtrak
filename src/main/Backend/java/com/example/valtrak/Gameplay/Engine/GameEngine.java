@@ -150,12 +150,12 @@ public final class GameEngine {
             case Deploy a -> deploy(s, me, a, r);
             case Convoy a -> convoy(me, a, r);
             case Repair a -> repair(me, a, r);
-            case Reveal a -> reveal(me, a, r);
-            case RevealGroup a -> revealGroup(me, a, r);
+            case Reveal a -> reveal(s, me, opp, a, r);
+            case RevealGroup a -> revealGroup(s, me, opp, a, r);
             case Retreat a -> retreat(me, a, r);
             case RetreatGroup a -> retreatGroup(me, a, r);
             case Move a -> move(s, me, a, r);
-            case UseAbility a -> useAbility(me, opp, a, r);
+            case UseAbility a -> useAbility(s, me, opp, a, r);
             case PlayItem a -> playItem(s, me, opp, a, r);
             case SetJammer a -> setJammer(me, a, r);
             case Attack a -> attack(s, me, opp, a, r);
@@ -271,7 +271,7 @@ public final class GameEngine {
         r.say("Repairs restore " + healed + " HP" + (full ? " and remove BREACH." : "."));
     }
 
-    private void reveal(PlayerState me, Reveal a, ActionResult r) {
+    private void reveal(GameState s, PlayerState me, PlayerState opp, Reveal a, ActionResult r) {
         List<Long> ids = a.vehicleIds() == null ? List.of() : a.vehicleIds();
         if (ids.isEmpty()) throw violation("Choose a vehicle to reveal.");
         List<Vehicle> toFlip = new ArrayList<>();
@@ -281,17 +281,17 @@ public final class GameEngine {
             if (v.faceUp) throw violation("That vehicle is already face up.");
             if (!toFlip.contains(v)) toFlip.add(v);
         }
-        toFlip.forEach(v -> v.faceUp = true);
         r.say("Player " + (me.index + 1) + " reveals " + toFlip.size() + " vehicle(s).");
+        for (Vehicle v : toFlip) if (onField(me, v)) flipUp(s, me, opp, v, r);
     }
 
-    private void revealGroup(PlayerState me, RevealGroup a, ActionResult r) {
+    private void revealGroup(GameState s, PlayerState me, PlayerState opp, RevealGroup a, ActionResult r) {
         StrikeGroup g = group(me, a.groupId());
         List<Vehicle> toFlip = g.vehicles.stream()
                 .filter(v -> !v.faceUp && !catalog.vehicle(v.cardId).isResupply()).toList();
         if (toFlip.isEmpty()) throw violation("Everything in that group is already face up.");
-        toFlip.forEach(v -> v.faceUp = true);
         r.say("Player " + (me.index + 1) + " reveals a strike group.");
+        for (Vehicle v : toFlip) if (onField(me, v)) flipUp(s, me, opp, v, r);
     }
 
     private void retreat(PlayerState me, Retreat a, ActionResult r) {
@@ -348,7 +348,7 @@ public final class GameEngine {
 
     // ── Abilities ────────────────────────────────────────────────────────────
 
-    private void useAbility(PlayerState me, PlayerState opp, UseAbility a, ActionResult r) {
+    private void useAbility(GameState s, PlayerState me, PlayerState opp, UseAbility a, ActionResult r) {
         Located loc = findVehicle(me, a.vehicleId());
         VehicleSpec spec = catalog.vehicle(loc.vehicle.cardId);
         AbilitySpec ability = spec.ability();
@@ -374,9 +374,9 @@ public final class GameEngine {
         }
         requireFuel(loc.group, ability.fuelCost());
         spend(me, loc.group.pool, ResourceKind.FUEL, null, ability.fuelCost());
-        targets.forEach(t -> t.faceUp = true);
         loc.vehicle.abilityUsed = true;
         r.say(spec.name() + " reveals " + targets.size() + " enemy vehicle(s).");
+        for (Vehicle t : targets) if (onField(opp, t)) flipUp(s, opp, me, t, r);
     }
 
     // ── Item cards ───────────────────────────────────────────────────────────
@@ -598,30 +598,61 @@ public final class GameEngine {
             for (long id : targets) {
                 Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst().orElse(null);
                 if (t == null || t.smoked || (!t.faceUp && !artilleryHitsHidden(spec))) continue;    // gone, or gone face down, since the first hit
-                if (catalog.vehicle(t.cardId).air()) {                // a hidden aircraft: the shell finds nothing, and nothing is revealed
-                    r.say(spec.name() + " finds nothing to hit at one of its targets.");
+                if (!t.faceUp) {                                      // nobody can tell what is under it: place a damage counter
+                    t.hiddenHits.add(spec.power());
+                    r.say(spec.name() + " lands on a face-down vehicle: a damage counter is placed, to be resolved when it is turned face up.");
                     continue;
                 }
-                t.faceUp = true;
-                int base = spec.power();
-                SpecialEffect effect = SpecialEffect.NONE;
-                String kind = "true damage";
-                if (rules.artilleryDamageType != null) {            // worked out with the normal armor rules
-                    DamageCalculator.Result dmg = DamageCalculator.calculate(base, SpecialEffect.NONE, rules.artilleryDamageType,
-                            rules.artilleryCaliber, catalog.vehicle(t.cardId).armor(), t.breachStacks);
-                    base = dmg.damage();
-                    effect = dmg.effect();
-                    kind = rules.artilleryDamageType.name().toLowerCase() + (dmg.trueDamage() ? ", full" : "");
-                }
-                int dealt = rules.damagePercent == 100 ? base : Math.max(1, Math.round(base * rules.damagePercent / 100f));
-                t.hp -= dealt;
-                applyEffect(t, effect);
-                r.say(spec.name() + " hits " + catalog.vehicle(t.cardId).name() + " for " + dealt + " (" + kind
-                        + (effect != SpecialEffect.NONE && effect != SpecialEffect.OVERPRESSURE ? ", " + effect : "") + ").");
-                if (t.hp <= 0) destroy(s, opp, me, t, r);
+                artilleryHit(s, opp, me, t, spec.power(), spec.name(), r);
                 if (s.phase == GameState.Phase.FINISHED) return;
             }
         };
+    }
+
+    /** Artillery damage on a vehicle that is face up (or being revealed): worked out now, and the vehicle is destroyed at 0 HP. */
+    private void artilleryHit(GameState s, PlayerState owner, PlayerState attacker, Vehicle t, int baseDamage, String source, ActionResult r) {
+        int base = baseDamage;
+        SpecialEffect effect = SpecialEffect.NONE;
+        String kind = "true damage";
+        if (rules.artilleryDamageType != null) {            // worked out with the normal armor rules
+            DamageCalculator.Result dmg = DamageCalculator.calculate(base, SpecialEffect.NONE, rules.artilleryDamageType,
+                    rules.artilleryCaliber, catalog.vehicle(t.cardId).armor(), t.breachStacks);
+            base = dmg.damage();
+            effect = dmg.effect();
+            kind = rules.artilleryDamageType.name().toLowerCase() + (dmg.trueDamage() ? ", full" : "");
+        }
+        int dealt = rules.damagePercent == 100 ? base : Math.max(1, Math.round(base * rules.damagePercent / 100f));
+        t.hp -= dealt;
+        applyEffect(t, effect);
+        r.say(source + " hits " + catalog.vehicle(t.cardId).name() + " for " + dealt + " (" + kind
+                + (effect != SpecialEffect.NONE && effect != SpecialEffect.OVERPRESSURE ? ", " + effect : "") + ").");
+        if (t.hp <= 0) destroy(s, owner, attacker, t, r);
+    }
+
+    /**
+     * Turns a vehicle face up. Artillery counters that landed on it while it was hidden are resolved now: an aircraft takes nothing
+     * (the shells were wasted); anything else takes each hit, and is destroyed if it runs out of HP (the Artillery's owner takes the chip).
+     */
+    private void flipUp(GameState s, PlayerState owner, PlayerState attacker, Vehicle v, ActionResult r) {
+        v.faceUp = true;
+        if (v.hiddenHits.isEmpty()) return;
+        List<Integer> hits = new ArrayList<>(v.hiddenHits);
+        v.hiddenHits.clear();
+        VehicleSpec spec = catalog.vehicle(v.cardId);
+        if (spec.air()) {
+            r.say(spec.name() + " is revealed: it is an aircraft, so the artillery counters on it do nothing.");
+            return;
+        }
+        r.say(spec.name() + " is revealed: " + hits.size() + " artillery counter(s) resolve.");
+        for (int hit : hits) {
+            artilleryHit(s, owner, attacker, v, hit, "Artillery", r);
+            if (v.hp <= 0 || s.phase == GameState.Phase.FINISHED) return;
+        }
+    }
+
+    private static boolean onField(PlayerState p, Vehicle v) {
+        for (StrikeGroup g : p.groups) for (Vehicle x : g.vehicles) if (x == v) return true;
+        return false;
     }
 
     private Runnable prepareSearch(GameState s, PlayerState me, ItemSpec spec, List<Long> chosen, ActionResult r) {
@@ -884,10 +915,11 @@ public final class GameEngine {
         if (rules.stalemateRounds > 0 && s.passesInARow >= 2 * rules.stalemateRounds) {
             s.passesInARow = 0;
             for (PlayerState p : s.players) {
-                for (StrikeGroup g : p.groups) {
-                    for (Vehicle v : g.vehicles) if (!catalog.vehicle(v.cardId).isResupply()) v.faceUp = true;
-                }
+                List<Vehicle> all = new ArrayList<>();
+                for (StrikeGroup g : p.groups) for (Vehicle v : g.vehicles) if (!catalog.vehicle(v.cardId).isResupply()) all.add(v);
+                for (Vehicle v : all) if (onField(p, v) && s.phase != GameState.Phase.FINISHED) flipUp(s, p, s.player(1 - p.index), v, r);
             }
+            if (s.phase == GameState.Phase.FINISHED) return;
             r.say("Stalemate: every vehicle is revealed.");
         }
         s.activePlayer = 1 - s.activePlayer;

@@ -197,12 +197,13 @@ class ItemCardTest {
     }
 
     @Test
-    void legendaryArtilleryAlsoHitsFaceDownVehiclesAndTurnsThemFaceUp() {
+    void legendaryArtilleryAlsoTargetsFaceDownVehiclesButOnlyPlacesADamageCounter() {
         Vehicle hidden = w.add(enemy, ANTI_AIR, false);
         w.hand(0, ARTILLERY_BLIND);
         w.act(0, play(ARTILLERY_BLIND, hidden));
-        assertThat(hidden.hp).isEqualTo(80 - 40);
-        assertThat(hidden.faceUp).isTrue();
+        assertThat(hidden.hp).as("nothing is worked out while it is hidden").isEqualTo(80);
+        assertThat(hidden.faceUp).isFalse();
+        assertThat(hidden.hiddenHits).containsExactly(40);
     }
 
     @Test

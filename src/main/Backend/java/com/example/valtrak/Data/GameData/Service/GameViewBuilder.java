@@ -62,10 +62,10 @@ public final class GameViewBuilder {
     /** Your own vehicles are shown in full. An enemy vehicle is only shown in full while it is face up. */
     private static VehicleView vehicle(Vehicle v, boolean isViewer) {
         if (!isViewer && !v.faceUp) {
-            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null, null, null, v.smoked);
+            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null, null, null, v.smoked, v.hiddenHits.size());
         }
         return new VehicleView(v.id, v.faceUp, v.cardId, v.hp, v.maxHp, v.breachStacks, v.stunned, v.suppressed, v.disabled, v.abilityUsed,
-                v.eraCardId == 0 ? null : v.eraCardId, v.camoCardId == 0 ? null : v.camoCardId, v.smoked);
+                v.eraCardId == 0 ? null : v.eraCardId, v.camoCardId == 0 ? null : v.camoCardId, v.smoked, v.hiddenHits.size());
     }
 
     /** You see your own Jammer always; an opponent only sees one that is switched on. */

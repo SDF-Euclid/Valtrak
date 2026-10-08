@@ -17,6 +17,11 @@ public class Vehicle {
     public long eraCardId;
     /** Card id of the Camouflage attached to this vehicle, or 0 for none. */
     public long camoCardId;
+    /**
+     * Artillery that landed on this vehicle while it was face down: the base damage of each hit. Nobody knows what it does
+     * until the vehicle is turned face up (an aircraft takes nothing; anything else takes the damage its armor allows).
+     */
+    public java.util.List<Integer> hiddenHits = new java.util.ArrayList<>();
     /** Under a Smoke Screen: can't be targeted and can't attack, until its owner's next turn starts. */
     public boolean smoked;
 
@@ -41,6 +46,7 @@ public class Vehicle {
         v.eraCardId = eraCardId;
         v.camoCardId = camoCardId;
         v.smoked = smoked;
+        v.hiddenHits.addAll(hiddenHits);
         return v;
     }
 }
