@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.11
+# Valtrak Rulebook: DRAFT v0.12
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -101,6 +101,29 @@ and it costs **Fuel** from its group's pool. Using one does not end your turn, s
 - **UAV teams** are Specialists (they take the Specialist slot and don't attack): Common and Uncommon reveal 1,
   Rare and Epic reveal 2, Legendary reveals 3. **Recon vehicles** take a Line slot, carry a light MG, and reveal 1 (Rare: 2).
 
+## 7c. Item cards (PROPOSED: not built yet, please review)
+Item cards are played from your hand during your main step.
+- **Cost:** **Supply** from your Depot, by rarity: Common/Uncommon **[1]**, Rare/Epic **[2]**, Legendary/Commander **[3]**
+  (the same table as forming a group). There is no limit on how many you play per turn; Supply is the limit.
+- **Strength scales with rarity** using one *tier* number so power per Supply stays about equal:
+  **Common 1, Uncommon 1, Rare 2, Epic 2, Legendary 3** (the same scale the UAV teams use).
+- Playing an item never ends your turn.
+
+| Card | What it does | By rarity (C / U / R / E / L) |
+|---|---|---|
+| **ERA** (attached) | Attach to one of your vehicles. Chemical damage (HEAT, TOW) that vehicle takes is reduced. One ERA per vehicle (a new one replaces the old). Stays until the vehicle leaves play; if the vehicle returns to your hand, so does the ERA. | **[20% / 25% / 35% / 40% / 50%]** less chemical damage |
+| **Artillery** | Choose **one** of: (a) one face-up enemy vehicle takes **true damage** (ignores armor), or (b) every face-up vehicle in one enemy strike group takes about a third of that. Needs a face-up target, and **does not expose any vehicle of yours** (so it is cheap to use and strong). Killing a Leader this way takes the chip as usual. | (a) **[15 / 25 / 40 / 55 / 75]**, (b) **[5 / 8 / 13 / 18 / 25]** each |
+| **Search** | Search your deck for up to *N* cards of one kind, show them to your opponent, put them in your hand, shuffle. Variants by kind (names to come): resource cards, tanks, support vehicles. | *N* = **1 / 1 / 2 / 2 / 3** |
+| **Draw** | Draw *N* cards. (Drawing from an empty deck still loses the game, which keeps draw cards honest.) | *N* = **1 / 1 / 2 / 2 / 3** |
+
+**Other ideas to consider** (not in the draft yet):
+- **Smoke Screen:** your vehicle or group can't be targeted by attacks or Artillery until your next turn (the answer to Artillery).
+- **Jammer (counter-UAV):** an enemy UAV or Recon vehicle can't use its ability until its owner's next turn.
+- **Camouflage** (attached): retreating this vehicle costs no Fuel.
+- **Sabotage:** your opponent discards *N* cards at random (the hand-shrinking card you mentioned).
+- **Recycle:** return *N* resource cards from your discard pile to your hand.
+- **Rapid Deployment:** deploy a vehicle from your hand into a group without paying the formation cost.
+
 ## 8. Attacking
 - Choose a strike group, then which of its **face-up** vehicles attack (at least one) and which attack each one uses.
 - **Skirmish:** exactly one vehicle attacks. The Leader may stay face down. Only that vehicle's requirement is paid.
@@ -134,13 +157,13 @@ and it costs **Fuel** from its group's pool. Using one does not end your turn, s
 ---
 
 ## Open questions
-1. Game length with 5 chips, once the simulator can measure it.
-2. **Group upside:** big groups give the opponent a bonus chip when destroyed, so groups need a clear upside
-   (Combined Assault's several attacks, Leader bonuses later). Wait for playtests.
-3. Names for Skirmish and Combined Assault.
-4. Fuel costs for retreating and moving vehicles, convoy capacity (and whether to keep the cap), group-size chip bonus.
-5. Resupply abilities beyond moving cards, special item rules, and air units.
-6. All bracketed numbers: need playtesting (a bot-vs-bot simulator can help).
+1. **Item cards:** Supply cost by rarity, or free with a limit of one per turn? Does Artillery need a face-up spotter of yours (a UAV or Recon vehicle)?
+   Is ERA a steady percentage or does it get used up (charges)?
+2. **Stalling:** UAV and Recon cards make players fight, but a deck without them can still stall. Do you want a backstop (a minimum number
+   of reveal cards per deck, or a deck-out tiebreak)?
+3. **Leader secrecy:** the Leader is always the first vehicle in a group, so a UAV can pick it out. Hide the order, or keep it public?
+4. Game length (about 3 chips and 4x damage for 13-15 turns per player), convoy capacity, Resupply vehicles, air units.
+5. All bracketed numbers: need playtesting.
 
 ## Planned cards (wish list)
-- Hand-disruption cards (shrink the opponent's hand), Recycle cards (return resource cards from your discard pile), capture/seize cards.
+- Capture/seize cards, field-condition cards. (Hand disruption and Recycle are in the item card ideas above.)
