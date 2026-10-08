@@ -296,7 +296,7 @@ public final class GameEngine {
     private void retreat(PlayerState me, Retreat a, ActionResult r) {
         Located loc = findVehicle(me, a.vehicleId());
         if (!loc.vehicle.faceUp) throw violation("That vehicle is already face down.");
-        int cost = rules.retreatFuel(catalog.vehicle(loc.vehicle.cardId).level());
+        int cost = retreatCost(loc.vehicle);
         requireFuel(loc.group, cost);
         spend(me, loc.group.pool, ResourceKind.FUEL, null, cost);
         loc.vehicle.faceUp = false;
@@ -306,7 +306,7 @@ public final class GameEngine {
     private void retreatGroup(PlayerState me, RetreatGroup a, ActionResult r) {
         StrikeGroup g = group(me, a.groupId());
         if (g.vehicles.stream().noneMatch(v -> v.faceUp)) throw violation("Everything in that group is already face down.");
-        int cost = rules.retreatFuel(catalog.vehicle(g.leader().cardId).level()) * rules.groupRetreatMultiplier;
+        int cost = retreatCost(g.leader()) * rules.groupRetreatMultiplier;
         requireFuel(g, cost);
         spend(me, g.pool, ResourceKind.FUEL, null, cost);
         g.vehicles.forEach(v -> v.faceUp = false);
@@ -363,9 +363,12 @@ public final class GameEngine {
         }
         List<Vehicle> targets = new ArrayList<>();
         for (long id : ids) {
-            Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst()
+            Located enemy = opp.groups.stream().flatMap(g -> g.vehicles.stream().map(v -> new Located(g, v)))
+                    .filter(l -> l.vehicle.id == id).findFirst()
                     .orElseThrow(() -> violation("Enemy vehicle " + id + " was not found."));
+            Vehicle t = enemy.vehicle;
             if (t.faceUp) throw violation("Enemy vehicle " + id + " is already face up.");
+            if (enemy.group.jammerCardId != 0) throw violation("Enemy vehicle " + id + " is in a jammed strike group.");
             targets.add(t);
         }
         requireFuel(loc.group, ability.fuelCost());
@@ -389,13 +392,25 @@ public final class GameEngine {
             case ARTILLERY -> prepareArtillery(s, me, opp, spec, targets, r);
             case SEARCH -> prepareSearch(s, me, spec, chosen, r);
             case DRAW -> prepareDraw(me, spec, r);
+            case SMOKE -> prepareSmoke(me, spec, targets, r);
+            case JAMMER -> prepareJammer(me, spec, targets, r);
+            case CAMO -> prepareCamo(me, spec, targets, r);
+            case SABOTAGE -> prepareSabotage(s, me, opp, spec, r);
+            case RECYCLE -> prepareRecycle(me, spec, chosen, r);
+            case RAPID_DEPLOY -> prepareRapidDeploy(s, me, spec, targets, chosen, r);
         };
+        int limit = rules.itemLimit(spec.effect());
+        if (limit > 0 && me.itemUses.getOrDefault(spec.effect(), 0) >= limit) {
+            throw violation("You can only play " + limit + " " + kindOfItem(spec) + " card" + (limit == 1 ? "" : "s") + " per turn.");
+        }
         int supply = rules.itemSupply(spec.level());
         requireSupply(me, supply, "Playing " + spec.name());
 
         me.hand.remove(Long.valueOf(a.cardId()));
         spend(me, me.depot, ResourceKind.SUPPLY, null, supply);
-        if (spec.effect() != ItemEffect.ERA) me.discard.add(a.cardId());   // ERA stays on its vehicle
+        boolean attached = spec.effect() == ItemEffect.ERA || spec.effect() == ItemEffect.CAMO || spec.effect() == ItemEffect.JAMMER;
+        if (!attached) me.discard.add(a.cardId());   // attached cards stay on the field
+        if (limit > 0) me.itemUses.merge(spec.effect(), 1, Integer::sum);
         effect.run();
     }
 
@@ -406,6 +421,107 @@ public final class GameEngine {
             if (v.eraCardId != 0) me.discard.add(v.eraCardId);
             v.eraCardId = spec.cardId();
             r.say("Player " + (me.index + 1) + " plays " + spec.name() + " (-" + spec.power() + "% chemical damage).");
+        };
+    }
+
+    private static String kindOfItem(ItemSpec spec) {
+        return switch (spec.effect()) {
+            case ARTILLERY -> "Artillery";
+            case SABOTAGE -> "Sabotage";
+            default -> spec.name();
+        };
+    }
+
+    private Runnable prepareSmoke(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
+        if (targets.isEmpty()) throw violation("Choose which of your vehicles " + spec.name() + " covers.");
+        if (new HashSet<>(targets).size() != targets.size()) throw violation("Each vehicle can only be chosen once.");
+        if (targets.size() > spec.count()) throw violation(spec.name() + " covers at most " + spec.count() + " vehicle(s).");
+        List<Vehicle> covered = targets.stream().map(id -> findVehicle(me, id).vehicle).toList();
+        return () -> {
+            covered.forEach(v -> v.smoked = true);
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " over " + covered.size() + " vehicle(s).");
+        };
+    }
+
+    private Runnable prepareJammer(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
+        if (targets.size() != 1) throw violation(spec.name() + " attaches to exactly one of your strike groups.");
+        StrikeGroup g = group(me, targets.get(0));
+        return () -> {
+            if (g.jammerCardId != 0) me.discard.add(g.jammerCardId);
+            g.jammerCardId = spec.cardId();
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " on a strike group (upkeep " + spec.power() + " Fuel).");
+        };
+    }
+
+    private Runnable prepareCamo(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
+        if (targets.size() != 1) throw violation(spec.name() + " attaches to exactly one of your vehicles.");
+        Vehicle v = findVehicle(me, targets.get(0)).vehicle;
+        return () -> {
+            if (v.camoCardId != 0) me.discard.add(v.camoCardId);
+            v.camoCardId = spec.cardId();
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " (retreating costs " + spec.power() + " less Fuel).");
+        };
+    }
+
+    private Runnable prepareSabotage(GameState s, PlayerState me, PlayerState opp, ItemSpec spec, ActionResult r) {
+        if (opp.hand.isEmpty()) throw violation("Your opponent has no cards in hand.");
+        return () -> {
+            Random rnd = nextRandom(s);
+            List<String> names = new ArrayList<>();
+            for (int i = 0; i < spec.count() && !opp.hand.isEmpty(); i++) {
+                long gone = opp.hand.remove(rnd.nextInt(opp.hand.size()));
+                opp.discard.add(gone);
+                names.add(catalog.spec(gone).name());
+            }
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + ": player " + (opp.index + 1) + " discards " + String.join(", ", names) + ".");
+        };
+    }
+
+    private Runnable prepareRecycle(PlayerState me, ItemSpec spec, List<Long> chosen, ActionResult r) {
+        if (chosen.size() > spec.count()) throw violation(spec.name() + " returns at most " + spec.count() + " card(s).");
+        Map<Long, Integer> wanted = new HashMap<>();
+        for (long id : chosen) {
+            if (!(catalog.find(id) instanceof ResourceSpec)) throw violation(spec.name() + " only returns resource cards.");
+            if (wanted.merge(id, 1, Integer::sum) > Collections.frequency(me.discard, id)) {
+                throw violation("Your discard pile doesn't have that many copies of card " + id + ".");
+            }
+        }
+        return () -> {
+            List<String> names = new ArrayList<>();
+            for (long id : chosen) {
+                me.discard.remove(Long.valueOf(id));
+                me.hand.add(id);
+                names.add(catalog.spec(id).name());
+            }
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " and returns " + (names.isEmpty() ? "nothing." : String.join(", ", names) + "."));
+        };
+    }
+
+    private Runnable prepareRapidDeploy(GameState s, PlayerState me, ItemSpec spec, List<Long> targets, List<Long> chosen, ActionResult r) {
+        if (targets.size() != 1) throw violation(spec.name() + " deploys into exactly one of your strike groups.");
+        StrikeGroup g = group(me, targets.get(0));
+        if (chosen.isEmpty()) throw violation("Choose which vehicles from your hand to deploy.");
+        if (chosen.size() > spec.count()) throw violation(spec.name() + " deploys at most " + spec.count() + " vehicle(s).");
+        Map<Long, Integer> wanted = new HashMap<>();
+        StrikeGroup sim = g.copy();                          // try the slot rules on a copy, one vehicle at a time
+        for (long id : chosen) {
+            requireInHand(me, id);
+            if (wanted.merge(id, 1, Integer::sum) > Collections.frequency(me.hand, id)) {
+                throw violation("You don't have that many copies of card " + id + " in your hand.");
+            }
+            VehicleSpec vs = catalog.vehicle(id);
+            requireRoom(sim, vs);
+            sim.vehicles.add(new Vehicle(-1, id, vs.hp()));
+            electLeader(sim);
+        }
+        return () -> {
+            for (long id : chosen) {
+                me.hand.remove(Long.valueOf(id));
+                g.vehicles.add(newVehicle(s, catalog.vehicle(id)));
+            }
+            if (g.vehicles.size() >= 2) g.formed = true;
+            electLeader(g);
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " and deploys " + chosen.size() + " vehicle(s) with no formation cost.");
         };
     }
 
@@ -423,12 +539,13 @@ public final class GameEngine {
             if (!t.faceUp && !artilleryHitsHidden(spec)) {
                 throw violation(spec.name() + " can only hit face-up vehicles.");
             }
+            if (t.smoked) throw violation("Enemy vehicle " + id + " is hidden in smoke and can't be targeted.");
         }
         return () -> {
             r.say("Player " + (me.index + 1) + " plays " + spec.name() + ".");
             for (long id : targets) {
                 Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst().orElse(null);
-                if (t == null || (!t.faceUp && !artilleryHitsHidden(spec))) continue;    // gone, or gone face down, since the first hit
+                if (t == null || t.smoked || (!t.faceUp && !artilleryHitsHidden(spec))) continue;    // gone, or gone face down, since the first hit
                 t.faceUp = true;
                 int dealt = rules.damagePercent == 100 ? spec.power() : Math.max(1, Math.round(spec.power() * rules.damagePercent / 100f));
                 t.hp -= dealt;
@@ -457,9 +574,7 @@ public final class GameEngine {
                 me.hand.add(id);
                 names.add(catalog.spec(id).name());
             }
-            Random shuffle = new Random(s.rngSeed);
-            s.rngSeed = shuffle.nextLong();
-            Collections.shuffle(me.deck, shuffle);
+            Collections.shuffle(me.deck, nextRandom(s));
             r.say("Player " + (me.index + 1) + " plays " + spec.name() + " and finds "
                     + (names.isEmpty() ? "nothing." : String.join(", ", names) + "."));
         };
@@ -491,6 +606,23 @@ public final class GameEngine {
         };
     }
 
+    /** Fuel to retreat a vehicle: by rarity, less any Camouflage (never below 0). */
+    private int retreatCost(Vehicle v) {
+        int base = rules.retreatFuel(catalog.vehicle(v.cardId).level());
+        return v.camoCardId == 0 ? base : Math.max(0, base - catalog.item(v.camoCardId).power());
+    }
+
+    private static void discardAttachments(PlayerState owner, Vehicle v) {
+        if (v.eraCardId != 0) owner.discard.add(v.eraCardId);
+        if (v.camoCardId != 0) owner.discard.add(v.camoCardId);
+    }
+
+    private Random nextRandom(GameState s) {
+        Random rnd = new Random(s.rngSeed);
+        s.rngSeed = rnd.nextLong();
+        return rnd;
+    }
+
     private int eraPercent(Vehicle v) {
         return v.eraCardId == 0 ? 0 : catalog.item(v.eraCardId).power();
     }
@@ -517,6 +649,7 @@ public final class GameEngine {
             if (!attacker.faceUp) throw violation(spec.name() + " is face down and can't attack.");
             if (attacker.stunned) throw violation(spec.name() + " is stunned and can't attack this turn.");
             if (attacker.disabled) throw violation(spec.name() + " is disabled and can't attack this turn.");
+            if (attacker.smoked) throw violation(spec.name() + " is in its own smoke and can't attack this turn.");
             AttackSpec attack = spec.attack(c.slot())
                     .orElseThrow(() -> violation(spec.name() + " has no " + c.slot() + " attack."));
             if (attacker.suppressed && c.slot() == AttackSlot.ATTACK_1) {
@@ -534,6 +667,7 @@ public final class GameEngine {
                     .filter(v -> v.id == c.targetVehicleId()).findFirst()
                     .orElseThrow(() -> violation("Target " + c.targetVehicleId() + " was not found."));
             if (!target.faceUp) throw violation("You can only attack face-up vehicles.");
+            if (target.smoked) throw violation("That vehicle is hidden in smoke and can't be targeted.");
             plans.add(new Plan(attacker, spec, attack, ammo, target));
         }
         if (plans.size() >= 2 && !g.leader().faceUp) {
@@ -598,7 +732,7 @@ public final class GameEngine {
         if (g.leader() != target) {
             g.vehicles.remove(target);
             owner.discard.add(target.cardId);
-            if (target.eraCardId != 0) owner.discard.add(target.eraCardId);
+            discardAttachments(owner, target);
             r.say(catalog.vehicle(target.cardId).name() + " is destroyed.");
             return;
         }
@@ -621,7 +755,8 @@ public final class GameEngine {
         g.pool.clear();
 
         owner.discard.add(target.cardId);
-        if (target.eraCardId != 0) owner.discard.add(target.eraCardId);
+        discardAttachments(owner, target);
+        if (g.jammerCardId != 0) owner.discard.add(g.jammerCardId);
         owner.groups.remove(g);
         for (Vehicle survivor : g.vehicles) {
             if (survivor == target) continue;
@@ -633,6 +768,7 @@ public final class GameEngine {
             } else {
                 owner.hand.add(survivor.cardId);
                 if (survivor.eraCardId != 0) owner.hand.add(survivor.eraCardId);
+                if (survivor.camoCardId != 0) owner.hand.add(survivor.camoCardId);
             }
         }
         if (attacker.chips >= rules.winChips) {
@@ -670,10 +806,24 @@ public final class GameEngine {
         s.turnCount++;
         p.turnsTaken++;
         p.designationsLeft = rules.designationsPerTurn;
-        p.groups.forEach(g -> {
+        p.itemUses.clear();
+        for (StrikeGroup g : p.groups) {
             g.convoyMoved = 0;
-            g.vehicles.forEach(v -> v.abilityUsed = false);
-        });
+            g.vehicles.forEach(v -> {
+                v.abilityUsed = false;
+                v.smoked = false;                       // a Smoke Screen lasts until its owner's next turn starts
+            });
+            if (g.jammerCardId != 0) {                  // the Jammer's upkeep, paid from the group's pool
+                int upkeep = catalog.item(g.jammerCardId).power();
+                if (available(g.pool, ResourceKind.FUEL, null) >= upkeep) {
+                    spend(p, g.pool, ResourceKind.FUEL, null, upkeep);
+                } else {
+                    p.discard.add(g.jammerCardId);
+                    g.jammerCardId = 0;
+                    r.say("A Jammer powers down: its group couldn't pay the upkeep.");
+                }
+            }
+        }
         if (p.deck.isEmpty()) {
             finish(s, 1 - p.index, "Player " + (p.index + 1) + " had no card to draw.", r);
             return;
@@ -783,7 +933,18 @@ public final class GameEngine {
                 }
                 c.add(new PlayItem(id, List.of(), found));
             }
-            case ERA -> me.groups.forEach(g -> g.vehicles.forEach(v -> c.add(new PlayItem(id, List.of(v.id), List.of()))));
+            case ERA, CAMO, SMOKE -> me.groups.forEach(g -> g.vehicles.forEach(v -> c.add(new PlayItem(id, List.of(v.id), List.of()))));
+            case JAMMER -> me.groups.forEach(g -> c.add(new PlayItem(id, List.of(g.id), List.of())));
+            case SABOTAGE -> c.add(new PlayItem(id, List.of(), List.of()));
+            case RECYCLE -> c.add(new PlayItem(id, List.of(), me.discard.stream().filter(x -> catalog.find(x) instanceof ResourceSpec)
+                    .limit(item.count()).toList()));
+            case RAPID_DEPLOY -> {
+                for (StrikeGroup g : me.groups) {
+                    for (long handId : new LinkedHashSet<>(me.hand)) {
+                        if (catalog.find(handId) instanceof VehicleSpec) c.add(new PlayItem(id, List.of(g.id), List.of(handId)));
+                    }
+                }
+            }
             case ARTILLERY -> {
                 List<Long> hittable = opp.groups.stream().flatMap(g -> g.vehicles.stream())
                         .filter(v -> v.faceUp || artilleryHitsHidden(item)).map(v -> v.id).toList();

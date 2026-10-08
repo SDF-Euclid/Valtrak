@@ -26,7 +26,7 @@ class BotAndSimulationTest {
 
     @Test
     void theEnumCatalogHasEveryCardKindWithStableIds() {
-        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 60 + 4 + 4 + 3 + 24);   // tanks, recon, UAV teams, ammo, fuel, repair, supply, item cards
+        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 60 + 4 + 4 + 3 + 41);   // tanks, recon, UAV teams, ammo, fuel, repair, supply, item cards
         assertThat(catalog.find(1)).isInstanceOf(VehicleSpec.class);
         assertThat(new EnumCardCatalog(true).find(1).name()).isEqualTo(catalog.find(1).name());
         assertThat(catalog.all()).anyMatch(c -> c instanceof ResourceSpec r && r.kind() == ResourceKind.SUPPLY);
@@ -138,8 +138,8 @@ class BotAndSimulationTest {
     void randomBotsCanPlayItemsToo() {
         GameEngine engine = engine(0);
         for (int seed = 0; seed < 4; seed++) {
-            List<Long> d0 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed), 1, 3);
-            List<Long> d1 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed + 9), 1, 3);
+            List<Long> d0 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed), 1, 1);
+            List<Long> d1 = SimDecks.standard(catalog, catalog.all(), 100, new Random(seed + 9), 1, 1);
             GameSimulator.play(engine, d0, d1, new RandomBot(), new RandomBot(), seed, 20000);
         }
     }
@@ -153,8 +153,8 @@ class BotAndSimulationTest {
             attacks += r.attacks()[0] + r.attacks()[1];
             destroyed += r.groupsDestroyed();
         }
-        assertThat(attacks).isGreaterThan(100);
-        assertThat(destroyed).isGreaterThan(10);
+        assertThat(attacks).isGreaterThan(50);       // games are short now (3 chips, damage x4)
+        assertThat(destroyed).isGreaterThan(15);
     }
 
     /**

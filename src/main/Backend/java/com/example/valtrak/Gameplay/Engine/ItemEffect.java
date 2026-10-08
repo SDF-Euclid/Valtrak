@@ -9,5 +9,17 @@ public enum ItemEffect {
     /** Look through your deck for cards of one kind. */
     SEARCH,
     /** Draw cards. */
-    DRAW
+    DRAW,
+    /** Chosen vehicles can't be targeted (and can't attack) until the start of your next turn. */
+    SMOKE,
+    /** Attach to a strike group: enemy reveal abilities can't target it, and it costs Fuel each turn. */
+    JAMMER,
+    /** Attach to a vehicle: retreating it costs less Fuel. */
+    CAMO,
+    /** The opponent discards cards at random. */
+    SABOTAGE,
+    /** Return resource cards from your discard pile to your hand. */
+    RECYCLE,
+    /** Deploy vehicles from your hand into a group without the formation cost. */
+    RAPID_DEPLOY
 }

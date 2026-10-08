@@ -95,6 +95,12 @@ public class CardArtRenderer {
                 case "ERA"       -> drawEra(sprite);
                 case "Artillery" -> drawBlast(sprite);
                 case "Search"    -> drawMagnifier(sprite);
+                case "Smoke"     -> drawSmoke(sprite);
+                case "Jammer"    -> drawJammer(sprite);
+                case "Camo"      -> drawCamo(sprite);
+                case "Sabotage"  -> drawSabotage(sprite);
+                case "Recycle"   -> drawRecycle(sprite);
+                case "Rapid Deploy" -> drawRapid(sprite);
                 default          -> drawCardStack(sprite);
             }
         });
@@ -530,6 +536,62 @@ public class CardArtRenderer {
         gc.strokeLine(86, 54, 104, 72);
         gc.setFill(Color.web("#9fb4d633"));
         gc.fillOval(54, 22, 34, 34);
+    }
+
+    private static void drawSmoke(GraphicsContext gc) {
+        gc.setFill(Color.web("#aab2bd"));
+        gc.fillOval(40, 32, 44, 34);
+        gc.fillOval(62, 22, 44, 38);
+        gc.fillOval(74, 38, 40, 30);
+        gc.setFill(Color.web("#cfd5dd"));
+        gc.fillOval(58, 30, 36, 26);
+    }
+
+    private static void drawJammer(GraphicsContext gc) {
+        gc.setStroke(Color.web("#7ab8e8"));
+        gc.setLineWidth(3);
+        for (int i = 1; i <= 3; i++) gc.strokeArc(78 - i * 13, 45 - i * 13, i * 26, i * 26, 30, 120, javafx.scene.shape.ArcType.OPEN);
+        gc.setFill(Color.web("#e8b84b"));
+        gc.fillRect(75, 44, 6, 28);
+        gc.fillOval(72, 38, 12, 12);
+    }
+
+    private static void drawCamo(GraphicsContext gc) {
+        gc.setFill(Color.web("#3d4a2c"));
+        gc.fillRoundRect(36, 24, 84, 44, 8, 8);
+        gc.setFill(Color.web("#6a7a45"));
+        gc.fillOval(46, 30, 28, 18);
+        gc.fillOval(84, 42, 28, 18);
+        gc.setFill(Color.web("#2a3320"));
+        gc.fillOval(70, 28, 22, 14);
+        gc.fillOval(42, 48, 24, 14);
+    }
+
+    private static void drawSabotage(GraphicsContext gc) {
+        gc.setFill(Color.web("#3a4666"));
+        gc.fillRoundRect(44, 24, 36, 48, 5, 5);
+        gc.setFill(Color.web("#4a5678"));
+        gc.fillRoundRect(76, 24, 36, 48, 5, 5);
+        gc.setStroke(Color.web("#ff4d4d"));
+        gc.setLineWidth(5);
+        gc.strokeLine(40, 28, 116, 68);
+        gc.strokeLine(116, 28, 40, 68);
+    }
+
+    private static void drawRecycle(GraphicsContext gc) {
+        gc.setStroke(Color.web("#5ec27a"));
+        gc.setLineWidth(6);
+        gc.strokeArc(46, 20, 64, 52, 40, 250, javafx.scene.shape.ArcType.OPEN);
+        gc.setFill(Color.web("#5ec27a"));
+        gc.fillPolygon(new double[]{100, 118, 114}, new double[]{22, 40, 20}, 3);
+    }
+
+    private static void drawRapid(GraphicsContext gc) {
+        gc.setFill(Color.web("#e8b84b"));
+        for (int i = 0; i < 3; i++) {
+            double x = 38 + i * 26;
+            gc.fillPolygon(new double[]{x, x + 22, x, x + 8}, new double[]{24, 46, 68, 46}, 4);
+        }
     }
 
     private static void drawCardStack(GraphicsContext gc) {

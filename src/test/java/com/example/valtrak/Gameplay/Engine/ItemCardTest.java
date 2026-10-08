@@ -255,6 +255,29 @@ class ItemCardTest {
         assertThat(w.s.winner).isZero();
     }
 
+    @Test
+    void artilleryIsLimitedToOnePerTurnAndTheLimitResetsEachTurn() {
+        w.hand(0, ARTILLERY_1, ARTILLERY_1);
+        w.act(0, play(ARTILLERY_1, enemyLeader));
+        assertThatThrownBy(() -> w.act(0, play(ARTILLERY_1, enemyLeader)))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("only play 1 Artillery card per turn");
+        assertThat(enemyLeader.hp).isEqualTo(180);
+        assertThat(w.p(0).hand).containsExactly(ARTILLERY_1);
+
+        w.act(0, new EndTurn());
+        w.act(1, new EndTurn());
+        w.act(0, play(ARTILLERY_1, enemyLeader));        // a new turn: allowed again
+        assertThat(enemyLeader.hp).isEqualTo(160);
+    }
+
+    @Test
+    void otherItemsHaveNoLimit() {
+        w.hand(0, DRAW_1, DRAW_1);
+        w.act(0, new PlayItem(DRAW_1, List.of(), List.of()));
+        w.act(0, new PlayItem(DRAW_1, List.of(), List.of()));
+        assertThat(w.p(0).discard).containsExactly(DRAW_1, DRAW_1);
+    }
+
     // ── search ───────────────────────────────────────────────────────────────
 
     @Test

@@ -122,6 +122,25 @@ class GameViewBuilderTest {
     }
 
     @Test
+    void smokeAndJammersArePublicButCamouflageOnAFaceDownVehicleIsNot() {
+        StrikeGroup theirs = w.group(1, TANK_RARE, false);
+        theirs.leader().smoked = true;
+        theirs.jammerCardId = JAMMER_2;
+        Vehicle hidden = w.add(theirs, ANTI_AIR, false);
+        hidden.camoCardId = CAMO_1;
+        Vehicle shown = w.add(theirs, RECON, true);
+        shown.camoCardId = CAMO_3;
+
+        GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
+        GroupView group = view.opponent().groups().get(0);
+        assertThat(group.jammerCardId()).isEqualTo(JAMMER_2);
+        assertThat(byId(group.vehicles(), theirs.leader().id).smoked()).isTrue();
+        assertThat(byId(group.vehicles(), theirs.leader().id).cardId()).isNull();
+        assertThat(byId(group.vehicles(), hidden.id).camoCardId()).isNull();
+        assertThat(byId(group.vehicles(), shown.id).camoCardId()).isEqualTo(CAMO_3);
+    }
+
+    @Test
     void abilityUseIsShownForYourVehiclesAndHiddenForFaceDownEnemies() {
         StrikeGroup mine = w.group(0, TANK_COMMON, false);
         Vehicle uav = w.add(mine, UAV, true);

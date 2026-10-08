@@ -13,7 +13,7 @@ import java.util.Map;
 public class GameRules {
 
     // goal and decks
-    public int winChips = 5;
+    public int winChips = 3;
     public int minDeckSize = 60;
     public int maxDeckSize = 100;
     public int maxCopies = 3;
@@ -35,8 +35,9 @@ public class GameRules {
     // attacks, every vehicle except Resupply vehicles is turned face up
     public int stalemateRounds = 0;
 
-    // optional experiment (100 = the numbers on the cards): scales every attack's damage
-    public int damagePercent = 100;
+    // damage scale: every attack's (and Artillery's) damage is multiplied by this percent. 400 with 3 chips gives about 13-15 turns
+    // per player (docs/SIMULATION.md); 100 = the numbers on the cards
+    public int damagePercent = 400;
 
     // resources
     public int designationsPerTurn = 1;
@@ -53,6 +54,8 @@ public class GameRules {
     // Artillery may also choose face-down vehicles
     public Map<CardLevel, Integer> itemSupply = byLevel(0, 0, 0, 0, 0, 0);
     public CardLevel artilleryBlindFrom = CardLevel.LEGENDARY;
+    // how many cards of a limited kind a player may play per turn (kinds not listed have no limit)
+    public Map<ItemEffect, Integer> itemLimitPerTurn = new EnumMap<>(Map.of(ItemEffect.ARTILLERY, 1, ItemEffect.SABOTAGE, 1));
 
     public static GameRules defaults() {
         return new GameRules();
@@ -65,6 +68,9 @@ public class GameRules {
     public int formationSupply(CardLevel level) { return formationSupply.get(level); }
 
     public int convoyCapacity(CardLevel level) { return convoyCapacity.get(level); }
+
+    /** 0 = no limit. */
+    public int itemLimit(ItemEffect effect) { return itemLimitPerTurn.getOrDefault(effect, 0); }
 
     public int itemSupply(CardLevel level) { return itemSupply.get(level); }
 

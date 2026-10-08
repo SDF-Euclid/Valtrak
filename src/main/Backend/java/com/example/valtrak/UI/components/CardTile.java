@@ -152,6 +152,12 @@ public class CardTile {
         if (effect.startsWith("ARTILLERY")) return "Artillery";
         if (effect.startsWith("SEARCH")) return "Search";
         if (effect.startsWith("DRAW")) return "Draw";
+        if (effect.startsWith("SMOKE")) return "Smoke";
+        if (effect.startsWith("JAMMER")) return "Jammer";
+        if (effect.startsWith("CAMO")) return "Camo";
+        if (effect.startsWith("SABOTAGE")) return "Sabotage";
+        if (effect.startsWith("RECYCLE")) return "Recycle";
+        if (effect.startsWith("RAPID")) return "Rapid Deploy";
         return "Item";
     }
 

@@ -10,10 +10,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ExperimentRulesTest {
 
     @Test
-    void theExperimentRulesAreOffByDefault() {
+    void theStalemateRuleIsOffByDefault() {
         GameRules rules = GameRules.defaults();
         assertThat(rules.stalemateRounds).isZero();
-        assertThat(rules.damagePercent).isEqualTo(100);
     }
 
     @Test

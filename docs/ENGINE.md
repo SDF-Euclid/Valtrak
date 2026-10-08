@@ -36,6 +36,13 @@ validates and returns what to do), then pays the optional Supply cost (`GameRule
   vehicles, which are turned face up. A target that has left the field, or gone face down, since an earlier hit in the same play is skipped.
 - **Search** shuffles with `GameState.rngSeed` (a seed stored in the state and never sent to players), so a saved game replays the same way.
 - **Draw** is refused if the deck has fewer than `count` cards.
+- **Per-turn limits:** `GameRules.itemLimitPerTurn` (Artillery 1, Sabotage 1); uses are counted in `PlayerState.itemUses` and cleared when the turn starts.
+- **Smoke** sets `Vehicle.smoked` (can't be targeted by attacks or Artillery, and can't attack); it is cleared when its owner's next turn starts.
+- **Jammer** sets `StrikeGroup.jammerCardId`: `UseAbility` can't target vehicles in that group. At the start of its owner's turn the group's pool pays the
+  upkeep Fuel, or the Jammer is discarded (also discarded with its group).
+- **Camouflage** sets `Vehicle.camoCardId`: `retreatCost` takes its `power` off the retreat Fuel (a Leader's Camouflage also makes a group retreat cheaper).
+- **Sabotage** and the Search shuffle use `GameState.rngSeed`. **Recycle** and **Rapid Deployment** check their picks against the discard pile / hand;
+  Rapid Deployment tries the slot rules on a copy of the group, one vehicle at a time.
 
 To add an item effect: add it to `ItemEffect`, write a `prepare...` method, add it to `candidates` (for bots), to `SpecialItemEffect` and to
 `DbCardCatalog.itemSpec` / `EnumCardCatalog`, then add cards to `SpecialItem`.
@@ -50,8 +57,9 @@ handle it in `GameEngine.useAbility`, add tests, then give cards the new ability
 Leader (the first vehicle in the real list) can't be picked out. ERA is hidden while its vehicle is face down.
 
 ## Experiment rules (off by default)
-`GameRules.stalemateRounds` (reveal everything after N passive rounds) and `GameRules.damagePercent` exist so the simulator
-can measure candidate changes. With the default values the engine plays exactly the rulebook. See `docs/SIMULATION.md`.
+`GameRules.stalemateRounds` (reveal everything after N passive rounds, off by default) exists so the simulator can measure a candidate change.
+`GameRules.damagePercent` is the damage scale (400 = x4) and `winChips` is 3: together they give 13-15 turns per player (see `docs/SIMULATION.md`).
+The tests use `TestWorld.rules` (5 chips, x1) so their numbers stay simple; `GameRulesTest`-style checks of the real defaults are in `MoreItemCardsTest`.
 
 ## Choices the engine makes where the rulebook is silent
 - Resources are spent smallest card first, so big crates are kept for later.

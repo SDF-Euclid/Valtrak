@@ -1,10 +1,10 @@
-# Valtrak Rulebook: DRAFT v0.13
+# Valtrak Rulebook: DRAFT v0.14
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
 
 ## 1. Goal
-Be the first player to take **[5]** Territory Chips. You take chips when you destroy an enemy strike group (see §9). Chips are never lost.
+Be the first player to take **[3]** Territory Chips. You take chips when you destroy an enemy strike group (see §9). Chips are never lost.
 You also lose if you must draw from an empty deck.
 
 ## 2. Decks
@@ -30,7 +30,7 @@ A strike group is up to **5** vehicles with these slots:
 
 - **A single tank is a strike group of one.** It needs no formation cost and counts toward your group limit.
   Only tanks can stand alone (assumed); every other vehicle joins an existing group.
-- Group limit: **3** at a time, **+1 for every 2 chips you hold [so +3 at 6 chips]** (assumed).
+- Group limit: **3** at a time, **+1 for every 2 chips you hold** (assumed).
 - **Facing:** every vehicle is **face down** (hidden) or **face up** (revealed). Face-down vehicles can't attack or be attacked.
   A group is "revealed" when its attacking vehicles are face up. New vehicles are played face down.
 - **Leaders can't leave:** a Leader stays in the group it leads for as long as it lives. Groups never merge.
@@ -103,24 +103,22 @@ and it costs **Fuel** from its group's pool. Using one does not end your turn, s
 
 ## 7c. Item cards
 Item cards are played from your hand during your main step, **as many as you like per turn** (like Pokémon trainer cards). Playing one never ends your turn.
-- **Cost:** none. The limit is the cards in your hand and each card's own conditions. (The engine has a per-rarity Supply cost switch, `itemSupply`,
-  set to 0 for now, in case playtesting says items are too easy.)
-- **Strength scales with rarity.** A played item goes to the discard pile, except ERA, which stays on its vehicle.
+Some cards have their own **limit per turn** (marked below). The engine has a per-rarity Supply cost switch (`itemSupply`, set to 0 now) in case items turn out too easy.
+A played item goes to the discard pile, except attached cards (ERA, Camouflage, Jammer), which stay on the field until the thing they are attached to is gone.
+Cards come in the rarities listed; the number is by rarity: **C / U / R / E / L**.
 
-| Card | What it does | By rarity (C / U / R / E / L) |
+| Card | What it does | By rarity |
 |---|---|---|
-| **ERA** (attached) | Attach to one of your vehicles. Chemical damage (HEAT, TOW, and other CHEMICAL ammo) that vehicle takes is reduced by a **steady percentage**. It is removed **only when the vehicle is destroyed** (the ERA goes to the discard pile). It stays through moves, retreats and being revealed. If the vehicle returns to your hand (a non-tank whose group was destroyed), the ERA returns with it. One ERA per vehicle: a new one replaces the old (the old one is discarded). Hidden from your opponent while the vehicle is face down. | **[20% / 25% / 35% / 40% / 50%]** |
-| **Artillery** | Choose up to *N* enemy vehicles. Each takes **true damage** (ignores armor and breach). Below Legendary you may only choose **face-up** vehicles. **Legendary can also choose face-down vehicles**; any vehicle it hits is turned face up. It does not expose any vehicle of yours. A destroyed Leader takes the chip as usual (a later target in the same destroyed group is skipped if it is gone or has gone face down). | targets *N* = **1 / 1 / 2 / 2 / 3**, damage each **[20 / 25 / 30 / 35 / 40]** |
-| **Search** | Look through your deck for up to *N* cards of one kind, show them to your opponent, put them in your hand, shuffle your deck. Three kinds: **resources** (Ammo, Fuel, Supply, Repair), **tanks**, **support vehicles** (Specialists, Resupply, Recon and other non-tanks). You may find fewer than *N*. | *N* = **1 / 1 / 2 / 2 / 3** (the cards are Common, Rare and Legendary for each kind) |
-| **Draw** | Draw *N* cards. Condition: your deck must have at least *N* cards (you can't deck yourself with it). | *N* = **1 / 1 / 2 / 2 / 3** |
-
-**Other ideas to consider** (not built; tell me which you want):
-- **Smoke Screen:** your vehicle or group can't be targeted by attacks or Artillery until your next turn (the answer to Artillery).
-- **Jammer (counter-UAV):** an enemy UAV or Recon vehicle can't use its ability until its owner's next turn.
-- **Camouflage** (attached): retreating this vehicle costs no Fuel.
-- **Sabotage:** your opponent discards *N* cards at random (the hand-shrinking card you mentioned).
-- **Recycle:** return *N* resource cards from your discard pile to your hand.
-- **Rapid Deployment:** deploy a vehicle from your hand into a group without paying the formation cost.
+| **ERA** (attached to a vehicle) | That vehicle takes a **steady percentage** less chemical damage (HEAT, TOW, other CHEMICAL ammo) until it is destroyed (the ERA then goes to the discard pile). It stays through moves, retreats and reveals. If the vehicle returns to your hand (a non-tank whose group was destroyed), the ERA returns with it. One ERA per vehicle: a new one replaces the old. | **[20% / 25% / 35% / 40% / 50%]** |
+| **Artillery** (**1 per turn**) | Choose up to *N* enemy vehicles. Each takes **true damage** (ignores armor and breach). Below Legendary you may only choose **face-up** vehicles. **Legendary can also choose face-down vehicles**; any vehicle it hits turns face up. It does not expose any vehicle of yours. A destroyed Leader takes the chip as usual (a later target in a group that has just been destroyed is skipped). Smoke Screen protects against it. | targets **1 / 1 / 2 / 2 / 3**, damage each **[20 / 25 / 30 / 35 / 40]** (times the damage scale) |
+| **Search** | Look through your deck for up to *N* cards of one kind, show them to your opponent, put them in your hand, shuffle. Three kinds: **resources** (Ammo, Fuel, Supply, Repair), **tanks**, **support vehicles** (Specialists, Resupply, Recon and other non-tanks). You may find fewer than *N*. | *N* = **1 / 1 / 2 / 2 / 3** (Common, Rare and Legendary cards exist for each kind) |
+| **Draw** | Draw *N* cards. Condition: your deck must have at least *N* cards. | *N* = **1 / 1 / 2 / 2 / 3** |
+| **Smoke Screen** | Choose up to *N* of your vehicles. Until the start of your next turn they **can't be targeted** by attacks or Artillery (Legendary too), **and they can't attack** while they are in the smoke. (Without that cost you could smoke up and then shoot.) Reveals still work on them. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
+| **Jammer** (attached to a strike group) | Enemy **reveal abilities can't target any vehicle in this group**. **Upkeep:** at the start of each of your turns, spend Fuel from the group's pool, or the Jammer is discarded. One Jammer per group; it is visible to your opponent. *Why the upkeep:* a Jammer on every group would otherwise let you stall for ever. It costs Fuel you need for attacking and retreating, and the Fuel sits in a pool that can be destroyed. | upkeep **[2 / 2 / 1 / 1 / 1]** Fuel (cards exist at C and R) |
+| **Camouflage** (attached to a vehicle) | Retreating this vehicle costs less Fuel (never below 0). If it is a group's Leader, a group retreat costs less too. It goes to the discard pile if the vehicle is destroyed and returns to your hand with it, like ERA. | **[1 / 1 / 2 / 2 / 3]** less Fuel (cards exist at C, R, L) |
+| **Sabotage** (**1 per turn**) | Your opponent discards *N* cards from their hand, **chosen at random**. (They go to the public discard pile, so you see what they were.) Condition: your opponent has a card in hand. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
+| **Recycle** | Return up to *N* resource cards from your discard pile to your hand. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
+| **Rapid Deployment** | Deploy up to *N* vehicles from your hand into one of your strike groups **without paying the formation cost** (slot rules still apply). | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
 
 ## 8. Attacking
 - Choose a strike group, then which of its **face-up** vehicles attack (at least one) and which attack each one uses.
@@ -131,6 +129,8 @@ Item cards are played from your hand during your main step, **as many as you lik
   Use the convoy in your main step, before attacking, to move resources in from your Depot.
 - The Resupply vehicle never attacks. A Specialist attacks only if its card lists attacks.
 - Each attack targets one **face-up** enemy vehicle. Damage uses the existing damage-type, armor and special-effect rules.
+- **Damage scale [4x]:** all damage dealt (by attacks and by Artillery) is multiplied by 4 when it lands (armor is taken off first). It is one setting
+  so the numbers on the cards stay small; it can be baked into the cards later. With 3 chips to win it gives about 13-15 turns per player.
 - A **face-down Specialist** doesn't stop the group from attacking, but it can't use its ability. The **Resupply** vehicle never has to be
   face up and can't be targeted (unless an item or effect says otherwise).
 - A vehicle at 0 HP is destroyed and goes to the discard pile.
@@ -158,8 +158,8 @@ Item cards are played from your hand during your main step, **as many as you lik
 ## Open questions
 1. **Stalling:** UAV and Recon cards make players fight, but a deck without them can still stall. Do you want a backstop (a minimum number
    of reveal cards per deck, or a deck-out tiebreak)? Legendary Artillery now also hits face-down vehicles, which helps.
-2. **Items with no cost** can stack (several Artillery in one turn). If that is too strong: a per-turn limit, or turn on the Supply cost.
-3. Game length (about 3 chips and 4x damage for 13-15 turns per player), convoy capacity, Resupply vehicles, air units.
+2. **Jammer upkeep** is my answer to your stall worry. Other options: the Jammer's group can't attack, or its carrier must stay face up. Which do you prefer?
+3. Convoy capacity, Resupply vehicles, air units.
 4. All bracketed numbers: need playtesting.
 
 ## Planned cards (wish list)

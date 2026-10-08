@@ -29,6 +29,7 @@ public final class SimDecks {
     public static List<Long> standard(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts, int items) {
         List<Long> itemCards = new ArrayList<>();
         for (CardSpec spec : all) if (spec instanceof ItemSpec) addCopies(itemCards, spec.cardId(), items);
+        while (itemCards.size() > size / 2) itemCards.remove(itemCards.size() - 1);   // never more than half a deck
         // item cards replace some of the usual cards (mostly extra Ammo), so they don't change how many cards a deck has
         List<Long> deck = new ArrayList<>(standardWithoutItems(catalog, all, size - itemCards.size(), rng, scouts));
         deck.addAll(itemCards);

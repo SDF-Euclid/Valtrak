@@ -8,7 +8,11 @@ import com.example.valtrak.Data.CardLibrary.CardLevel;
  *   <li>ERA: {@code power} = percent less CHEMICAL damage</li>
  *   <li>ARTILLERY: {@code power} = true damage to each target, {@code count} = how many targets</li>
  *   <li>SEARCH: {@code count} = how many cards, {@code searchKind} = what kind</li>
- *   <li>DRAW: {@code count} = how many cards</li>
+ *   <li>DRAW, SABOTAGE, RECYCLE: {@code count} = how many cards</li>
+ *   <li>SMOKE: {@code count} = how many vehicles</li>
+ *   <li>JAMMER: {@code power} = Fuel upkeep each turn</li>
+ *   <li>CAMO: {@code power} = Fuel less to retreat</li>
+ *   <li>RAPID_DEPLOY: {@code count} = how many vehicles
  * </ul>
  */
 public record ItemSpec(long cardId, String name, CardLevel level, ItemEffect effect,

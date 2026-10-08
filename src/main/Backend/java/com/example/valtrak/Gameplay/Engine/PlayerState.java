@@ -16,6 +16,8 @@ public class PlayerState {
     public int turnsTaken;
     public int mulligans;
     public boolean placedStartingTank;
+    /** How many item cards of each limited kind (Artillery, Sabotage) this player has played this turn. */
+    public java.util.Map<ItemEffect, Integer> itemUses = new java.util.HashMap<>();
 
     public PlayerState() {}
 
@@ -35,6 +37,7 @@ public class PlayerState {
         p.turnsTaken = turnsTaken;
         p.mulligans = mulligans;
         p.placedStartingTank = placedStartingTank;
+        p.itemUses.putAll(itemUses);
         return p;
     }
 }

@@ -12,6 +12,8 @@ public class StrikeGroup {
     public boolean formed;
     /** Resource cards the convoy has moved into the pool this turn. */
     public int convoyMoved;
+    /** Card id of the Jammer attached to this group, or 0 for none. */
+    public long jammerCardId;
 
     public StrikeGroup() {}
 
@@ -29,6 +31,7 @@ public class StrikeGroup {
         pool.forEach(r -> g.pool.add(r.copy()));
         g.formed = formed;
         g.convoyMoved = convoyMoved;
+        g.jammerCardId = jammerCardId;
         return g;
     }
 }

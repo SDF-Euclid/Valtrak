@@ -14,9 +14,9 @@ import java.util.Random;
  * Runs many bot-vs-bot games and prints what happened. Run it from your IDE. Options are {@code key=value}
  * program arguments:
  * <pre>
- *   games=200  chips=5  deckSize=60  damage=100  designations=1  scouts=1  items=0  stalemate=0  fillAmmo=false  matchups=all|aggressive
+ *   games=200  chips=3  deckSize=60  damage=400  designations=1  scouts=1  items=0  stalemate=0  fillAmmo=false  matchups=all|aggressive
  * </pre>
- * With no options it plays 200 games per matchup using the rulebook as written.
+ * With no options it plays 200 games per matchup using the game's default rules ({@link GameRules}).
  */
 public final class SimulationMain {
 
@@ -34,10 +34,10 @@ public final class SimulationMain {
         int items = Integer.parseInt(opt.getOrDefault("items", "0"));
 
         GameRules rules = GameRules.defaults();
-        rules.stalemateRounds = Integer.parseInt(opt.getOrDefault("stalemate", "0"));
-        rules.winChips = Integer.parseInt(opt.getOrDefault("chips", "5"));
-        rules.damagePercent = Integer.parseInt(opt.getOrDefault("damage", "100"));
-        rules.designationsPerTurn = Integer.parseInt(opt.getOrDefault("designations", "1"));
+        rules.stalemateRounds = Integer.parseInt(opt.getOrDefault("stalemate", String.valueOf(rules.stalemateRounds)));
+        rules.winChips = Integer.parseInt(opt.getOrDefault("chips", String.valueOf(rules.winChips)));
+        rules.damagePercent = Integer.parseInt(opt.getOrDefault("damage", String.valueOf(rules.damagePercent)));
+        rules.designationsPerTurn = Integer.parseInt(opt.getOrDefault("designations", String.valueOf(rules.designationsPerTurn)));
         System.out.println("Rules: win at " + rules.winChips + " chips, " + deckSize + "-card decks, damage "
                 + rules.damagePercent + "%, stalemate rule "
                 + (rules.stalemateRounds == 0 ? "off" : "after " + rules.stalemateRounds + " passive rounds")

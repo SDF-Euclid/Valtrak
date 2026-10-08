@@ -15,6 +15,10 @@ public class Vehicle {
     public boolean abilityUsed;
     /** Card id of the ERA attached to this vehicle, or 0 for none. */
     public long eraCardId;
+    /** Card id of the Camouflage attached to this vehicle, or 0 for none. */
+    public long camoCardId;
+    /** Under a Smoke Screen: can't be targeted and can't attack, until its owner's next turn starts. */
+    public boolean smoked;
 
     public Vehicle() {}
 
@@ -35,6 +39,8 @@ public class Vehicle {
         v.disabled = disabled;
         v.abilityUsed = abilityUsed;
         v.eraCardId = eraCardId;
+        v.camoCardId = camoCardId;
+        v.smoked = smoked;
         return v;
     }
 }

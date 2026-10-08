@@ -27,9 +27,12 @@ public final class TestWorld {
             SUPPLY_1 = 26, SUPPLY_3 = 27, REPAIR_25 = 28, REPAIR_FULL = 29;
     // item cards
     public static final long ERA_20 = 40, ERA_50 = 41, ARTILLERY_1 = 42, ARTILLERY_2 = 43, ARTILLERY_BLIND = 44,
-            SEARCH_RESOURCES_2 = 45, SEARCH_TANK_1 = 46, SEARCH_SUPPORT_2 = 47, DRAW_1 = 48, DRAW_3 = 49;
+            SEARCH_RESOURCES_2 = 45, SEARCH_TANK_1 = 46, SEARCH_SUPPORT_2 = 47, DRAW_1 = 48, DRAW_3 = 49,
+            SMOKE_1 = 50, SMOKE_2 = 51, JAMMER_2 = 52, JAMMER_1 = 53, CAMO_1 = 54, CAMO_3 = 55, SABOTAGE_1 = 56, SABOTAGE_2 = 57,
+            RECYCLE_1 = 58, RECYCLE_2 = 59, RAPID_1 = 60, RAPID_2 = 61;
 
-    public final GameRules rules = GameRules.defaults();
+    /** The tests use the plain numbers on the cards (5 chips, damage x1); the game's own defaults are tested in GameRulesTest. */
+    public final GameRules rules = untuned();
     public final MapCardCatalog catalog = buildCatalog();
     public final GameEngine engine = new GameEngine(rules, catalog);
     public final GameState s = playingState();
@@ -77,6 +80,18 @@ public final class TestWorld {
         c.add(new ItemSpec(SEARCH_SUPPORT_2, "Specialist Call-Up", CardLevel.RARE, ItemEffect.SEARCH, 0, 2, SearchKind.SUPPORT));
         c.add(new ItemSpec(DRAW_1, "Field Report", CardLevel.COMMON, ItemEffect.DRAW, 0, 1, null));
         c.add(new ItemSpec(DRAW_3, "Total Mobilization", CardLevel.LEGENDARY, ItemEffect.DRAW, 0, 3, null));
+        c.add(new ItemSpec(SMOKE_1, "Smoke Grenades", CardLevel.COMMON, ItemEffect.SMOKE, 0, 1, null));
+        c.add(new ItemSpec(SMOKE_2, "Smoke Screen", CardLevel.RARE, ItemEffect.SMOKE, 0, 2, null));
+        c.add(new ItemSpec(JAMMER_2, "Portable Jammer", CardLevel.COMMON, ItemEffect.JAMMER, 2, 0, null));
+        c.add(new ItemSpec(JAMMER_1, "Wide-Band Jammer", CardLevel.RARE, ItemEffect.JAMMER, 1, 0, null));
+        c.add(new ItemSpec(CAMO_1, "Camo Netting", CardLevel.COMMON, ItemEffect.CAMO, 1, 0, null));
+        c.add(new ItemSpec(CAMO_3, "Thermal Camo", CardLevel.LEGENDARY, ItemEffect.CAMO, 3, 0, null));
+        c.add(new ItemSpec(SABOTAGE_1, "Sabotage", CardLevel.COMMON, ItemEffect.SABOTAGE, 0, 1, null));
+        c.add(new ItemSpec(SABOTAGE_2, "Cyber Intrusion", CardLevel.RARE, ItemEffect.SABOTAGE, 0, 2, null));
+        c.add(new ItemSpec(RECYCLE_1, "Salvage", CardLevel.COMMON, ItemEffect.RECYCLE, 0, 1, null));
+        c.add(new ItemSpec(RECYCLE_2, "Field Recovery", CardLevel.RARE, ItemEffect.RECYCLE, 0, 2, null));
+        c.add(new ItemSpec(RAPID_1, "Rapid Deployment", CardLevel.COMMON, ItemEffect.RAPID_DEPLOY, 0, 1, null));
+        c.add(new ItemSpec(RAPID_2, "Forced March", CardLevel.RARE, ItemEffect.RAPID_DEPLOY, 0, 2, null));
         return c;
     }
 
@@ -90,6 +105,13 @@ public final class TestWorld {
     private static VehicleSpec armed(long id, String name, CardLevel level, VehicleClass vc, int hp, int armor) {
         return new VehicleSpec(id, name, level, vc, hp, armor, List.of(
                 new AttackSpec(AttackSlot.ATTACK_1, "MG", Weapon.BROWNING_50CAL, 15, 1, 0, SpecialEffect.NONE)));
+    }
+
+    private static GameRules untuned() {
+        GameRules r = GameRules.defaults();
+        r.winChips = 5;
+        r.damagePercent = 100;
+        return r;
     }
 
     private static GameState playingState() {

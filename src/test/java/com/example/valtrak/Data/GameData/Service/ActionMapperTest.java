@@ -51,6 +51,9 @@ class ActionMapperTest {
         assertThat(ActionMapper.map(new ActionRequest("PLAY_ITEM", 5L, null, null, null, null, null, null, null, null)))
                 .isEqualTo(new Action.PlayItem(5L, List.of(), List.of()));
         assertThatThrownBy(() -> ActionMapper.map(req("PLAY_ITEM"))).isInstanceOf(ApiException.class).hasMessageContaining("cardId");
+        // Jammer and Rapid Deployment name a strike group
+        assertThat(ActionMapper.map(new ActionRequest("PLAY_ITEM", 5L, 12L, null, null, null, null, null, null, List.of(8L))))
+                .isEqualTo(new Action.PlayItem(5L, List.of(12L), List.of(8L)));
     }
 
     @Test

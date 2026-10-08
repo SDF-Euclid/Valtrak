@@ -95,6 +95,12 @@ public class DbCardCatalog implements CardCatalog {
             case SEARCH_TANKS -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SEARCH, 0, power, SearchKind.TANK);
             case SEARCH_SUPPORT -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SEARCH, 0, power, SearchKind.SUPPORT);
             case DRAW_CARDS -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.DRAW, 0, power, null);
+            case SMOKE_SCREEN -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SMOKE, 0, power, null);
+            case JAMMER -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.JAMMER, power, 0, null);
+            case CAMOUFLAGE -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.CAMO, power, 0, null);
+            case SABOTAGE -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.SABOTAGE, 0, power, null);
+            case RECYCLE -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.RECYCLE, 0, power, null);
+            case RAPID_DEPLOYMENT -> new ItemSpec(c.getId(), c.getName(), c.getLevel(), ItemEffect.RAPID_DEPLOY, 0, power, null);
         };
     }
 

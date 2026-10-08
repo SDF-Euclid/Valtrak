@@ -12,7 +12,10 @@ import lombok.Getter;
  *   <li>ERA_PROTECTION: primary = percent less CHEMICAL damage</li>
  *   <li>ARTILLERY_STRIKE: primary = true damage to each target, secondary = how many targets (Legendary may also pick face-down ones)</li>
  *   <li>SEARCH_*: primary = how many cards to take</li>
- *   <li>DRAW_CARDS: primary = how many cards to draw</li>
+ *   <li>DRAW_CARDS, SABOTAGE, RECYCLE: primary = how many cards</li>
+ *   <li>SMOKE_SCREEN, RAPID_DEPLOYMENT: primary = how many vehicles</li>
+ *   <li>JAMMER: primary = Fuel upkeep each turn</li>
+ *   <li>CAMOUFLAGE: primary = Fuel less to retreat</li>
  * </ul>
  */
 @Getter
@@ -55,7 +58,27 @@ public enum SpecialItem implements SpecialItemInterface {
     INTEL_BRIEFING("Intel Briefing", "Draw 1 card", CardLevel.UNCOMMON, ItemType.SPECIAL, 1, SpecialItemEffect.DRAW_CARDS, 1.0, 0.0),
     STAFF_PLANNING("Staff Planning", "Draw 2 cards", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.DRAW_CARDS, 2.0, 0.0),
     REINFORCEMENT_ORDERS("Reinforcement Orders", "Draw 2 cards", CardLevel.EPIC, ItemType.SPECIAL, 1, SpecialItemEffect.DRAW_CARDS, 2.0, 0.0),
-    TOTAL_MOBILIZATION("Total Mobilization", "Draw 3 cards", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.DRAW_CARDS, 3.0, 0.0);
+    TOTAL_MOBILIZATION("Total Mobilization", "Draw 3 cards", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.DRAW_CARDS, 3.0, 0.0),
+
+    /*==================== SMOKE, JAMMER, CAMOUFLAGE, SABOTAGE, RECYCLE, RAPID DEPLOYMENT ====================*/
+
+    SMOKE_GRENADES("Smoke Grenades", "Up to 1 of your vehicles can't be targeted until your next turn, and it can't attack in that time", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.SMOKE_SCREEN, 1.0, 0.0),
+    SMOKE_SCREEN("Smoke Screen", "Up to 2 of your vehicles can't be targeted until your next turn, and they can't attack in that time", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.SMOKE_SCREEN, 2.0, 0.0),
+    SMOKE_CURTAIN("Smoke Curtain", "Up to 3 of your vehicles can't be targeted until your next turn, and they can't attack in that time", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.SMOKE_SCREEN, 3.0, 0.0),
+    PORTABLE_JAMMER("Portable Jammer", "Attach to one of your strike groups: enemy reveal abilities can't target its vehicles. Upkeep: 2 Fuel from its pool at the start of each of your turns, or this is discarded", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.JAMMER, 2.0, 0.0),
+    WIDE_BAND_JAMMER("Wide-Band Jammer", "Attach to one of your strike groups: enemy reveal abilities can't target its vehicles. Upkeep: 1 Fuel from its pool at the start of each of your turns, or this is discarded", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.JAMMER, 1.0, 0.0),
+    CAMO_NETTING("Camouflage Netting", "Attach to one of your vehicles: retreating it costs 1 less Fuel", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.CAMOUFLAGE, 1.0, 0.0),
+    DISRUPTIVE_CAMO("Disruptive Camo Pattern", "Attach to one of your vehicles: retreating it costs 2 less Fuel", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.CAMOUFLAGE, 2.0, 0.0),
+    THERMAL_CAMO("Thermal Camouflage Suite", "Attach to one of your vehicles: retreating it costs 3 less Fuel", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.CAMOUFLAGE, 3.0, 0.0),
+    SABOTAGE_RAID("Sabotage", "Your opponent discards 1 card from their hand at random. Once per turn", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.SABOTAGE, 1.0, 0.0),
+    CYBER_INTRUSION("Cyber Intrusion", "Your opponent discards 2 cards from their hand at random. Once per turn", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.SABOTAGE, 2.0, 0.0),
+    STRATEGIC_DISRUPTION("Strategic Disruption", "Your opponent discards 3 cards from their hand at random. Once per turn", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.SABOTAGE, 3.0, 0.0),
+    SALVAGE("Salvage", "Return 1 resource card from your discard pile to your hand", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.RECYCLE, 1.0, 0.0),
+    FIELD_RECOVERY("Field Recovery", "Return up to 2 resource cards from your discard pile to your hand", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.RECYCLE, 2.0, 0.0),
+    SUPPLY_RECLAMATION("Supply Reclamation", "Return up to 3 resource cards from your discard pile to your hand", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.RECYCLE, 3.0, 0.0),
+    RAPID_DEPLOYMENT("Rapid Deployment", "Deploy 1 vehicle from your hand into one of your strike groups without paying the formation cost", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.RAPID_DEPLOYMENT, 1.0, 0.0),
+    FORCED_MARCH("Forced March", "Deploy up to 2 vehicles from your hand into one of your strike groups without paying the formation cost", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.RAPID_DEPLOYMENT, 2.0, 0.0),
+    AIRBORNE_INSERTION("Airborne Insertion", "Deploy up to 3 vehicles from your hand into one of your strike groups without paying the formation cost", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.RAPID_DEPLOYMENT, 3.0, 0.0);
 
     private final String itemName;
     private final String itemDescription;

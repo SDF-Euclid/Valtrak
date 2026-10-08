@@ -76,6 +76,12 @@ public class CardCatalogService {
             case SEARCH_TANKS -> "Search: " + power + " tank" + (power == 1 ? "" : "s");
             case SEARCH_SUPPORT -> "Search: " + power + " support vehicle" + (power == 1 ? "" : "s");
             case DRAW_CARDS -> "Draw " + power + " card" + (power == 1 ? "" : "s");
+            case SMOKE_SCREEN -> "Smoke: " + power + " vehicle" + (power == 1 ? "" : "s") + " untargetable";
+            case JAMMER -> "Attached to a group: blocks enemy reveals (" + power + " Fuel per turn)";
+            case CAMOUFLAGE -> "Attached: retreat costs " + power + " less Fuel";
+            case SABOTAGE -> "Opponent discards " + power + " at random (1 per turn)";
+            case RECYCLE -> "Recycle: " + power + " resource card" + (power == 1 ? "" : "s") + " from the discard pile";
+            case RAPID_DEPLOYMENT -> "Deploy " + power + " vehicle" + (power == 1 ? "" : "s") + " free of the formation cost";
         };
     }
 

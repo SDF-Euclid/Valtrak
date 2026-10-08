@@ -148,12 +148,37 @@ public final class GreedyBot implements Bot {
                 case DRAW -> me.deck.size() > 12 ? new PlayItem(id, List.of(), List.of()) : null;
                 case SEARCH -> me.deck.size() > 12 ? new PlayItem(id, List.of(), searchPicks(item, me, cat)) : null;
                 case ERA -> eraTarget(me, cat).<Action>map(v -> new PlayItem(id, List.of(v.id), List.of())).orElse(null);
+                case SABOTAGE -> opp.hand.isEmpty() ? null : new PlayItem(id, List.of(), List.of());
+                case RECYCLE -> recyclePicks(item, me, cat);
+                case RAPID_DEPLOY -> rapidDeploy(engine, s, player, id, me, cat);
+                case SMOKE, JAMMER, CAMO -> null;           // the bots don't use these
                 case ARTILLERY -> {
                     List<Long> targets = artilleryTargets(engine, item, opp, cat, rng);
                     yield targets.isEmpty() ? null : new PlayItem(id, targets, List.of());
                 }
             };
             if (a != null && engine.isLegal(s, player, a)) return a;
+        }
+        return null;
+    }
+
+    private Action recyclePicks(ItemSpec item, PlayerState me, CardCatalog cat) {
+        StrikeGroup main = mainGroup(me, cat);
+        Need need = main == null ? new Need() : needOf(main, cat);
+        List<Long> picks = me.discard.stream().filter(x -> cat.find(x) instanceof ResourceSpec)
+                .sorted(Comparator.comparingDouble((Long x) -> -searchScore(cat.find(x), need))).limit(item.count()).toList();
+        return picks.isEmpty() ? null : new PlayItem(item.cardId(), List.of(), picks);
+    }
+
+    /** Skips the formation cost when the main group is still a lone tank and a vehicle in hand could join it. */
+    private Action rapidDeploy(GameEngine engine, GameState s, int player, long cardId, PlayerState me, CardCatalog cat) {
+        StrikeGroup main = mainGroup(me, cat);
+        if (main == null || main.formed) return null;
+        List<Long> vehicles = me.hand.stream().filter(id -> cat.find(id) instanceof VehicleSpec).distinct()
+                .sorted(Comparator.comparingInt((Long id) -> -cat.vehicle(id).level().ordinal())).toList();
+        for (long v : vehicles) {
+            Action a = new PlayItem(cardId, List.of(main.id), List.of(v));
+            if (engine.isLegal(s, player, a)) return a;
         }
         return null;
     }
@@ -219,6 +244,7 @@ public final class GreedyBot implements Bot {
         List<Vehicle> hiddenLeaders = new ArrayList<>();
         List<Vehicle> hiddenOthers = new ArrayList<>();
         for (StrikeGroup g : opp.groups) {
+            if (g.jammerCardId != 0) continue;                  // a jammed group can't be revealed
             for (Vehicle v : g.vehicles) {
                 if (v.faceUp) continue;
                 if (v == g.leader()) hiddenLeaders.add(v); else hiddenOthers.add(v);
