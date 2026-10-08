@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.3
+# Valtrak Rulebook: DRAFT v0.4
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -44,19 +44,20 @@ Resources are counters. When you play a Resource card it goes to your discard pi
 
 | | **Depot** | **Strike group pool** |
 |---|---|---|
-| What goes there | Any resource | Ammo and Fuel only (assumed; Supply and Repair are always spent, so a pool gives them no benefit) |
+| What goes there | Any resource | Ammo and Fuel only (assumed; Supply and Repair are only ever spent from the Depot) |
 | Safe? | **Yes.** Never lost when a group is destroyed. | **At risk.** Part is discarded if the Leader dies (§9). |
-| Used for | Forming groups (Supply), healing (Repair), and feeding a convoy | Meeting attack requirements |
-| Spent when used? | Yes | **No.** Ammo and Fuel stay in the pool after an attack |
+| Used for | Forming groups (Supply), healing (Repair), and refilling a pool through a convoy | Attacks and retreats |
+| Spent when used? | Yes | **Yes.** Attacks use up the resources they need |
 
+- Resources that are used up go into your **spent pile** (kept as counts, so a future Recycle card can return some of them).
 - A **lone tank's pool** is its own; when other vehicles join it, the pool becomes the group's pool (assumed).
-  This replaces separate "per unit" storage.
-- **Designate:** play one Resource card per turn **[1]** (items can raise this).
+- **Designate:** play one Resource card per turn **[1]** (items can raise this). Put it in your Depot, or directly into a group's pool (unlimited amount, but at risk).
 - Depot contents are public (assumed); the number of resources in each pool is public too.
-- **Moving** resources from the Depot into a pool is **not** allowed on its own (assumed). That is what the convoy is for.
+- **Convoy (a Resupply vehicle in the group):** during your main step you may move resources from your Depot into the group's pool,
+  up to the Resupply vehicle's **capacity** per turn (a number on its card; assumed **[Common 3, Rare 6, Legendary 10]**).
+  Without a convoy, resources can't move from the Depot into a pool. Any resources beyond the capacity must already be in the pool.
+  Example: an attack needs 9 Ammo and the convoy's capacity is 5, so at least 4 Ammo must already be in the pool.
 - **Repair:** spend any amount from your Depot to restore that much HP to one vehicle (assumed).
-- **Convoy (a Resupply vehicle in the group):** when the group attacks or retreats, if its pool is short of what is needed,
-  the shortfall is **taken from your Depot and spent** (discarded). More convoy abilities (searching the deck, reducing costs) come later.
 
 ## 6. Setup
 1. Shuffle, draw **7**. If your hand has no tank, you **mulligan**: shuffle back and draw 7 again.
@@ -67,20 +68,20 @@ Resources are counters. When you play a Resource card it goes to your discard pi
 ## 7. Your turn
 1. **Draw 1 card** (items or field conditions can add more). The first player also draws on turn 1.
 2. **Main step.** Do any of these in any order, as often as the rules allow:
-   - **Designate** a Resource card into your Depot or a group's pool (§5).
+   - **Designate** a Resource card into your Depot or a group's pool, and use a **convoy** to refill a pool (§5).
    - **Deploy** a vehicle from hand, face down: as a lone tank, or into a hidden group with a free slot. No resource cost.
    - **Form** a strike group (§4), **organize** hidden groups (§4), **heal** with Repair (§5).
    - **Reveal** a group: its Leader and Line vehicles turn face up. Free. Revealed vehicles can attack and be attacked.
    - **Reveal your Specialist** (separate, free): it only does its job while revealed, but a revealed Specialist can be attacked.
-   - **Retreat** a vehicle: spend **[1 Fuel]** (from the pool, or via the convoy from the Depot); it leaves the group and goes back to hidden.
+   - **Retreat** a vehicle: spend **[1 Fuel]** from its group's pool (refill it with the convoy first if needed); it leaves the group and goes back to hidden.
    - **Play item cards**.
 3. **Attack, or pass.** Attacking **ends your turn** immediately. If you can't or won't attack, choose **End Turn**.
 
 ## 8. Attacking
 - Choose one **revealed** strike group as the attacker.
-- **Every vehicle in the group that has an attack uses one of its attacks.** Add up the requirements of all chosen attacks:
-  the group's pool must contain at least that much of each Ammo type and of Fuel. Nothing in the pool is spent.
-  If the pool falls short and the group has a convoy, the shortfall comes from your Depot and is spent.
+- Choose which of its vehicles attack (at least one, assumed) and which attack each uses. Add up the requirements of all chosen attacks:
+  the group's pool must contain at least that much of each Ammo type and of Fuel at that moment. **That amount is spent.**
+  Anything extra stays in the pool. Use the convoy in your main step, before attacking, to move resources in from your Depot.
 - The Resupply vehicle never attacks. A Specialist attacks only if its card lists attacks.
 - Each attack targets one **revealed** enemy vehicle. Damage uses the existing damage-type, armor and special-effect rules.
 - A **hidden Specialist** doesn't stop the group from attacking, but it can't use its ability. The **Resupply** vehicle never has to be revealed
@@ -107,7 +108,7 @@ Resources are counters. When you play a Resource card it goes to your discard pi
 ---
 
 ## Open questions
-1. Is the convoy rule right: depot resources used for attacks are spent, while pool resources persist?
-2. Can resources move from the Depot to a pool in any other way, and can a pool be refilled from the Depot at a cost?
-3. Resupply vehicle abilities beyond paying shortfalls, special item rules, and where air units fit.
+1. Convoy capacity numbers per Resupply vehicle, and whether a cap is worth the extra rules.
+2. A hand limit (and, if you add one, an extra "reserve" play area for spare vehicles).
+3. Resupply vehicle abilities beyond moving resources, special item rules, and where air units fit.
 4. All bracketed numbers: need playtesting.
