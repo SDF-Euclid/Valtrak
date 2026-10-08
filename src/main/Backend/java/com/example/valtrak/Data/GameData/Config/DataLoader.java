@@ -32,6 +32,8 @@ import com.example.valtrak.Data.GameData.Repository.Cards.RepairCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.SpecialItemCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.SupplyCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.VehicleCardRepository;
+import com.example.valtrak.Data.GameData.Repository.DeckRepository;
+import com.example.valtrak.Data.GameData.Repository.PlayerRepository;
 import com.example.valtrak.Data.GameData.Repository.EnumData.*;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Items.ItemCardInterface;
 import com.example.valtrak.Gameplay.Cards.Base.ItemCard;
@@ -81,6 +83,8 @@ public class DataLoader implements CommandLineRunner {
     private final RepairCardRepository repairCardRepo;
     private final SupplyCardRepository supplyCardRepo;
     private final SpecialItemCardRepository specialItemRepo;
+    private final DeckRepository deckRepo;
+    private final PlayerRepository playerRepo;
     private final WeaponRepository weaponRepo;
     private final NationRepository nationRepo;
     private final VehicleCardRepository vehicleRepo;
@@ -117,6 +121,7 @@ public class DataLoader implements CommandLineRunner {
         loadRepairCards(RepairSupplyKit.values());
         loadSupplyCards(SupplyCrate.values());
         loadSpecialItems(SpecialItem.values());
+        retireCards();
         logger.info("Data loaded successfully");
     }
 
@@ -397,6 +402,25 @@ public class DataLoader implements CommandLineRunner {
                 continue;
             }
             specialItemRepo.save(new SpecialItemCard(item));
+        }
+    }
+
+    /** Cards that were in the card library once and were removed from it. They are deleted unless a saved deck still uses them. */
+    private static final List<String> RETIRED_CARDS = List.of("Cyber Intrusion", "Strategic Disruption");
+
+    private void retireCards() {
+        for (String name : RETIRED_CARDS) {
+            specialItemRepo.findByName(name).ifPresent(card -> {
+                if (deckRepo.countUsingCard(card.getId()) > 0) {
+                    logger.warn("Retired card '{}' is still in a saved deck, so it was kept.", name);
+                    return;
+                }
+                for (var player : playerRepo.findAll()) {
+                    if (player.getFavoriteCardIds().remove(card.getId())) playerRepo.save(player);
+                }
+                specialItemRepo.delete(card);
+                logger.info("Removed retired card: {}", name);
+            });
         }
     }
 

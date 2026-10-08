@@ -49,14 +49,14 @@ public final class MatchDtos {
                              List<Long> discard, List<ResourceView> depot, List<GroupView> groups,
                              int chips, int groupLimit, int designationsLeft, boolean placedStartingTank) {}
 
-    /** {@code jammerCardId} is public: everyone can see a group is jammed (null if it isn't). */
+    /** {@code jammed} is public: everyone can see that a Jammer is running in the group (its carrier is face up). */
     public record GroupView(long id, boolean formed, int convoyMoved, List<VehicleView> vehicles, List<ResourceView> pool,
-                            Long jammerCardId) {}
+                            boolean jammed) {}
 
     /** For a face-down enemy vehicle, everything except {@code id}, {@code faceUp} and {@code smoked} is null. */
     public record VehicleView(long id, boolean faceUp, Long cardId, Integer hp, Integer maxHp, Integer breachStacks,
                               Boolean stunned, Boolean suppressed, Boolean disabled, Boolean abilityUsed,
-                              Long eraCardId, Long camoCardId, boolean smoked) {}
+                              Long eraCardId, Long camoCardId, Long jammerCardId, Boolean jammerOn, boolean smoked) {}
 
     public record ResourceView(long id, long cardId, String kind, String ammunition, int remaining) {}
 }

@@ -16,5 +16,9 @@ public interface DeckRepository extends JpaRepository<Deck, Long> {
 
     long countByPlayerId(Long playerId);
 
+    /** How many saved decks contain this card. */
+    @org.springframework.data.jpa.repository.Query("select count(d) from Deck d join d.cardCounts cc where key(cc) = :cardId")
+    long countUsingCard(@org.springframework.data.repository.query.Param("cardId") Long cardId);
+
     boolean existsByPlayerIdAndNameIgnoreCase(Long playerId, String name);
 }

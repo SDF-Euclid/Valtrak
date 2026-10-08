@@ -30,7 +30,7 @@ public final class ActionMapper {
             case "MOVE" -> new Action.Move(need(r.vehicleId(), "vehicleId"), r.toGroupId());
             case "USE_ABILITY" -> new Action.UseAbility(need(r.vehicleId(), "vehicleId"), needList(r.vehicleIds(), "vehicleIds"));
             case "PLAY_ITEM" -> new Action.PlayItem(need(r.cardId(), "cardId"),
-                    r.vehicleIds() != null ? r.vehicleIds() : r.groupId() != null ? List.of(r.groupId()) : List.of(),   // Jammer and Rapid Deployment name a group
+                    r.vehicleIds() != null ? r.vehicleIds() : r.groupId() != null ? List.of(r.groupId()) : List.of(),   // Rapid Deployment names a group
                     r.cardIds() == null ? List.of() : r.cardIds());
             case "ATTACK" -> new Action.Attack(need(r.groupId(), "groupId"), choices(r.choices()));
             case "END_TURN" -> new Action.EndTurn();

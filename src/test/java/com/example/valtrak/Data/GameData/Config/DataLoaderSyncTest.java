@@ -85,7 +85,7 @@ class DataLoaderSyncTest {
 
     @Test
     void itemCardsAreLoadedAndGiveTheEngineTheRightNumbers() {
-        assertThat(items.count()).isEqualTo(41);
+        assertThat(items.count()).isEqualTo(39);
         var era = (ItemSpec) catalog.find(items.findByName("Advanced ERA Suite").orElseThrow().getId());
         assertThat(era.effect()).isEqualTo(ItemEffect.ERA);
         assertThat(era.power()).isEqualTo(50);
@@ -115,6 +115,32 @@ class DataLoaderSyncTest {
         assertThat(fixed.getPrimaryValue()).isEqualTo(20);
         assertThat(fixed.getSecondaryValue()).isEqualTo(1);
         assertThat(fixed.getLevel()).isEqualTo(CardLevel.COMMON);
+    }
+
+    @Test
+    void everyCardDescriptionFitsInTheDatabaseColumn() {
+        for (var item : com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SpecialItem.values()) {
+            assertThat(item.getItemDescription().length()).as(item.getItemName()).isLessThanOrEqualTo(255);
+        }
+    }
+
+    @Test
+    void sabotageIsASingleCardThatDiscardsUpToThree() {
+        var sabotage = (ItemSpec) catalog.find(items.findByName("Sabotage").orElseThrow().getId());
+        assertThat(sabotage.effect()).isEqualTo(ItemEffect.SABOTAGE);
+        assertThat(sabotage.count()).isEqualTo(3);
+        assertThat(items.findByName("Cyber Intrusion")).isEmpty();
+        assertThat(items.findByName("Strategic Disruption")).isEmpty();
+    }
+
+    @Test
+    void aRetiredCardIsRemovedFromTheDatabaseUnlessADeckStillUsesIt() {
+        var old = new com.example.valtrak.Gameplay.Cards.Special.SpecialItemCard(
+                com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SpecialItem.SABOTAGE_RAID);
+        old.setName("Cyber Intrusion");
+        items.save(old);
+        loader.run();
+        assertThat(items.findByName("Cyber Intrusion")).isEmpty();
     }
 
     @Test

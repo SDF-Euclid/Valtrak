@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.14
+# Valtrak Rulebook: DRAFT v0.15
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -114,9 +114,9 @@ Cards come in the rarities listed; the number is by rarity: **C / U / R / E / L*
 | **Search** | Look through your deck for up to *N* cards of one kind, show them to your opponent, put them in your hand, shuffle. Three kinds: **resources** (Ammo, Fuel, Supply, Repair), **tanks**, **support vehicles** (Specialists, Resupply, Recon and other non-tanks). You may find fewer than *N*. | *N* = **1 / 1 / 2 / 2 / 3** (Common, Rare and Legendary cards exist for each kind) |
 | **Draw** | Draw *N* cards. Condition: your deck must have at least *N* cards. | *N* = **1 / 1 / 2 / 2 / 3** |
 | **Smoke Screen** | Choose up to *N* of your vehicles. Until the start of your next turn they **can't be targeted** by attacks or Artillery (Legendary too), **and they can't attack** while they are in the smoke. (Without that cost you could smoke up and then shoot.) Reveals still work on them. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
-| **Jammer** (attached to a strike group) | Enemy **reveal abilities can't target any vehicle in this group**. **Upkeep:** at the start of each of your turns, spend Fuel from the group's pool, or the Jammer is discarded. One Jammer per group; it is visible to your opponent. *Why the upkeep:* a Jammer on every group would otherwise let you stall for ever. It costs Fuel you need for attacking and retreating, and the Fuel sits in a pool that can be destroyed. | upkeep **[2 / 2 / 1 / 1 / 1]** Fuel (cards exist at C and R) |
+| **Jammer** (attached to a vehicle) | **It runs while its vehicle is face up.** A running Jammer stops enemy **reveal abilities from targeting any vehicle in that vehicle's strike group**. Reveal the vehicle (free) to switch it on; retreat it (face down) to switch it off. **Upkeep:** at the start of each of your turns, a running Jammer spends Fuel from the group's pool; if the pool can't pay, the Jammer simply stays off that turn (it is **not** discarded). Because the carrier must be face up, **it can be attacked**; if it is destroyed, the Jammer goes to the discard pile. Hidden carriers don't pay anything. One Jammer per vehicle (a new one replaces the old). Everyone can see that a group is jammed. *Why it can't be used to stall:* the jam only works while a vehicle is exposed, and it costs Fuel. | upkeep **[2 / 2 / 1 / 1 / 1]** Fuel (cards exist at C and R) |
 | **Camouflage** (attached to a vehicle) | Retreating this vehicle costs less Fuel (never below 0). If it is a group's Leader, a group retreat costs less too. It goes to the discard pile if the vehicle is destroyed and returns to your hand with it, like ERA. | **[1 / 1 / 2 / 2 / 3]** less Fuel (cards exist at C, R, L) |
-| **Sabotage** (**1 per turn**) | Your opponent discards *N* cards from their hand, **chosen at random**. (They go to the public discard pile, so you see what they were.) Condition: your opponent has a card in hand. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
+| **Sabotage** (**1 per turn**) | Your opponent discards **up to 3** cards from their hand, **chosen at random** (fewer if they hold fewer). They go to the public discard pile, so you see what they were. Condition: your opponent has a card in hand. | one card (Rare) |
 | **Recycle** | Return up to *N* resource cards from your discard pile to your hand. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
 | **Rapid Deployment** | Deploy up to *N* vehicles from your hand into one of your strike groups **without paying the formation cost** (slot rules still apply). | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
 
@@ -158,9 +158,8 @@ Cards come in the rarities listed; the number is by rarity: **C / U / R / E / L*
 ## Open questions
 1. **Stalling:** UAV and Recon cards make players fight, but a deck without them can still stall. Do you want a backstop (a minimum number
    of reveal cards per deck, or a deck-out tiebreak)? Legendary Artillery now also hits face-down vehicles, which helps.
-2. **Jammer upkeep** is my answer to your stall worry. Other options: the Jammer's group can't attack, or its carrier must stay face up. Which do you prefer?
-3. Convoy capacity, Resupply vehicles, air units.
-4. All bracketed numbers: need playtesting.
+2. Convoy capacity, Resupply vehicles, air units.
+3. All bracketed numbers: need playtesting.
 
 ## Planned cards (wish list)
 - Capture/seize cards, field-condition cards. (Hand disruption and Recycle are in the item card ideas above.)

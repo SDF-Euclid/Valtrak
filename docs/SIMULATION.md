@@ -105,7 +105,7 @@ The bots play Draw and Search whenever the deck is over 12 cards, ERA on their b
 With 3 chips and damage x4 now the defaults, and one copy of each of the 41 item cards (41% of a 100-card deck), aggressive bots: a game takes
 about 31 turns (15.5 per player), 100% decided by chips, versus 36 turns with no items. Bots attack less often (5 vs 13 per game) because Artillery
 does much of the killing and the items take the place of Ammo. The bots use Draw, Search, ERA, Artillery, Sabotage, Recycle and Rapid Deployment;
-they don't use Smoke Screen, Jammer or Camouflage yet, so those are untested in bot games (they are covered by unit tests).
+they don't use Smoke Screen, Jammer or Camouflage yet (the Jammer now only works while its carrier is face up, so it is attackable), so those are untested in bot games (they are covered by unit tests).
 `SimulationMain` now takes its defaults from `GameRules`.
 
 ## Things worth deciding

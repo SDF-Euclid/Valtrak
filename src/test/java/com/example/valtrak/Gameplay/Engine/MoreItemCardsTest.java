@@ -98,53 +98,118 @@ class MoreItemCardsTest {
 
     // ── jammer ───────────────────────────────────────────────────────────────
 
-    @Test
-    void aJammedGroupCannotBeRevealedByAnAbility() {
+    /** An enemy group of a hidden Leader, a hidden Line vehicle and a face-up Line vehicle carrying a Jammer. */
+    private Vehicle jammedEnemyCarrier() {
         enemy.leader().faceUp = false;
-        Vehicle line = w.add(enemy, ANTI_AIR, false);
+        Vehicle carrier = w.add(enemy, ANTI_AIR, true);
         w.hand(1, JAMMER_2);
         w.s.activePlayer = 1;
-        w.act(1, onGroup(JAMMER_2, enemy));
-        assertThat(enemy.jammerCardId).isEqualTo(JAMMER_2);
+        w.act(1, on(JAMMER_2, carrier));
         w.act(1, new EndTurn());
+        return carrier;
+    }
+
+    @Test
+    void aRunningJammerStopsAbilitiesFromRevealingItsGroup() {
+        Vehicle carrier = jammedEnemyCarrier();
+        assertThat(carrier.jammerOn).as("a Jammer on a face-up vehicle runs right away").isTrue();
+        assertThat(enemy.jammed()).isTrue();
 
         Vehicle uav = w.add(mine, UAV, true);
         w.pool(mine, FUEL_5);
-        assertThatThrownBy(() -> w.act(0, new UseAbility(uav.id, List.of(line.id))))
+        assertThatThrownBy(() -> w.act(0, new UseAbility(uav.id, List.of(enemy.leader().id))))
                 .isInstanceOf(RuleViolationException.class).hasMessageContaining("jammed");
-        assertThat(line.faceUp).isFalse();
+        assertThat(enemy.leader().faceUp).isFalse();
         assertThat(w.fuelIn(mine)).isEqualTo(5);
     }
 
     @Test
-    void theJammerCostsFuelEveryTurnAndFallsOffWhenItCannotBePaid() {
+    void theJammerCarrierIsFaceUpSoItCanBeAttackedAndItsJammerGoesWhenItDies() {
+        Vehicle carrier = jammedEnemyCarrier();
+        carrier.hp = 1;
+        w.pool(mine, NATO_10);
+        w.act(0, skirmish(mine, mine.leader(), ATTACK_1, null, carrier));
+        assertThat(enemy.vehicles).doesNotContain(carrier);
+        assertThat(w.p(1).discard).contains(ANTI_AIR, JAMMER_2);
+        assertThat(enemy.jammed()).isFalse();
+    }
+
+    @Test
+    void flippingTheCarrierFaceDownSwitchesTheJammerOffAndFlippingItUpSwitchesItOn() {
+        Vehicle carrier = jammedEnemyCarrier();
+        w.act(0, new EndTurn());                                      // player 1's turn
         w.pool(enemy, FUEL_5);
-        enemy.jammerCardId = JAMMER_2;                               // upkeep 2
+        w.act(1, new Retreat(carrier.id));
+        assertThat(carrier.faceUp).isFalse();
+        assertThat(carrier.jammerOn).isFalse();
+        assertThat(enemy.jammed()).isFalse();
+
+        w.act(1, new Reveal(List.of(carrier.id)));
+        assertThat(carrier.jammerOn).isTrue();
+        assertThat(enemy.jammed()).isTrue();
+    }
+
+    @Test
+    void whenTheJammerIsOffTheGroupCanBeRevealedAgain() {
+        Vehicle carrier = jammedEnemyCarrier();
+        carrier.faceUp = false;
+        carrier.jammerOn = false;
+        Vehicle uav = w.add(mine, UAV, true);
+        w.pool(mine, FUEL_5);
+        w.act(0, new UseAbility(uav.id, List.of(enemy.leader().id, carrier.id)));
+        assertThat(enemy.leader().faceUp).isTrue();
+        assertThat(carrier.jammerOn).as("being revealed by the enemy does not switch it on").isFalse();
+    }
+
+    @Test
+    void aRunningJammerCostsFuelEveryTurnAndStaysOffInsteadOfBeingDiscardedWhenItCannotBePaid() {
+        Vehicle carrier = jammedEnemyCarrier();
+        for (int i = 0; i < 6; i++) { w.p(0).deck.add(TANK_COMMON); w.p(1).deck.add(TANK_COMMON); }   // enough cards to keep drawing
+        w.pool(enemy, FUEL_5);                                        // upkeep 2
         w.act(0, new EndTurn());                                      // player 1's turn starts: pays 2
         assertThat(w.fuelIn(enemy)).isEqualTo(3);
         w.act(1, new EndTurn());
         w.act(0, new EndTurn());                                      // pays 2 more
         assertThat(w.fuelIn(enemy)).isEqualTo(1);
-        assertThat(enemy.jammerCardId).isEqualTo(JAMMER_2);
+        assertThat(carrier.jammerOn).isTrue();
         w.act(1, new EndTurn());
-        ActionResult r = w.act(0, new EndTurn());                     // only 1 left: can't pay 2
-        assertThat(enemy.jammerCardId).isZero();
-        assertThat(w.p(1).discard).contains(JAMMER_2);
+        ActionResult r = w.act(0, new EndTurn());                     // 1 Fuel left: can't pay 2
+        assertThat(carrier.jammerOn).isFalse();
+        assertThat(carrier.jammerCardId).as("it is not discarded").isEqualTo(JAMMER_2);
+        assertThat(enemy.jammed()).isFalse();
         assertThat(r.log).anyMatch(l -> l.contains("powers down"));
+
+        w.pool(enemy, FUEL_5);                                        // fuel arrives: it comes back on next turn
+        w.act(1, new EndTurn());
+        w.act(0, new EndTurn());
+        assertThat(carrier.jammerOn).isTrue();
+        assertThat(w.fuelIn(enemy)).isEqualTo(4);
     }
 
     @Test
-    void aNewJammerReplacesTheOldAndAJammerGoesWhenItsGroupIsDestroyed() {
-        w.hand(0, JAMMER_2, JAMMER_1, ARTILLERY_1);
-        w.act(0, onGroup(JAMMER_2, mine));
-        w.act(0, onGroup(JAMMER_1, mine));
-        assertThat(mine.jammerCardId).isEqualTo(JAMMER_1);
+    void aFaceDownCarrierPaysNothing() {
+        Vehicle carrier = w.add(mine, ANTI_AIR, false);
+        carrier.jammerCardId = JAMMER_2;
+        w.pool(mine, FUEL_5);
+        w.act(0, new EndTurn());
+        w.act(1, new EndTurn());
+        assertThat(w.fuelIn(mine)).isEqualTo(5);
+        assertThat(carrier.jammerOn).isFalse();
+    }
+
+    @Test
+    void aNewJammerReplacesTheOldAndJammersGoWithTheirVehicle() {
+        Vehicle line = w.add(mine, ANTI_AIR, true);
+        w.hand(0, JAMMER_2, JAMMER_1);
+        w.act(0, on(JAMMER_2, line));
+        w.act(0, on(JAMMER_1, line));
+        assertThat(line.jammerCardId).isEqualTo(JAMMER_1);
         assertThat(w.p(0).discard).containsExactly(JAMMER_2);
 
-        mine.leader().hp = 1;
+        line.hp = 1;
         w.hand(1, ARTILLERY_1);
         w.s.activePlayer = 1;
-        w.act(1, new PlayItem(ARTILLERY_1, List.of(mine.leader().id), List.of()));
+        w.act(1, new PlayItem(ARTILLERY_1, List.of(line.id), List.of()));
         assertThat(w.p(0).discard).contains(JAMMER_1);
     }
 
@@ -226,6 +291,15 @@ class MoreItemCardsTest {
         w.hand(1, FUEL_5);
         assertThatThrownBy(() -> w.act(0, new PlayItem(SABOTAGE_1, List.of(), List.of())))
                 .isInstanceOf(RuleViolationException.class).hasMessageContaining("per turn");
+    }
+
+    @Test
+    void sabotageDiscardsUpToThreeAtRandom() {
+        w.hand(1, TANK_RARE, FUEL_5, SUPPLY_1, HEAT_5, NATO_10);
+        w.hand(0, SABOTAGE_3);
+        w.act(0, new PlayItem(SABOTAGE_3, List.of(), List.of()));
+        assertThat(w.p(1).hand).hasSize(2);
+        assertThat(w.p(1).discard).hasSize(3);
     }
 
     @Test

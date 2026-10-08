@@ -12,7 +12,7 @@ public enum ItemEffect {
     DRAW,
     /** Chosen vehicles can't be targeted (and can't attack) until the start of your next turn. */
     SMOKE,
-    /** Attach to a strike group: enemy reveal abilities can't target it, and it costs Fuel each turn. */
+    /** Attach to a vehicle: while it is face up and the Jammer is running, enemy reveal abilities can't target its group. */
     JAMMER,
     /** Attach to a vehicle: retreating it costs less Fuel. */
     CAMO,

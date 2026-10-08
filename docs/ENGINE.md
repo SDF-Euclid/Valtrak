@@ -38,8 +38,10 @@ validates and returns what to do), then pays the optional Supply cost (`GameRule
 - **Draw** is refused if the deck has fewer than `count` cards.
 - **Per-turn limits:** `GameRules.itemLimitPerTurn` (Artillery 1, Sabotage 1); uses are counted in `PlayerState.itemUses` and cleared when the turn starts.
 - **Smoke** sets `Vehicle.smoked` (can't be targeted by attacks or Artillery, and can't attack); it is cleared when its owner's next turn starts.
-- **Jammer** sets `StrikeGroup.jammerCardId`: `UseAbility` can't target vehicles in that group. At the start of its owner's turn the group's pool pays the
-  upkeep Fuel, or the Jammer is discarded (also discarded with its group).
+- **Jammer** sets `Vehicle.jammerCardId`; it runs (`jammerOn`) while its vehicle is face up, and `StrikeGroup.jammed()` is true while any carrier in the group
+  runs. `UseAbility` can't target vehicles in a jammed group. Revealing the carrier yourself switches it on, retreating switches it off, and an enemy's reveal
+  doesn't. At the start of its owner's turn a face-up carrier pays the upkeep Fuel from its group's pool, or the Jammer stays off that turn (it is not
+  discarded). It goes to the discard pile with its vehicle.
 - **Camouflage** sets `Vehicle.camoCardId`: `retreatCost` takes its `power` off the retreat Fuel (a Leader's Camouflage also makes a group retreat cheaper).
 - **Sabotage** and the Search shuffle use `GameState.rngSeed`. **Recycle** and **Rapid Deployment** check their picks against the discard pile / hand;
   Rapid Deployment tries the slot rules on a copy of the group, one vehicle at a time.

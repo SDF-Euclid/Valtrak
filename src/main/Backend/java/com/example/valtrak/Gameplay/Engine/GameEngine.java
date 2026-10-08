@@ -280,7 +280,7 @@ public final class GameEngine {
             if (v.faceUp) throw violation("That vehicle is already face up.");
             if (!toFlip.contains(v)) toFlip.add(v);
         }
-        toFlip.forEach(v -> v.faceUp = true);
+        toFlip.forEach(v -> flipUp(v));
         r.say("Player " + (me.index + 1) + " reveals " + toFlip.size() + " vehicle(s).");
     }
 
@@ -289,7 +289,7 @@ public final class GameEngine {
         List<Vehicle> toFlip = g.vehicles.stream()
                 .filter(v -> !v.faceUp && !catalog.vehicle(v.cardId).isResupply()).toList();
         if (toFlip.isEmpty()) throw violation("Everything in that group is already face up.");
-        toFlip.forEach(v -> v.faceUp = true);
+        toFlip.forEach(v -> flipUp(v));
         r.say("Player " + (me.index + 1) + " reveals a strike group.");
     }
 
@@ -300,6 +300,7 @@ public final class GameEngine {
         requireFuel(loc.group, cost);
         spend(me, loc.group.pool, ResourceKind.FUEL, null, cost);
         loc.vehicle.faceUp = false;
+        loc.vehicle.jammerOn = false;
         r.say("A vehicle retreats face down (" + cost + " Fuel).");
     }
 
@@ -309,7 +310,7 @@ public final class GameEngine {
         int cost = retreatCost(g.leader()) * rules.groupRetreatMultiplier;
         requireFuel(g, cost);
         spend(me, g.pool, ResourceKind.FUEL, null, cost);
-        g.vehicles.forEach(v -> v.faceUp = false);
+        g.vehicles.forEach(v -> { v.faceUp = false; v.jammerOn = false; });
         r.say("A strike group retreats face down (" + cost + " Fuel).");
     }
 
@@ -368,7 +369,7 @@ public final class GameEngine {
                     .orElseThrow(() -> violation("Enemy vehicle " + id + " was not found."));
             Vehicle t = enemy.vehicle;
             if (t.faceUp) throw violation("Enemy vehicle " + id + " is already face up.");
-            if (enemy.group.jammerCardId != 0) throw violation("Enemy vehicle " + id + " is in a jammed strike group.");
+            if (enemy.group.jammed()) throw violation("Enemy vehicle " + id + " is in a jammed strike group.");
             targets.add(t);
         }
         requireFuel(loc.group, ability.fuelCost());
@@ -444,13 +445,20 @@ public final class GameEngine {
     }
 
     private Runnable prepareJammer(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
-        if (targets.size() != 1) throw violation(spec.name() + " attaches to exactly one of your strike groups.");
-        StrikeGroup g = group(me, targets.get(0));
+        if (targets.size() != 1) throw violation(spec.name() + " attaches to exactly one of your vehicles.");
+        Vehicle v = findVehicle(me, targets.get(0)).vehicle;
         return () -> {
-            if (g.jammerCardId != 0) me.discard.add(g.jammerCardId);
-            g.jammerCardId = spec.cardId();
-            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " on a strike group (upkeep " + spec.power() + " Fuel).");
+            if (v.jammerCardId != 0) me.discard.add(v.jammerCardId);
+            v.jammerCardId = spec.cardId();
+            v.jammerOn = v.faceUp;                       // it runs while its vehicle is face up
+            r.say("Player " + (me.index + 1) + " plays " + spec.name() + " (upkeep " + spec.power() + " Fuel while it runs).");
         };
+    }
+
+    /** Turns a vehicle face up on its owner's say-so; a Jammer it carries starts running. */
+    private static void flipUp(Vehicle v) {
+        v.faceUp = true;
+        if (v.jammerCardId != 0) v.jammerOn = true;
     }
 
     private Runnable prepareCamo(PlayerState me, ItemSpec spec, List<Long> targets, ActionResult r) {
@@ -615,6 +623,7 @@ public final class GameEngine {
     private static void discardAttachments(PlayerState owner, Vehicle v) {
         if (v.eraCardId != 0) owner.discard.add(v.eraCardId);
         if (v.camoCardId != 0) owner.discard.add(v.camoCardId);
+        if (v.jammerCardId != 0) owner.discard.add(v.jammerCardId);
     }
 
     private Random nextRandom(GameState s) {
@@ -756,7 +765,6 @@ public final class GameEngine {
 
         owner.discard.add(target.cardId);
         discardAttachments(owner, target);
-        if (g.jammerCardId != 0) owner.discard.add(g.jammerCardId);
         owner.groups.remove(g);
         for (Vehicle survivor : g.vehicles) {
             if (survivor == target) continue;
@@ -769,6 +777,7 @@ public final class GameEngine {
                 owner.hand.add(survivor.cardId);
                 if (survivor.eraCardId != 0) owner.hand.add(survivor.eraCardId);
                 if (survivor.camoCardId != 0) owner.hand.add(survivor.camoCardId);
+                if (survivor.jammerCardId != 0) owner.hand.add(survivor.jammerCardId);
             }
         }
         if (attacker.chips >= rules.winChips) {
@@ -813,14 +822,15 @@ public final class GameEngine {
                 v.abilityUsed = false;
                 v.smoked = false;                       // a Smoke Screen lasts until its owner's next turn starts
             });
-            if (g.jammerCardId != 0) {                  // the Jammer's upkeep, paid from the group's pool
-                int upkeep = catalog.item(g.jammerCardId).power();
-                if (available(g.pool, ResourceKind.FUEL, null) >= upkeep) {
+            for (Vehicle v : g.vehicles) {              // a face-up Jammer carrier pays its upkeep from the group's pool, or the Jammer stays off
+                if (v.jammerCardId == 0) continue;
+                int upkeep = catalog.item(v.jammerCardId).power();
+                if (v.faceUp && available(g.pool, ResourceKind.FUEL, null) >= upkeep) {
                     spend(p, g.pool, ResourceKind.FUEL, null, upkeep);
+                    v.jammerOn = true;
                 } else {
-                    p.discard.add(g.jammerCardId);
-                    g.jammerCardId = 0;
-                    r.say("A Jammer powers down: its group couldn't pay the upkeep.");
+                    if (v.jammerOn) r.say("A Jammer powers down" + (v.faceUp ? ": its group couldn't pay the upkeep." : "."));
+                    v.jammerOn = false;
                 }
             }
         }
@@ -933,8 +943,7 @@ public final class GameEngine {
                 }
                 c.add(new PlayItem(id, List.of(), found));
             }
-            case ERA, CAMO, SMOKE -> me.groups.forEach(g -> g.vehicles.forEach(v -> c.add(new PlayItem(id, List.of(v.id), List.of()))));
-            case JAMMER -> me.groups.forEach(g -> c.add(new PlayItem(id, List.of(g.id), List.of())));
+            case ERA, CAMO, SMOKE, JAMMER -> me.groups.forEach(g -> g.vehicles.forEach(v -> c.add(new PlayItem(id, List.of(v.id), List.of()))));
             case SABOTAGE -> c.add(new PlayItem(id, List.of(), List.of()));
             case RECYCLE -> c.add(new PlayItem(id, List.of(), me.discard.stream().filter(x -> catalog.find(x) instanceof ResourceSpec)
                     .limit(item.count()).toList()));

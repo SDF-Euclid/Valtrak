@@ -12,13 +12,16 @@ public class StrikeGroup {
     public boolean formed;
     /** Resource cards the convoy has moved into the pool this turn. */
     public int convoyMoved;
-    /** Card id of the Jammer attached to this group, or 0 for none. */
-    public long jammerCardId;
 
     public StrikeGroup() {}
 
     public StrikeGroup(long id) {
         this.id = id;
+    }
+
+    /** True while a Jammer in this group is running: enemy reveal abilities can't target its vehicles. */
+    public boolean jammed() {
+        return vehicles.stream().anyMatch(v -> v.jammerOn && v.faceUp);
     }
 
     public Vehicle leader() {
@@ -31,7 +34,6 @@ public class StrikeGroup {
         pool.forEach(r -> g.pool.add(r.copy()));
         g.formed = formed;
         g.convoyMoved = convoyMoved;
-        g.jammerCardId = jammerCardId;
         return g;
     }
 }

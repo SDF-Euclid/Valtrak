@@ -44,7 +44,7 @@ public final class GameViewBuilder {
         return new GroupView(g.id, g.formed, isViewer ? g.convoyMoved : 0,
                 (isViewer ? g.vehicles : hideOrder(g.vehicles)).stream().map(v -> vehicle(v, isViewer)).toList(),
                 g.pool.stream().map(GameViewBuilder::resource).toList(),
-                g.jammerCardId == 0 ? null : g.jammerCardId);
+                g.jammed());
     }
 
     /**
@@ -61,10 +61,11 @@ public final class GameViewBuilder {
     /** Your own vehicles are shown in full. An enemy vehicle is only shown in full while it is face up. */
     private static VehicleView vehicle(Vehicle v, boolean isViewer) {
         if (!isViewer && !v.faceUp) {
-            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null, null, null, v.smoked);
+            return new VehicleView(v.id, false, null, null, null, null, null, null, null, null, null, null, null, null, v.smoked);
         }
         return new VehicleView(v.id, v.faceUp, v.cardId, v.hp, v.maxHp, v.breachStacks, v.stunned, v.suppressed, v.disabled, v.abilityUsed,
-                v.eraCardId == 0 ? null : v.eraCardId, v.camoCardId == 0 ? null : v.camoCardId, v.smoked);
+                v.eraCardId == 0 ? null : v.eraCardId, v.camoCardId == 0 ? null : v.camoCardId,
+                v.jammerCardId == 0 ? null : v.jammerCardId, v.jammerCardId == 0 ? null : v.jammerOn, v.smoked);
     }
 
     private static ResourceView resource(ResourceStack r) {

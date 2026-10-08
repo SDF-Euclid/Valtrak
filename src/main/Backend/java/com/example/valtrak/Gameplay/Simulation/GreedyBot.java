@@ -244,7 +244,7 @@ public final class GreedyBot implements Bot {
         List<Vehicle> hiddenLeaders = new ArrayList<>();
         List<Vehicle> hiddenOthers = new ArrayList<>();
         for (StrikeGroup g : opp.groups) {
-            if (g.jammerCardId != 0) continue;                  // a jammed group can't be revealed
+            if (g.jammed()) continue;                           // a jammed group can't be revealed
             for (Vehicle v : g.vehicles) {
                 if (v.faceUp) continue;
                 if (v == g.leader()) hiddenLeaders.add(v); else hiddenOthers.add(v);

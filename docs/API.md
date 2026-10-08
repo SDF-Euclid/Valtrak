@@ -15,7 +15,7 @@ Errors come back as plain text with an HTTP status (400 = the move or request is
 ## Playing
 | Call | What it does |
 |---|---|
-| `GET /matches/{id}` | The game as **you** may see it (`GameView`): your hand, but only the size of theirs; face-down enemy vehicles show no identity, and an opponent's group lists its face-up vehicles first, then the face-down ones in a scrambled order (so the Leader can't be picked out). Each vehicle has `eraCardId` and `camoCardId` (hidden on face-down enemies) and `smoked` (public); each group has `jammerCardId` (public). Poll it and compare `version`. |
+| `GET /matches/{id}` | The game as **you** may see it (`GameView`): your hand, but only the size of theirs; face-down enemy vehicles show no identity, and an opponent's group lists its face-up vehicles first, then the face-down ones in a scrambled order (so the Leader can't be picked out). Each vehicle has `eraCardId` and `camoCardId` (hidden on face-down enemies) and `smoked` (public); each vehicle has `jammerCardId` / `jammerOn` (hidden on face-down enemies), and each group has `jammed` (public). Poll it and compare `version`. |
 | `POST /matches/{id}/actions` `ActionRequest` | Make a move. Returns the new `GameView` and the log lines it produced. |
 | `POST /matches/{id}/resign` | Give up (any time, even out of turn). |
 | `GET /matches/{id}/log?after=N` | Game log lines after sequence number N. |
@@ -38,7 +38,7 @@ Matches you are not in look exactly like matches that don't exist (404).
 | `RETREAT_GROUP` | `groupId` |
 | `MOVE` | `vehicleId`, `toGroupId` (omit = out to a new group, tanks only) |
 | `USE_ABILITY` | `vehicleId` (the UAV/Recon vehicle), `vehicleIds` (the face-down enemy vehicles to reveal) |
-| `PLAY_ITEM` | `cardId` (the item card in your hand). ERA: `vehicleIds` = one of your vehicles. Artillery: `vehicleIds` = the enemy vehicles to hit (face-up ones; Legendary may also pick face-down ones). Search: `cardIds` = the cards to take from your deck (up to the card's limit, may be empty). Draw, Sabotage: nothing else. Smoke Screen: `vehicleIds` = your vehicles. Camouflage: `vehicleIds` = one of your vehicles. Jammer: `groupId` = one of your strike groups. Recycle: `cardIds` = resource cards in your discard pile. Rapid Deployment: `groupId` = your strike group, `cardIds` = vehicle cards in your hand |
+| `PLAY_ITEM` | `cardId` (the item card in your hand). ERA: `vehicleIds` = one of your vehicles. Artillery: `vehicleIds` = the enemy vehicles to hit (face-up ones; Legendary may also pick face-down ones). Search: `cardIds` = the cards to take from your deck (up to the card's limit, may be empty). Draw, Sabotage: nothing else. Smoke Screen: `vehicleIds` = your vehicles. Camouflage: `vehicleIds` = one of your vehicles. Jammer: `vehicleIds` = one of your vehicles. Recycle: `cardIds` = resource cards in your discard pile. Rapid Deployment: `groupId` = your strike group, `cardIds` = vehicle cards in your hand |
 | `ATTACK` | `groupId`, `choices`: `[{vehicleId, slot, ammo, targetVehicleId}]` (one choice = Skirmish, two or more = Combined Assault) |
 | `END_TURN` | |
 
