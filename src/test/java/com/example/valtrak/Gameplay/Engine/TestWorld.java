@@ -54,7 +54,7 @@ public final class TestWorld {
         c.add(new VehicleSpec(SPECIALIST, "Specialist", CardLevel.UNCOMMON, VehicleClass.SPECIALIST, 60, 20, List.of()));
         c.add(new VehicleSpec(RESUPPLY, "Resupply", CardLevel.RARE, VehicleClass.SUPPLY, 90, 30, List.of()));
         c.add(new VehicleSpec(UAV, "UAV Team", CardLevel.RARE, VehicleClass.SPECIALIST, 40, 10, List.of(),
-                new AbilitySpec(AbilityType.REVEAL_ENEMY, 2, 1)));
+                new AbilitySpec(AbilityType.REVEAL_ENEMY, 2, 1), true));
         c.add(new VehicleSpec(SCOUT, "Scout", CardLevel.COMMON, VehicleClass.RECON, 70, 25, List.of(
                 new AttackSpec(AttackSlot.ATTACK_1, "MG", Weapon.BROWNING_50CAL, 12, 1, 0, SpecialEffect.NONE)),
                 new AbilitySpec(AbilityType.REVEAL_ENEMY, 1, 1)));

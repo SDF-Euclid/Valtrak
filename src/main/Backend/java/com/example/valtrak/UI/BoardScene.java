@@ -453,8 +453,9 @@ public class BoardScene {
             case "ARTILLERY_STRIKE" -> {
                 boolean blind = "LEGENDARY".equals(c.level()) || "COMMANDER".equals(c.level());
                 menu.getItems().add(item("Fire at up to " + second + " enemy vehicle(s)...", () ->
-                        startPicking("Choose up to " + second + " enemy vehicles" + (blind ? " (this card can hit face-down ones too)" : " (face-up only)"),
-                                second, false, t -> !t.mine && !t.isGroup && (blind || t.vehicle.faceUp()),
+                        startPicking("Choose up to " + second + " enemy vehicles" + (blind ? " (this card can hit face-down ones too)" : " (face-up only)")
+                                        + ". Aircraft can't be hit.",
+                                second, false, t -> !t.mine && !t.isGroup && (t.vehicle.faceUp() ? !(t.card != null && Boolean.TRUE.equals(t.card.air())) : blind),
                                 ids -> send(Moves.playItem(c.id(), ids, null, List.of())))));
             }
             case "JAMMER" -> menu.getItems().add(item("Attach to one of my strike groups...", () ->

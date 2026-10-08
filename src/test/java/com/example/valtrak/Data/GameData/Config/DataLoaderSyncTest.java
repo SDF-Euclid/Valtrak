@@ -92,7 +92,7 @@ class DataLoaderSyncTest {
         assertThat(era.level()).isEqualTo(CardLevel.LEGENDARY);
         var artillery = (ItemSpec) catalog.find(items.findByName("Strategic Bombardment").orElseThrow().getId());
         assertThat(artillery.effect()).isEqualTo(ItemEffect.ARTILLERY);
-        assertThat(artillery.power()).isEqualTo(40);
+        assertThat(artillery.power()).isEqualTo(36);
         assertThat(artillery.count()).isEqualTo(3);
         var search = (ItemSpec) catalog.find(items.findByName("Armored Reinforcements").orElseThrow().getId());
         assertThat(search.effect()).isEqualTo(ItemEffect.SEARCH);
@@ -112,7 +112,7 @@ class DataLoaderSyncTest {
         items.save(card);
         loader.run();
         var fixed = items.findByName("Mortar Strike").orElseThrow();
-        assertThat(fixed.getPrimaryValue()).isEqualTo(20);
+        assertThat(fixed.getPrimaryValue()).isEqualTo(10);
         assertThat(fixed.getSecondaryValue()).isEqualTo(1);
         assertThat(fixed.getLevel()).isEqualTo(CardLevel.COMMON);
     }

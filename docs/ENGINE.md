@@ -33,7 +33,7 @@ validates and returns what to do), then pays the optional Supply cost (`GameRule
 - **ERA** reduces damage from CHEMICAL ammo by `power` percent (minimum 1). It goes to the discard pile when the vehicle is destroyed and to the
   hand with a non-tank survivor of a destroyed group.
 - **Artillery** is worked out like a shell of type `GameRules.artilleryDamageType` (EXPLOSIVE, caliber `artilleryCaliber` 100) against the target's armor, so armor, the
-  damage-type table, overpressure and the automatic STUN apply; set the type to null for plain true damage. It is scaled by `damagePercent`. Cards at or above `GameRules.artilleryBlindFrom` (Legendary) can also pick face-down
+  damage-type table, overpressure and the automatic STUN apply; set the type to null for plain true damage. It is scaled by `damagePercent`. `VehicleSpec.air` (from the card's vehicle type AIR: the UAV teams) can't be hit: a face-up aircraft is refused, and a hidden one picked by a Legendary card is skipped with "finds nothing" (nothing is revealed). `ArtilleryBalanceTest` checks the one-shot design goal against the real cards. Cards at or above `GameRules.artilleryBlindFrom` (Legendary) can also pick face-down
   vehicles, which are turned face up. A target that has left the field, or gone face down, since an earlier hit in the same play is skipped.
 - **Search** shuffles with `GameState.rngSeed` (a seed stored in the state and never sent to players), so a saved game replays the same way.
 - **Draw** is refused if the deck has fewer than `count` cards.

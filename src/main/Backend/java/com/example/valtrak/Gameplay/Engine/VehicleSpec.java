@@ -8,12 +8,18 @@ import java.util.List;
 import java.util.Optional;
 
 public record VehicleSpec(long cardId, String name, CardLevel level, VehicleClass vehicleClass,
-                          int hp, int armor, List<AttackSpec> attacks, AbilitySpec ability) implements CardSpec {
+                          int hp, int armor, List<AttackSpec> attacks, AbilitySpec ability, boolean air) implements CardSpec {
+
+    /** A ground vehicle with an ability (or none). */
+    public VehicleSpec(long cardId, String name, CardLevel level, VehicleClass vehicleClass,
+                       int hp, int armor, List<AttackSpec> attacks, AbilitySpec ability) {
+        this(cardId, name, level, vehicleClass, hp, armor, attacks, ability, false);
+    }
 
     /** A vehicle without an ability. */
     public VehicleSpec(long cardId, String name, CardLevel level, VehicleClass vehicleClass,
                        int hp, int armor, List<AttackSpec> attacks) {
-        this(cardId, name, level, vehicleClass, hp, armor, attacks, null);
+        this(cardId, name, level, vehicleClass, hp, armor, attacks, null, false);
     }
 
 

@@ -104,7 +104,7 @@ class NoForcesAndArtilleryTypeTest {
     void explosiveArtilleryDoesFullDamageToSoftVehiclesAndLittleToMainBattleTanks() {
         TestWorld t = explosive();
         StrikeGroup g = t.group(1, TANK_RARE_MBT, true);                  // armor 85
-        Vehicle soft = t.add(g, UAV, true);                               // armor 10
+        Vehicle soft = t.add(g, RECON, true);                             // armor 25
         Vehicle mbt = g.leader();
         assertThat(hitWith(t, ARTILLERY_BLIND, soft)).as("soft targets take the full 40").isEqualTo(40);
         t.act(0, new EndTurn());
@@ -119,6 +119,29 @@ class NoForcesAndArtilleryTypeTest {
         int dealt = hitWith(t, ARTILLERY_1, medium);                      // 20 base x 1.4 = 28, minus 11 for armor 70
         assertThat(dealt).isEqualTo(17);
         assertThat(medium.stunned).isTrue();
+    }
+
+    @Test
+    void artilleryCannotHitAFaceUpAircraftAndWastesItselfOnAHiddenOne() {
+        TestWorld t = explosive();
+        StrikeGroup g = t.group(1, TANK_COMMON, false);
+        Vehicle uav = t.add(g, UAV, true);
+        t.hand(0, ARTILLERY_1);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> t.act(0, new PlayItem(ARTILLERY_1, List.of(uav.id), List.of())))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("aircraft");
+        assertThat(uav.hp).isEqualTo(uav.maxHp);
+        assertThat(t.p(0).hand).containsExactly(ARTILLERY_1);
+
+        // a Legendary shell aimed at a hidden aircraft finds nothing: no damage, and the aircraft stays hidden
+        uav.faceUp = false;
+        Vehicle ground = t.add(g, ANTI_AIR, false);
+        t.hand(0, ARTILLERY_BLIND);
+        ActionResult r = t.act(0, new PlayItem(ARTILLERY_BLIND, List.of(uav.id, ground.id), List.of()));
+        assertThat(uav.hp).isEqualTo(uav.maxHp);
+        assertThat(uav.faceUp).isFalse();
+        assertThat(ground.hp).isLessThan(ground.maxHp);
+        assertThat(ground.faceUp).isTrue();
+        assertThat(r.log).anyMatch(l -> l.contains("finds nothing"));
     }
 
     @Test

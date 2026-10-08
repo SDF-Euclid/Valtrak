@@ -7,6 +7,7 @@ import java.util.List;
  * Fields that don't apply to a card's category are null.
  *
  * @param category VEHICLE, AMMUNITION, FUEL, SUPPLY, REPAIR, ITEM (ERA, Artillery, Search, Draw) or OTHER
+ * @param air      true for aircraft (UAV teams): Artillery can't hit them
  * @param ability  a short description of the vehicle's ability or the item's effect, or null
  */
 public record CardDto(
@@ -29,7 +30,8 @@ public record CardDto(
         Integer abilityPower,
         Integer abilityFuelCost,
         Integer effectPrimary,
-        Integer effectSecondary
+        Integer effectSecondary,
+        Boolean air
 ) {
 
     /** A card without attacks or numbers (everything except vehicles and special items). */
@@ -37,7 +39,7 @@ public record CardDto(
                    String vehicleClass, Integer hp, Integer armor, String damageType, String ammunition,
                    String itemType, Integer count, Integer repairAmount, String ability) {
         this(id, name, description, level, category, nation, vehicleClass, hp, armor, damageType, ammunition,
-                itemType, count, repairAmount, ability, null, null, null, null, null);
+                itemType, count, repairAmount, ability, null, null, null, null, null, null);
     }
 
     /** One attack of a vehicle: {@code ammo} lists the ammunition types its weapon can fire. */

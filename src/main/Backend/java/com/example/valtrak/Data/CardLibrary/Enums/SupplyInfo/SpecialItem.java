@@ -33,11 +33,11 @@ public enum SpecialItem implements SpecialItemInterface {
 
     /*==================== ARTILLERY (explosive damage; Legendary also hits face-down vehicles) ====================*/
 
-    MORTAR_STRIKE("Mortar Strike", "Deal 20 explosive damage to 1 face-up enemy vehicle", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 20.0, 1.0),
-    HOWITZER_FIRE_MISSION("Howitzer Fire Mission", "Deal 25 explosive damage to 1 face-up enemy vehicle", CardLevel.UNCOMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 25.0, 1.0),
-    ROCKET_SALVO("Rocket Salvo", "Deal 30 explosive damage to each of up to 2 face-up enemy vehicles", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 30.0, 2.0),
-    HEAVY_ROCKET_BARRAGE("Heavy Rocket Barrage", "Deal 35 explosive damage to each of up to 2 face-up enemy vehicles", CardLevel.EPIC, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 35.0, 2.0),
-    STRATEGIC_BOMBARDMENT("Strategic Bombardment", "Deal 40 explosive damage to each of up to 3 enemy vehicles, even face-down ones (they are turned face up)", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 40.0, 3.0),
+    MORTAR_STRIKE("Mortar Strike", "Deal 10 explosive damage to 1 face-up enemy vehicle. Can't hit aircraft", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 10.0, 1.0),
+    HOWITZER_FIRE_MISSION("Howitzer Fire Mission", "Deal 14 explosive damage to 1 face-up enemy vehicle. Can't hit aircraft", CardLevel.UNCOMMON, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 14.0, 1.0),
+    ROCKET_SALVO("Rocket Salvo", "Deal 20 explosive damage to each of up to 2 face-up enemy vehicles. Can't hit aircraft", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 20.0, 2.0),
+    HEAVY_ROCKET_BARRAGE("Heavy Rocket Barrage", "Deal 28 explosive damage to each of up to 2 face-up enemy vehicles. Can't hit aircraft", CardLevel.EPIC, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 28.0, 2.0),
+    STRATEGIC_BOMBARDMENT("Strategic Bombardment", "Deal 36 explosive damage to each of up to 3 enemy vehicles, even face-down ones (they are turned face up). Can't hit aircraft", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.ARTILLERY_STRIKE, 36.0, 3.0),
 
     /*==================== SEARCH (find cards of one kind in your deck) ====================*/
 

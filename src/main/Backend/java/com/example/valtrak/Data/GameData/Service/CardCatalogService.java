@@ -39,7 +39,8 @@ public class CardCatalogService {
                     v.getVehicleClass() != null ? v.getVehicleClass().getClassName() : null,
                     v.getVehicleHP(), v.getVehicleArmor(), null, null, null, null, null, abilityText(v),
                     attacksOf(v), v.getAbilityType() == null ? null : v.getAbilityPower(),
-                    v.getAbilityType() == null ? null : v.getAbilityFuelCost(), null, null);
+                    v.getAbilityType() == null ? null : v.getAbilityFuelCost(), null, null,
+                    v.getVehicleType() != null && "AIR".equals(v.getVehicleType().getName()));
             case AmmunitionCard a -> new CardDto(a.getId(), a.getName(), a.getDescription(), level,
                     "AMMUNITION", null, null, null, null,
                     a.getAmmunition() != null ? a.getAmmunition().getDamageType().name() : null,
@@ -53,7 +54,7 @@ public class CardCatalogService {
                     "REPAIR", null, null, null, null, null, null, itemType(r), r.getCount(), r.getRepairAmount(), null);
             case SpecialItemCard sp -> new CardDto(sp.getId(), sp.getName(), sp.getDescription(), level,
                     "ITEM", null, null, null, null, null, null, sp.getEffect().name(), null, null, specialText(sp),
-                    null, null, null, sp.getPrimaryValue(), sp.getSecondaryValue());
+                    null, null, null, sp.getPrimaryValue(), sp.getSecondaryValue(), null);
             default -> new CardDto(card.getId(), card.getName(), card.getDescription(), level,
                     "OTHER", null, null, null, null, null, null,
                     card instanceof ItemCard i ? itemType(i) : null, null, null, null);

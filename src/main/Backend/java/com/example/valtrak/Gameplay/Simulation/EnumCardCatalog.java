@@ -50,7 +50,8 @@ public final class EnumCardCatalog implements CardCatalog {
                 specs.put(id, new VehicleSpec(id, v.getVehicleName(), v.getLevel(),
                         VehicleClass.valueOf(v.getVehicleClass().name()), v.getVehicleHP(), v.getVehicleArmor(), attacks,
                         v.getAbility() == null ? null
-                                : new AbilitySpec(v.getAbility().type(), v.getAbility().power(), v.getAbility().fuelCost())));
+                                : new AbilitySpec(v.getAbility().type(), v.getAbility().power(), v.getAbility().fuelCost()),
+                        v.getVehicleType() == com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleType.AIR));
                 id++;
             }
         }

@@ -78,7 +78,8 @@ public class DbCardCatalog implements CardCatalog {
                     VehicleClass.valueOf(v.getVehicleClass().getClassName()),
                     v.getVehicleHP(), v.getVehicleArmor(), attacksOf(v),
                     v.getAbilityType() == null ? null
-                            : new AbilitySpec(v.getAbilityType(), v.getAbilityPower(), v.getAbilityFuelCost()));
+                            : new AbilitySpec(v.getAbilityType(), v.getAbilityPower(), v.getAbilityFuelCost()),
+                    v.getVehicleType() != null && "AIR".equals(v.getVehicleType().getName()));
             case AmmunitionCard a -> new ResourceSpec(a.getId(), a.getName(), a.getLevel(), ResourceKind.AMMO,
                     a.getAmmunition(), a.getCount());
             case FuelCard f -> new ResourceSpec(f.getId(), f.getName(), f.getLevel(), ResourceKind.FUEL, null, f.getCount());

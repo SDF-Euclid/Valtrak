@@ -588,6 +588,9 @@ public final class GameEngine {
             if (!t.faceUp && !artilleryHitsHidden(spec)) {
                 throw violation(spec.name() + " can only hit face-up vehicles.");
             }
+            if (t.faceUp && catalog.vehicle(t.cardId).air()) {
+                throw violation(catalog.vehicle(t.cardId).name() + " is an aircraft: Artillery can't hit it.");
+            }
             if (t.smoked) throw violation("Enemy vehicle " + id + " is hidden in smoke and can't be targeted.");
         }
         return () -> {
@@ -595,6 +598,10 @@ public final class GameEngine {
             for (long id : targets) {
                 Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst().orElse(null);
                 if (t == null || t.smoked || (!t.faceUp && !artilleryHitsHidden(spec))) continue;    // gone, or gone face down, since the first hit
+                if (catalog.vehicle(t.cardId).air()) {                // a hidden aircraft: the shell finds nothing, and nothing is revealed
+                    r.say(spec.name() + " finds nothing to hit at one of its targets.");
+                    continue;
+                }
                 t.faceUp = true;
                 int base = spec.power();
                 SpecialEffect effect = SpecialEffect.NONE;
@@ -1042,7 +1049,7 @@ public final class GameEngine {
             }
             case ARTILLERY -> {
                 List<Long> hittable = opp.groups.stream().flatMap(g -> g.vehicles.stream())
-                        .filter(v -> v.faceUp || artilleryHitsHidden(item)).map(v -> v.id).toList();
+                        .filter(v -> v.faceUp ? !catalog.vehicle(v.cardId).air() : artilleryHitsHidden(item)).map(v -> v.id).toList();
                 hittable.forEach(t -> c.add(new PlayItem(id, List.of(t), List.of())));
                 if (hittable.size() >= 2) c.add(new PlayItem(id, hittable.stream().limit(item.count()).toList(), List.of()));
             }
