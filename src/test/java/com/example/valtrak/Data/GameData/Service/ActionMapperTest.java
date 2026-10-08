@@ -36,6 +36,15 @@ class ActionMapperTest {
     }
 
     @Test
+    void mapsAnAbilityUse() {
+        assertThat(ActionMapper.map(new ActionRequest("USE_ABILITY", null, null, 7L, List.of(3L, 4L), null, null, null, null)))
+                .isEqualTo(new Action.UseAbility(7L, List.of(3L, 4L)));
+        assertThatThrownBy(() -> ActionMapper.map(req("USE_ABILITY"))).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> ActionMapper.map(new ActionRequest("USE_ABILITY", null, null, 7L, null, null, null, null, null)))
+                .isInstanceOf(ApiException.class).hasMessageContaining("vehicleIds");
+    }
+
+    @Test
     void mapsAnAttackWithAmmoAndSlot() {
         var choice = new AttackChoiceRequest(1L, "ATTACK_2", "APFSDS_120MM", 2L);
         Action a = ActionMapper.map(new ActionRequest("ATTACK", null, 6L, null, null, null, null, null, List.of(choice)));

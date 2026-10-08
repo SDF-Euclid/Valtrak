@@ -153,6 +153,7 @@ public final class GameEngine {
             case Retreat a -> retreat(me, a, r);
             case RetreatGroup a -> retreatGroup(me, a, r);
             case Move a -> move(s, me, a, r);
+            case UseAbility a -> useAbility(me, opp, a, r);
             case Attack a -> attack(s, me, opp, a, r);
             case EndTurn a -> {
                 r.say("Player " + (player + 1) + " ends their turn.");
@@ -339,6 +340,36 @@ public final class GameEngine {
         r.say("A vehicle moves to another strike group (" + fuel + " Fuel).");
     }
 
+    // ── Abilities ────────────────────────────────────────────────────────────
+
+    private void useAbility(PlayerState me, PlayerState opp, UseAbility a, ActionResult r) {
+        Located loc = findVehicle(me, a.vehicleId());
+        VehicleSpec spec = catalog.vehicle(loc.vehicle.cardId);
+        AbilitySpec ability = spec.ability();
+        if (ability == null) throw violation(spec.name() + " has no ability.");
+        if (!loc.vehicle.faceUp) throw violation(spec.name() + " has to be face up to use its ability.");
+        if (loc.vehicle.stunned || loc.vehicle.disabled) throw violation(spec.name() + " can't use its ability this turn.");
+        if (loc.vehicle.abilityUsed) throw violation(spec.name() + " has already used its ability this turn.");
+        List<Long> ids = a.targetVehicleIds() == null ? List.of() : a.targetVehicleIds();
+        if (ids.isEmpty()) throw violation("Choose which enemy vehicles to reveal.");
+        if (new HashSet<>(ids).size() != ids.size()) throw violation("Each target can only be chosen once.");
+        if (ids.size() > ability.power()) {
+            throw violation(spec.name() + " can reveal at most " + ability.power() + " vehicle(s).");
+        }
+        List<Vehicle> targets = new ArrayList<>();
+        for (long id : ids) {
+            Vehicle t = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> v.id == id).findFirst()
+                    .orElseThrow(() -> violation("Enemy vehicle " + id + " was not found."));
+            if (t.faceUp) throw violation("Enemy vehicle " + id + " is already face up.");
+            targets.add(t);
+        }
+        requireFuel(loc.group, ability.fuelCost());
+        spend(me, loc.group.pool, ResourceKind.FUEL, null, ability.fuelCost());
+        targets.forEach(t -> t.faceUp = true);
+        loc.vehicle.abilityUsed = true;
+        r.say(spec.name() + " reveals " + targets.size() + " enemy vehicle(s).");
+    }
+
     // ── Attacking ────────────────────────────────────────────────────────────
 
     private record Plan(Vehicle attacker, VehicleSpec spec, AttackSpec attack, Ammunition ammo, Vehicle target) {}
@@ -378,7 +409,6 @@ public final class GameEngine {
                     .filter(v -> v.id == c.targetVehicleId()).findFirst()
                     .orElseThrow(() -> violation("Target " + c.targetVehicleId() + " was not found."));
             if (!target.faceUp) throw violation("You can only attack face-up vehicles.");
-            if (catalog.vehicle(target.cardId).isResupply()) throw violation("A Resupply vehicle can't be targeted.");
             plans.add(new Plan(attacker, spec, attack, ammo, target));
         }
         if (plans.size() >= 2 && !g.leader().faceUp) {
@@ -509,7 +539,10 @@ public final class GameEngine {
         s.turnCount++;
         p.turnsTaken++;
         p.designationsLeft = rules.designationsPerTurn;
-        p.groups.forEach(g -> g.convoyMoved = 0);
+        p.groups.forEach(g -> {
+            g.convoyMoved = 0;
+            g.vehicles.forEach(v -> v.abilityUsed = false);
+        });
         if (p.deck.isEmpty()) {
             finish(s, 1 - p.index, "Player " + (p.index + 1) + " had no card to draw.", r);
             return;
@@ -573,7 +606,16 @@ public final class GameEngine {
             }
         }
         List<Vehicle> targets = opp.groups.stream().flatMap(g -> g.vehicles.stream())
-                .filter(v -> v.faceUp && !catalog.vehicle(v.cardId).isResupply()).toList();
+                .filter(v -> v.faceUp).toList();
+        List<Vehicle> hidden = opp.groups.stream().flatMap(g -> g.vehicles.stream()).filter(v -> !v.faceUp).toList();
+        for (StrikeGroup g : me.groups) {
+            for (Vehicle v : g.vehicles) {
+                AbilitySpec ab = catalog.vehicle(v.cardId).ability();
+                if (ab == null || hidden.isEmpty()) continue;
+                c.add(new UseAbility(v.id, hidden.stream().limit(ab.power()).map(x -> x.id).toList()));
+                c.add(new UseAbility(v.id, List.of(hidden.get(hidden.size() - 1).id)));
+            }
+        }
         for (StrikeGroup g : me.groups) {
             List<AttackChoice> firstChoices = new ArrayList<>();
             for (Vehicle v : g.vehicles) {

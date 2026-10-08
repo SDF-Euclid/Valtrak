@@ -113,15 +113,15 @@ class AttackAndDestructionTest {
     // ── who can attack and who can be attacked ───────────────────────────────
 
     @Test
-    void onlyFaceUpVehiclesCanBeTargetedAndResupplyNever() {
+    void onlyFaceUpVehiclesCanBeTargeted() {
         StrikeGroup mine = w.group(0, TANK_COMMON, true);
         w.pool(mine, NATO_10);
         Vehicle hidden = w.add(enemy, ANTI_AIR, false);
-        Vehicle supply = w.add(enemy, RESUPPLY, true);
+        Vehicle hiddenSupply = w.add(enemy, RESUPPLY, false);
         assertThatThrownBy(() -> w.act(0, skirmish(mine, mine.leader(), ATTACK_1, null, hidden)))
                 .isInstanceOf(RuleViolationException.class).hasMessageContaining("face-up");
-        assertThatThrownBy(() -> w.act(0, skirmish(mine, mine.leader(), ATTACK_1, null, supply)))
-                .isInstanceOf(RuleViolationException.class).hasMessageContaining("Resupply");
+        assertThatThrownBy(() -> w.act(0, skirmish(mine, mine.leader(), ATTACK_1, null, hiddenSupply)))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("face-up");
     }
 
     @Test

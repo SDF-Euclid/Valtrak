@@ -19,7 +19,7 @@ class GameStateJsonTest {
     private List<Long> deck() {
         List<Long> deck = new ArrayList<>();
         long[] ids = {TANK_COMMON, TANK_UNCOMMON, TANK_RARE, TANK_RARE_MBT, TANK_EPIC, TANK_LEGENDARY, TANK_LEGENDARY_HEAVY,
-                TANK_COMMANDER, ANTI_AIR, RECON, SPECIALIST, RESUPPLY, AIR, APFSDS_5, HEAT_5, NATO_10, FUEL_5, FUEL_10, SUPPLY_1, SUPPLY_3};
+                TANK_COMMANDER, ANTI_AIR, SCOUT, UAV, RESUPPLY, AIR, APFSDS_5, HEAT_5, NATO_10, FUEL_5, FUEL_10, SUPPLY_1, SUPPLY_3};
         for (long id : ids) for (int i = 0; i < 3; i++) deck.add(id);
         return deck;
     }

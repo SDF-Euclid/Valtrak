@@ -11,6 +11,8 @@ public class Vehicle {
     public boolean stunned;
     public boolean suppressed;
     public boolean disabled;
+    /** True once this vehicle has used its ability this turn. */
+    public boolean abilityUsed;
 
     public Vehicle() {}
 
@@ -29,6 +31,7 @@ public class Vehicle {
         v.stunned = stunned;
         v.suppressed = suppressed;
         v.disabled = disabled;
+        v.abilityUsed = abilityUsed;
         return v;
     }
 }

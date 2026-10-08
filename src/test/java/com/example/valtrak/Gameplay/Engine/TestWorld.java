@@ -1,6 +1,7 @@
 package com.example.valtrak.Gameplay.Engine;
 
 import com.example.valtrak.Data.CardLibrary.CardLevel;
+import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.AbilityType;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.AttackSlot;
@@ -19,7 +20,8 @@ public final class TestWorld {
     public static final long TANK_COMMON = 1, TANK_UNCOMMON = 2, TANK_RARE = 3, TANK_RARE_MBT = 4,
             TANK_EPIC = 5, TANK_LEGENDARY = 6, TANK_LEGENDARY_HEAVY = 7, TANK_COMMANDER = 8;
     // other vehicles
-    public static final long ANTI_AIR = 10, RECON = 11, SPECIALIST = 12, RESUPPLY = 13, AIR = 14;
+    public static final long ANTI_AIR = 10, RECON = 11, SPECIALIST = 12, RESUPPLY = 13, AIR = 14,
+            UAV = 15, SCOUT = 16;
     // resources
     public static final long APFSDS_5 = 20, HEAT_5 = 21, NATO_10 = 22, FUEL_5 = 23, FUEL_1 = 24, FUEL_10 = 25,
             SUPPLY_1 = 26, SUPPLY_3 = 27, REPAIR_25 = 28, REPAIR_FULL = 29;
@@ -45,6 +47,11 @@ public final class TestWorld {
         c.add(armed(RECON, "Recon", CardLevel.UNCOMMON, VehicleClass.RECON, 70, 25));
         c.add(new VehicleSpec(SPECIALIST, "Specialist", CardLevel.UNCOMMON, VehicleClass.SPECIALIST, 60, 20, List.of()));
         c.add(new VehicleSpec(RESUPPLY, "Resupply", CardLevel.RARE, VehicleClass.SUPPLY, 90, 30, List.of()));
+        c.add(new VehicleSpec(UAV, "UAV Team", CardLevel.RARE, VehicleClass.SPECIALIST, 40, 10, List.of(),
+                new AbilitySpec(AbilityType.REVEAL_ENEMY, 2, 1)));
+        c.add(new VehicleSpec(SCOUT, "Scout", CardLevel.COMMON, VehicleClass.RECON, 70, 25, List.of(
+                new AttackSpec(AttackSlot.ATTACK_1, "MG", Weapon.BROWNING_50CAL, 12, 1, 0, SpecialEffect.NONE)),
+                new AbilitySpec(AbilityType.REVEAL_ENEMY, 1, 1)));
         c.add(armed(AIR, "Air", CardLevel.RARE, VehicleClass.CLOSE_AIR_SUPPORT, 90, 20));
 
         c.add(new ResourceSpec(APFSDS_5, "5x Sabot", CardLevel.UNCOMMON, ResourceKind.AMMO, Ammunition.APFSDS_120MM, 5));

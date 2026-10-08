@@ -74,6 +74,20 @@ class GameViewBuilderTest {
     }
 
     @Test
+    void abilityUseIsShownForYourVehiclesAndHiddenForFaceDownEnemies() {
+        StrikeGroup mine = w.group(0, TANK_COMMON, false);
+        Vehicle uav = w.add(mine, UAV, true);
+        uav.abilityUsed = true;
+        StrikeGroup theirs = w.group(1, TANK_RARE, false);
+        Vehicle theirUav = w.add(theirs, UAV, false);
+        theirUav.abilityUsed = true;
+
+        GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);
+        assertThat(view.you().groups().get(0).vehicles().get(1).abilityUsed()).isTrue();
+        assertThat(view.opponent().groups().get(0).vehicles().get(1).abilityUsed()).isNull();
+    }
+
+    @Test
     void yourOwnFaceDownVehiclesAreShownInFull() {
         StrikeGroup g = w.group(0, TANK_LEGENDARY, false);
         GameView view = GameViewBuilder.build(match(), w.s, 0, w.rules);

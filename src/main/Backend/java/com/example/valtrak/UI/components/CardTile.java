@@ -53,6 +53,15 @@ public class CardTile {
         statsLbl.setWrapText(true);
         statsLbl.setMaxWidth(155);
 
+        Label abilityLbl = null;
+        if (card.ability() != null) {
+            abilityLbl = new Label("Ability: " + card.ability());
+            abilityLbl.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+            abilityLbl.setTextFill(Color.web("#7ab8e8"));
+            abilityLbl.setWrapText(true);
+            abilityLbl.setMaxWidth(155);
+        }
+
         Label rarityLbl = new Label(card.level() != null ? card.level() : "");
         rarityLbl.setFont(Font.font("Arial", FontWeight.BOLD, 9));
         rarityLbl.setTextFill(Color.web(rarityColor(card.level())));
@@ -71,7 +80,9 @@ public class CardTile {
         addBtn.setOnMouseExited(e -> addBtn.setStyle(btnBase));
         addBtn.setOnAction(e -> onAdd.run());
 
-        VBox tile = new VBox(5, art, nameLbl, subLbl, statsLbl, rarityLbl, addBtn);
+        VBox tile = new VBox(5, art, nameLbl, subLbl, statsLbl);
+        if (abilityLbl != null) tile.getChildren().add(abilityLbl);
+        tile.getChildren().addAll(rarityLbl, addBtn);
         tile.setPadding(new Insets(8));
         tile.setAlignment(Pos.TOP_CENTER);
         tile.setMinWidth(176);

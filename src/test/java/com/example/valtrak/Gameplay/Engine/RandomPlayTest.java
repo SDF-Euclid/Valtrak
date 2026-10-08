@@ -22,7 +22,7 @@ class RandomPlayTest {
     private List<Long> deck() {
         List<Long> deck = new ArrayList<>();
         long[] ids = {TANK_COMMON, TANK_UNCOMMON, TANK_RARE, TANK_RARE_MBT, TANK_EPIC, TANK_LEGENDARY, TANK_LEGENDARY_HEAVY,
-                TANK_COMMANDER, ANTI_AIR, RECON, SPECIALIST, RESUPPLY, AIR, APFSDS_5, HEAT_5, NATO_10, FUEL_5, FUEL_10, SUPPLY_1, SUPPLY_3};
+                TANK_COMMANDER, ANTI_AIR, SCOUT, UAV, RESUPPLY, AIR, APFSDS_5, HEAT_5, NATO_10, FUEL_5, FUEL_10, SUPPLY_1, SUPPLY_3};
         for (long id : ids) for (int i = 0; i < 3; i++) deck.add(id);
         return deck;
     }
@@ -91,9 +91,6 @@ class RandomPlayTest {
                 assertThat(line).as("line vehicles" + where).isLessThanOrEqualTo(w.rules.maxLineVehicles);
                 for (Vehicle v : g.vehicles) {
                     assertThat(v.hp).as("living vehicles have HP" + where).isPositive().isLessThanOrEqualTo(v.maxHp);
-                    if (((VehicleSpec) w.catalog.find(v.cardId)).isResupply()) {
-                        assertThat(v.faceUp).as("resupply vehicles stay face down" + where).isFalse();
-                    }
                     assertThat(v.breachStacks).isBetween(0, 3);
                 }
                 for (ResourceStack r : g.pool) {

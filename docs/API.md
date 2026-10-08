@@ -37,6 +37,7 @@ Matches you are not in look exactly like matches that don't exist (404).
 | `RETREAT` | `vehicleId` |
 | `RETREAT_GROUP` | `groupId` |
 | `MOVE` | `vehicleId`, `toGroupId` (omit = out to a new group, tanks only) |
+| `USE_ABILITY` | `vehicleId` (the UAV/Recon vehicle), `vehicleIds` (the face-down enemy vehicles to reveal) |
 | `ATTACK` | `groupId`, `choices`: `[{vehicleId, slot, ammo, targetVehicleId}]` (one choice = Skirmish, two or more = Combined Assault) |
 | `END_TURN` | |
 

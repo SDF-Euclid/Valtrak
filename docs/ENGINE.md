@@ -21,10 +21,14 @@ List<Action> options = engine.legalActions(state, player);          // everythin
   `GameViewBuilder` decides what each player may see. See `docs/API.md`.
 
 ## What is not built yet
-- Special item cards, Resupply abilities beyond the convoy, and the other new cards (Specialist, Resupply and
-  anti-air vehicles are not in the card library yet, so the convoy and large groups can't be tried in a real game).
+- Special item cards, and Resupply and anti-air vehicles (not in the card library yet, so the convoy can't be tried in a real game).
 - The game screen, and pushing updates to the other player.
 - The old `CombatService` (and its tests) are no longer used by the game; `DamageCalculator` replaces it.
+
+## Abilities
+A vehicle card can have an `AbilitySpec` (type, power, Fuel cost). `Action.UseAbility` runs it: once per turn, face up only, Fuel from the
+group's pool. Today there is one type, `REVEAL_ENEMY` (UAV teams, Recon vehicles). To add another: add a value to `AbilityType`,
+handle it in `GameEngine.useAbility`, add tests, then give cards the new ability in the card library.
 
 ## Experiment rules (off by default)
 `GameRules.stalemateRounds` (reveal everything after N passive rounds) and `GameRules.damagePercent` exist so the simulator

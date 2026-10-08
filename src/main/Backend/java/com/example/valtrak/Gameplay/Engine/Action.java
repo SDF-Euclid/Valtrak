@@ -35,6 +35,9 @@ public sealed interface Action {
     /** Move a vehicle to another group, or (tanks only) out to a new group of one when {@code toGroupId} is null. */
     record Move(long vehicleId, Long toGroupId) implements Action {}
 
+    /** Use a vehicle's ability (REVEAL_ENEMY: turn these face-down enemy vehicles face up). */
+    record UseAbility(long vehicleId, List<Long> targetVehicleIds) implements Action {}
+
     /** Attack with one vehicle (Skirmish) or several (Combined Assault). Ends your turn. */
     record Attack(long groupId, List<AttackChoice> choices) implements Action {}
 

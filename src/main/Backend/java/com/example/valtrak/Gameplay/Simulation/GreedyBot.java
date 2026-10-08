@@ -47,6 +47,7 @@ public final class GreedyBot implements Bot {
         if ((a = designate(engine, s, player, me, cat)) != null) return a;
         if ((a = deploy(engine, s, player, me, cat)) != null) return a;
         if ((a = repair(engine, s, player, me, cat)) != null) return a;
+        if ((a = scout(engine, s, player, me, opp, cat)) != null) return a;
         if ((a = reveal(engine, s, player, me, opp, cat)) != null) return a;
         if ((a = attack(engine, s, player, me, opp, cat)) != null) return a;
         return new EndTurn();
@@ -138,6 +139,38 @@ public final class GreedyBot implements Bot {
 
     // ── fighting ─────────────────────────────────────────────────────────────
 
+    /** When a group is ready to attack but an enemy Leader is hidden, bring out a UAV / Recon vehicle and reveal enemy Leaders. */
+    private Action scout(GameEngine engine, GameState s, int player, PlayerState me, PlayerState opp, CardCatalog cat) {
+        if (s.firstPlayer == player && me.turnsTaken <= 1) return null;          // can't attack this turn anyway
+        List<Vehicle> hiddenLeaders = new ArrayList<>();
+        List<Vehicle> hiddenOthers = new ArrayList<>();
+        for (StrikeGroup g : opp.groups) {
+            for (Vehicle v : g.vehicles) {
+                if (v.faceUp) continue;
+                if (v == g.leader()) hiddenLeaders.add(v); else hiddenOthers.add(v);
+            }
+        }
+        if (hiddenLeaders.isEmpty()) return null;
+        hiddenLeaders.sort(Comparator.comparingInt((Vehicle v) -> -cat.vehicle(v.cardId).level().ordinal()));
+        for (StrikeGroup g : me.groups) {
+            if (!canAffordAnAttack(g, cat)) continue;
+            for (Vehicle v : g.vehicles) {
+                AbilitySpec ability = cat.vehicle(v.cardId).ability();
+                if (ability == null || v.abilityUsed || Pool.of(g).fuel < ability.fuelCost()) continue;
+                if (!v.faceUp) {
+                    Action reveal = new Reveal(List.of(v.id));
+                    if (engine.isLegal(s, player, reveal)) return reveal;
+                    continue;
+                }
+                List<Vehicle> order = new ArrayList<>(hiddenLeaders);
+                order.addAll(hiddenOthers);
+                Action use = new UseAbility(v.id, order.stream().limit(ability.power()).map(x -> x.id).toList());
+                if (engine.isLegal(s, player, use)) return use;
+            }
+        }
+        return null;
+    }
+
     private Action reveal(GameEngine engine, GameState s, int player, PlayerState me, PlayerState opp, CardCatalog cat) {
         boolean targetsExist = !targets(opp, cat).isEmpty();
         boolean attackBanned = s.firstPlayer == player && me.turnsTaken <= 1;
@@ -177,7 +210,7 @@ public final class GreedyBot implements Bot {
     private List<Vehicle> targets(PlayerState opp, CardCatalog cat) {
         List<Vehicle> out = new ArrayList<>();
         for (StrikeGroup g : opp.groups) {
-            for (Vehicle v : g.vehicles) if (v.faceUp && !cat.vehicle(v.cardId).isResupply()) out.add(v);
+            for (Vehicle v : g.vehicles) if (v.faceUp) out.add(v);
         }
         return out;
     }

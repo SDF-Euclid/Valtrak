@@ -26,7 +26,7 @@ class BotAndSimulationTest {
 
     @Test
     void theEnumCatalogHasEveryCardKindWithStableIds() {
-        assertThat(catalog.all()).hasSize(7 + 60 + 4 + 4 + 3);   // vehicles, ammo, fuel, repair, supply
+        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 60 + 4 + 4 + 3);   // tanks, recon, UAV teams, ammo, fuel, repair, supply
         assertThat(catalog.find(1)).isInstanceOf(VehicleSpec.class);
         assertThat(new EnumCardCatalog(true).find(1).name()).isEqualTo(catalog.find(1).name());
         assertThat(catalog.all()).anyMatch(c -> c instanceof ResourceSpec r && r.kind() == ResourceKind.SUPPLY);
@@ -57,6 +57,38 @@ class BotAndSimulationTest {
             assertThat(sizes).as(ammo.name()).containsExactly(1, 5, 10, 20);
         }
         assertThat(real.all()).noneMatch(c -> c.name().contains("synthetic"));
+    }
+
+    @Test
+    void theNewCardsHaveAbilitiesScaledByRarity() {
+        var uavs = catalog.all().stream().filter(c -> c instanceof VehicleSpec v && v.isSpecialist() && v.ability() != null)
+                .map(c -> (VehicleSpec) c).toList();
+        assertThat(uavs).hasSize(7);
+        assertThat(uavs).allMatch(v -> v.attacks().isEmpty());
+        for (VehicleSpec v : uavs) {
+            int expected = switch (v.level()) {
+                case COMMON, UNCOMMON -> 1;
+                case RARE, EPIC -> 2;
+                default -> 3;
+            };
+            assertThat(v.ability().power()).as(v.name()).isEqualTo(expected);
+        }
+        var recon = catalog.all().stream().filter(c -> c instanceof VehicleSpec v && v.vehicleClass().name().equals("RECON"))
+                .map(c -> (VehicleSpec) c).toList();
+        assertThat(recon).hasSize(3);
+        assertThat(recon).allMatch(v -> v.ability() != null && !v.attacks().isEmpty());
+    }
+
+    @Test
+    void cautiousBotsFightWhenTheDecksHaveRevealCardsEvenWithoutAStalemateRule() {
+        int attacks = 0;
+        for (int seed = 0; seed < 6; seed++) {
+            GameReport r = GameSimulator.play(engine(0), SimDecks.standard(catalog, catalog.all(), 80, new Random(seed), 1),
+                    SimDecks.standard(catalog, catalog.all(), 80, new Random(seed + 40), 1),
+                    new GreedyBot(false), new GreedyBot(false), seed, 20000);
+            attacks += r.attacks()[0] + r.attacks()[1];
+        }
+        assertThat(attacks).isGreaterThan(50);
     }
 
     @Test
@@ -100,19 +132,23 @@ class BotAndSimulationTest {
     }
 
     /**
-     * Records a finding about the rules as written: if neither player ever has to reveal, nobody can be attacked
-     * and the game is decided by deck-out. If this test starts failing, a rule that forces a reveal was added.
+     * Records a finding about the rules as written: in decks without UAV or Recon cards, if neither player ever has to reveal,
+     * nobody can be attacked and the game is decided by deck-out. If this test starts failing, a rule that forces a reveal was added.
      */
     @Test
-    void cautiousBotsNeverFightWithoutAStalemateRuleAndDoWithOne() {
+    void cautiousBotsNeverFightWithoutRevealCardsOrAStalemateRule() {
         for (int seed = 0; seed < 4; seed++) {
-            GameReport stalled = GameSimulator.play(engine(0), deck(60, seed), deck(60, seed + 7),
+            GameReport stalled = GameSimulator.play(engine(0),
+                    SimDecks.standard(catalog, catalog.all(), 60, new Random(seed), 0),     // no UAV or Recon cards
+                    SimDecks.standard(catalog, catalog.all(), 60, new Random(seed + 7), 0),
                     new GreedyBot(false), new GreedyBot(false), seed, 20000);
             assertThat(stalled.attacks()[0] + stalled.attacks()[1]).isZero();
             assertThat(stalled.endedBy()).isEqualTo("DECK_OUT");
             assertThat(stalled.firstPlayerWon()).as("the first player draws first, so they run out first").isFalse();
 
-            GameReport fought = GameSimulator.play(engine(3), deck(60, seed), deck(60, seed + 7),
+            GameReport fought = GameSimulator.play(engine(3),
+                    SimDecks.standard(catalog, catalog.all(), 60, new Random(seed), 0),
+                    SimDecks.standard(catalog, catalog.all(), 60, new Random(seed + 7), 0),
                     new GreedyBot(false), new GreedyBot(false), seed, 20000);
             assertThat(fought.attacks()[0] + fought.attacks()[1]).isPositive();
         }
@@ -130,7 +166,7 @@ class BotAndSimulationTest {
     @Test
     void simulationStatsAddUp() {
         GameRules rules = GameRules.defaults();
-        var stats = SimulationMain.run(rules, new SimulationMain.Matchup(new GreedyBot(true), new GreedyBot(true)), 6, true, 100);
+        var stats = SimulationMain.run(rules, new SimulationMain.Matchup(new GreedyBot(true), new GreedyBot(true)), 6, true, 100, 1);
         assertThat(stats.games()).isEqualTo(6);
         assertThat(stats.chipsWins() + stats.deckOuts() + stats.limits()).isEqualTo(6);
         assertThat(stats.describe()).contains("aggressive vs aggressive");

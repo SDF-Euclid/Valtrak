@@ -67,6 +67,22 @@ reveal-everything rule at 3 passive rounds. The game is tank-only for now, so ev
   Bigger groups (4+ vehicles) are worth 2 chips, so once those cards exist, 5 chips will be reached faster than these tank-only numbers show.
 - **Conclusion for 13-15 turns per player with today's cards:** 3 chips and about 4x damage (or about 1/4 HP).
 
+## Round 3: UAV and Recon cards (reveal ability), no stalemate rule
+
+Cautious vs cautious bots, rules exactly as written, 80-card decks, 100 games. The bots bring a UAV/Recon vehicle out and reveal
+enemy Leaders when their group is ready to attack.
+
+| reveal cards in the deck | games decided by chips | attacks per game |
+|---|---|---|
+| none | 0% (never fight, deck-out decides, first player loses) | 0 |
+| 1 copy of each of the 10 cards | 75% | 62 |
+
+- **Reveal cards fix the stall** without a stalemate rule, as long as the deck has some. A deck without any can still stall.
+- Counting copies is not a clean test: in a fixed-size deck every extra reveal card replaces a tank or a resource card,
+  so more copies lowered the share of games decided by chips (24% with 2 copies, 3% with 3). The deck needs a balance.
+- **Leader position is visible.** The first vehicle of an enemy group is its Leader, so a face-down group can be sniped
+  (a UAV that reveals 1 can expose a Leader). Change `GameViewBuilder` if face-down order should be hidden.
+
 ## Things worth deciding
 - A stalemate rule (or a reliable reveal effect from the start) so the game isn't decided by deck size and turn order.
 - A target game length, then tune chips, damage/HP and deck minimum together (the table above is a starting point).

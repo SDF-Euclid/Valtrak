@@ -101,6 +101,26 @@ class MatchFlowIntegrationTest {
     }
 
     @Test
+    void uavAndReconCardsComeFromTheDatabaseWithTheirAbilities() {
+        VehicleSpec reaper = cards.findAll().stream().filter(c -> c.getName().equals("MQ-9 Reaper Flight"))
+                .map(c -> (VehicleSpec) catalog.find(c.getId())).findFirst().orElseThrow();
+        assertThat(reaper.isSpecialist()).isTrue();
+        assertThat(reaper.attacks()).isEmpty();
+        assertThat(reaper.ability().power()).isEqualTo(3);
+        assertThat(reaper.ability().fuelCost()).isEqualTo(1);
+
+        VehicleSpec fennek = cards.findAll().stream().filter(c -> c.getName().equals("Fennek"))
+                .map(c -> (VehicleSpec) catalog.find(c.getId())).findFirst().orElseThrow();
+        assertThat(fennek.vehicleClass().name()).isEqualTo("RECON");
+        assertThat(fennek.attacks()).hasSize(1);
+        assertThat(fennek.ability().power()).isEqualTo(2);
+
+        VehicleSpec abrams = cards.findAll().stream().filter(c -> c.getName().equals("M1A1 Abrams"))
+                .map(c -> (VehicleSpec) catalog.find(c.getId())).findFirst().orElseThrow();
+        assertThat(abrams.ability()).isNull();
+    }
+
+    @Test
     void aChallengeIsAcceptedAndTheMatchStarts() {
         Player a = newPlayer(), b = newPlayer();
         DeckDto deckA = playableDeck(a, "Deck A"), deckB = playableDeck(b, "Deck B");

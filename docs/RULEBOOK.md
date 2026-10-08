@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.9
+# Valtrak Rulebook: DRAFT v0.10
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -91,6 +91,15 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
    through your opponent's turn.
    If you can't or won't attack, choose **End Turn**.
 
+## 7b. Abilities (UAV teams and Recon vehicles)
+Some vehicles have an **ability**. A vehicle can use its ability **once per turn**, only while it is **face up** (and not stunned or disabled),
+and it costs **Fuel** from its group's pool. Using one does not end your turn, so you can scout and then attack.
+- **Reveal** (UAV teams and Recon vehicles): turn up to *N* face-down enemy vehicles face up. You choose which ones;
+  the first vehicle of each enemy group is its Leader. Revealed vehicles stay face up until their owner retreats them.
+  A Resupply vehicle can be revealed this way, and then it can be attacked like any other face-up vehicle.
+- **UAV teams** are Specialists (they take the Specialist slot and don't attack): Common and Uncommon reveal 1,
+  Rare and Epic reveal 2, Legendary reveals 3. **Recon vehicles** take a Line slot, carry a light MG, and reveal 1 (Rare: 2).
+
 ## 8. Attacking
 - Choose a strike group, then which of its **face-up** vehicles attack (at least one) and which attack each one uses.
 - **Skirmish:** exactly one vehicle attacks. The Leader may stay face down. Only that vehicle's requirement is paid.
@@ -133,6 +142,4 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
 6. All bracketed numbers: need playtesting (a bot-vs-bot simulator can help).
 
 ## Planned cards (wish list)
-- **UAV group (Specialist):** can force a hidden enemy vehicle or group face up. Whether this is an ability or an attack is undecided.
-  (An ability can be used before attacking the same turn; an attack would use up the turn.)
 - Hand-disruption cards (shrink the opponent's hand), Recycle cards (return resource cards from your discard pile), capture/seize cards.

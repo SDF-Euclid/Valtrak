@@ -36,21 +36,29 @@ public class CardCatalogService {
             case GroundVehicleCard v -> new CardDto(v.getId(), v.getName(), v.getDescription(), level,
                     "VEHICLE", v.getVehicleNation(),
                     v.getVehicleClass() != null ? v.getVehicleClass().getClassName() : null,
-                    v.getVehicleHP(), v.getVehicleArmor(), null, null, null, null, null);
+                    v.getVehicleHP(), v.getVehicleArmor(), null, null, null, null, null, abilityText(v));
             case AmmunitionCard a -> new CardDto(a.getId(), a.getName(), a.getDescription(), level,
                     "AMMUNITION", null, null, null, null,
                     a.getAmmunition() != null ? a.getAmmunition().getDamageType().name() : null,
                     a.getAmmunition() != null ? a.getAmmunition().name() : null,
-                    itemType(a), a.getCount(), null);
+                    itemType(a), a.getCount(), null, null);
             case FuelCard f -> new CardDto(f.getId(), f.getName(), f.getDescription(), level,
-                    "FUEL", null, null, null, null, null, null, itemType(f), f.getCount(), null);
+                    "FUEL", null, null, null, null, null, null, itemType(f), f.getCount(), null, null);
             case SupplyCard sc -> new CardDto(sc.getId(), sc.getName(), sc.getDescription(), level,
-                    "SUPPLY", null, null, null, null, null, null, itemType(sc), sc.getCount(), null);
+                    "SUPPLY", null, null, null, null, null, null, itemType(sc), sc.getCount(), null, null);
             case RepairCard r -> new CardDto(r.getId(), r.getName(), r.getDescription(), level,
-                    "REPAIR", null, null, null, null, null, null, itemType(r), r.getCount(), r.getRepairAmount());
+                    "REPAIR", null, null, null, null, null, null, itemType(r), r.getCount(), r.getRepairAmount(), null);
             default -> new CardDto(card.getId(), card.getName(), card.getDescription(), level,
                     "OTHER", null, null, null, null, null, null,
-                    card instanceof ItemCard i ? itemType(i) : null, null, null);
+                    card instanceof ItemCard i ? itemType(i) : null, null, null, null);
+        };
+    }
+
+    private static String abilityText(GroundVehicleCard v) {
+        if (v.getAbilityType() == null) return null;
+        return switch (v.getAbilityType()) {
+            case REVEAL_ENEMY -> "Reveals up to " + v.getAbilityPower() + " enemy vehicle" + (v.getAbilityPower() == 1 ? "" : "s")
+                    + " (" + v.getAbilityFuelCost() + " Fuel, while face up)";
         };
     }
 

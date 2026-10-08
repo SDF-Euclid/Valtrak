@@ -28,6 +28,7 @@ public final class ActionMapper {
             case "RETREAT" -> new Action.Retreat(need(r.vehicleId(), "vehicleId"));
             case "RETREAT_GROUP" -> new Action.RetreatGroup(need(r.groupId(), "groupId"));
             case "MOVE" -> new Action.Move(need(r.vehicleId(), "vehicleId"), r.toGroupId());
+            case "USE_ABILITY" -> new Action.UseAbility(need(r.vehicleId(), "vehicleId"), needList(r.vehicleIds(), "vehicleIds"));
             case "ATTACK" -> new Action.Attack(need(r.groupId(), "groupId"), choices(r.choices()));
             case "END_TURN" -> new Action.EndTurn();
             default -> throw bad("Unknown action type: " + r.type());

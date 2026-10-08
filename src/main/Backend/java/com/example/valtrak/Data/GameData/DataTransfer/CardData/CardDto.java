@@ -5,6 +5,7 @@ package com.example.valtrak.Data.GameData.DataTransfer.CardData;
  * Fields that don't apply to a card's category are null.
  *
  * @param category VEHICLE, AMMUNITION, FUEL, SUPPLY, REPAIR or OTHER
+ * @param ability  a short description of the vehicle's ability, or null
  */
 public record CardDto(
         Long id,
@@ -20,5 +21,6 @@ public record CardDto(
         String ammunition,
         String itemType,
         Integer count,
-        Integer repairAmount
+        Integer repairAmount,
+        String ability
 ) {}

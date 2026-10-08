@@ -70,7 +70,9 @@ public class DbCardCatalog implements CardCatalog {
         return switch (card) {
             case GroundVehicleCard v -> new VehicleSpec(v.getId(), v.getName(), v.getLevel(),
                     VehicleClass.valueOf(v.getVehicleClass().getClassName()),
-                    v.getVehicleHP(), v.getVehicleArmor(), attacksOf(v));
+                    v.getVehicleHP(), v.getVehicleArmor(), attacksOf(v),
+                    v.getAbilityType() == null ? null
+                            : new AbilitySpec(v.getAbilityType(), v.getAbilityPower(), v.getAbilityFuelCost()));
             case AmmunitionCard a -> new ResourceSpec(a.getId(), a.getName(), a.getLevel(), ResourceKind.AMMO,
                     a.getAmmunition(), a.getCount());
             case FuelCard f -> new ResourceSpec(f.getId(), f.getName(), f.getLevel(), ResourceKind.FUEL, null, f.getCount());

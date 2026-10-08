@@ -8,7 +8,14 @@ import java.util.List;
 import java.util.Optional;
 
 public record VehicleSpec(long cardId, String name, CardLevel level, VehicleClass vehicleClass,
-                          int hp, int armor, List<AttackSpec> attacks) implements CardSpec {
+                          int hp, int armor, List<AttackSpec> attacks, AbilitySpec ability) implements CardSpec {
+
+    /** A vehicle without an ability. */
+    public VehicleSpec(long cardId, String name, CardLevel level, VehicleClass vehicleClass,
+                       int hp, int armor, List<AttackSpec> attacks) {
+        this(cardId, name, level, vehicleClass, hp, armor, attacks, null);
+    }
+
 
     /** Only tanks can lead a group or stand alone as a group of one. */
     public boolean isTank() {

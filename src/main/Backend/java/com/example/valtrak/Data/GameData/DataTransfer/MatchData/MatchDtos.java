@@ -13,7 +13,7 @@ public final class MatchDtos {
 
     /**
      * One move. {@code type} is one of PLACE_STARTING_TANK, DESIGNATE, DEPLOY, CONVOY, REPAIR, REVEAL,
-     * REVEAL_GROUP, RETREAT, RETREAT_GROUP, MOVE, ATTACK, END_TURN; the other fields are the ones that move needs.
+     * REVEAL_GROUP, RETREAT, RETREAT_GROUP, MOVE, USE_ABILITY, ATTACK, END_TURN; the other fields are the ones that move needs.
      */
     public record ActionRequest(String type, Long cardId, Long groupId, Long vehicleId, List<Long> vehicleIds,
                                 Long resourceId, List<Long> resourceIds, Long toGroupId,
@@ -46,7 +46,7 @@ public final class MatchDtos {
 
     /** For a face-down enemy vehicle, everything except {@code id} and {@code faceUp} is null. */
     public record VehicleView(long id, boolean faceUp, Long cardId, Integer hp, Integer maxHp, Integer breachStacks,
-                              Boolean stunned, Boolean suppressed, Boolean disabled) {}
+                              Boolean stunned, Boolean suppressed, Boolean disabled, Boolean abilityUsed) {}
 
     public record ResourceView(long id, long cardId, String kind, String ammunition, int remaining) {}
 }
