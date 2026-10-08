@@ -1,13 +1,11 @@
-# Valtrak Rulebook: DRAFT v0.7
+# Valtrak Rulebook: DRAFT v0.8
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
 
 ## 1. Goal
-Be the first player to take **[3]** Territory Chips. You take one chip each time you destroy an enemy strike group (see §9).
-There are **5** chips in the middle (3 + 3 − 1: the most that can be taken before someone reaches 3), so there is always a winner.
-A player who is behind 0–2 can still win by taking the next three. Chips are never lost.
-You also lose if you must draw from an empty deck.
+Be the first player to take **[7]** Territory Chips. You take chips when you destroy an enemy strike group (see §9). Chips are never lost.
+Games with this target are long, so test **[5]** as well. You also lose if you must draw from an empty deck.
 
 ## 2. Decks
 - **[50–80]** cards, at most **3 copies** of any card.
@@ -32,7 +30,7 @@ A strike group is up to **5** vehicles with these slots:
 
 - **A single tank is a strike group of one.** It needs no formation cost and counts toward your group limit.
   Only tanks can stand alone (assumed); every other vehicle joins an existing group.
-- Group limit: **3** at a time, **+1 for each chip you hold** (so at most +2, since the game ends at 3 chips).
+- Group limit: **3** at a time, **+1 for every 2 chips you hold [so +3 at 6 chips]** (assumed).
 - **Facing:** every vehicle is **face down** (hidden) or **face up** (revealed). Face-down vehicles can't attack or be attacked.
   A group is "revealed" when its attacking vehicles are face up. New vehicles are played face down.
 - **Leaders can't leave:** a Leader stays in the group it leads for as long as it lives. Groups never merge.
@@ -89,14 +87,17 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
    - **Reveal** (turn face up) a vehicle or a whole group: free. A Specialist only does its job while it is face up, but a face-up Specialist can be attacked.
    - **Move a vehicle** to another group: spend Fuel by its rarity from the group it leaves (§4).
    - **Play item cards**.
-3. **Attack, or pass.** Attacking **ends your turn** immediately, so an attacking group stays revealed through your opponent's turn.
+3. **Attack, or pass.** Attacking **ends your turn** immediately, so the vehicles that attacked (and the Leader, in an assault) stay face up
+   through your opponent's turn.
    If you can't or won't attack, choose **End Turn**.
 
 ## 8. Attacking
-- Choose one strike group as the attacker. Only its **face-up** vehicles can attack.
-- Choose which of its vehicles attack (at least one, assumed) and which attack each uses. Add up the requirements of all chosen attacks:
-  the group's pool must contain at least that much of each Ammo type and of Fuel at that moment. **That amount is spent** from the cards in the pool.
-  Anything extra stays in the pool. Use the convoy in your main step, before attacking, to move resources in from your Depot.
+- Choose a strike group, then which of its **face-up** vehicles attack (at least one) and which attack each one uses.
+- **Skirmish:** exactly one vehicle attacks. The Leader may stay face down. Only that vehicle's requirement is paid.
+- **Combined Assault** (names are placeholders): two or more vehicles attack together. **The Leader must be face up** (it does not have to attack).
+- Add up the requirements of all chosen attacks: the group's pool must contain at least that much of each Ammo type and of Fuel at that moment.
+  **That amount is spent** from the cards in the pool. Anything extra stays in the pool.
+  Use the convoy in your main step, before attacking, to move resources in from your Depot.
 - The Resupply vehicle never attacks. A Specialist attacks only if its card lists attacks.
 - Each attack targets one **face-up** enemy vehicle. Damage uses the existing damage-type, armor and special-effect rules.
 - A **face-down Specialist** doesn't stop the group from attacking, but it can't use its ability. The **Resupply** vehicle never has to be
@@ -123,12 +124,13 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
 ---
 
 ## Open questions
-1. **Group upside:** big groups give the opponent a bonus chip when destroyed, so groups need a clear upside beyond making several attacks per turn
-   (for example Leader bonuses). Wait for playtests.
-2. **Stalling:** Recon and UAV vehicles can force a reveal. Is that enough, or do you also want a stalemate rule?
-3. Fuel costs for retreating and moving vehicles, convoy capacity (and whether to keep the cap), group-size chip bonus.
-4. Resupply abilities beyond moving cards, special item rules, and air units.
-5. All bracketed numbers: need playtesting (a bot-vs-bot simulator can help).
+1. **Chips to win** (7 vs 5) and game length against the deck limits.
+2. **Group upside:** big groups give the opponent a bonus chip when destroyed, so groups need a clear upside
+   (Combined Assault's several attacks, Leader bonuses later). Wait for playtests.
+3. Names for Skirmish and Combined Assault.
+4. Fuel costs for retreating and moving vehicles, convoy capacity (and whether to keep the cap), group-size chip bonus.
+5. Resupply abilities beyond moving cards, special item rules, and air units.
+6. All bracketed numbers: need playtesting (a bot-vs-bot simulator can help).
 
 ## Planned cards (wish list)
 - **UAV group (Specialist):** can force a hidden enemy vehicle or group face up. Whether this is an ability or an attack is undecided.
