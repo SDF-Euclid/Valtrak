@@ -81,8 +81,8 @@ Resources are **cards**, and they stay on the table as cards. Ammo, Fuel and Sup
 1. **Draw 1 card** (items or field conditions can add more). The first player also draws on turn 1.
 2. **Main step.** Do any of these in any order, as often as the rules allow:
    - **Designate** a Resource card into your Depot or a group's pool, and use a **convoy** to refill a pool (§5).
-   - **Deploy** a vehicle from hand, face down: as a lone tank, or into a hidden group with a free slot. No resource cost.
-   - **Form** a strike group (§4), **organize** hidden groups (§4), **heal** with a Repair card (§5).
+   - **Deploy** a vehicle from hand, face down: as a lone tank, or into a group with a free slot. No resource cost.
+   - **Form** a strike group (§4), **heal** with a Repair card (§5).
    - **Retreat** a vehicle (turn it face down): spend Fuel from its group's pool by its rarity
      (Common/Uncommon **[1]**, Rare/Epic **[2]**, Legendary/Commander **[3]**). It **stays in its group**.
    - **Retreat the whole group:** spend **[double]** the Leader's retreat cost; every vehicle in the group turns face down.
