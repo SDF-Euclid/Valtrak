@@ -116,6 +116,32 @@ class HiddenArtilleryTest {
     }
 
     @Test
+    void aRepairCardClearsTheCountersEvenOnAVehicleAtFullHealth() {
+        fire(line, aircraft);
+        w.act(0, new EndTurn());
+        ResourceStack kit = w.depot(1, REPAIR_25);
+        ActionResult r = w.act(1, new Repair(kit.id, line.id));
+        assertThat(line.hiddenHits).isEmpty();
+        assertThat(r.log).anyMatch(l -> l.contains("clear the artillery counters"));
+        w.act(1, new Reveal(List.of(line.id)));
+        assertThat(line.hp).as("nothing left to resolve").isEqualTo(80);
+        assertThat(aircraft.hiddenHits).as("only the repaired vehicle is cleared").containsExactly(40);
+    }
+
+    @Test
+    void aPartialRepairIsRefusedWhenItWouldDoNothing() {
+        Vehicle mine = w.group(0, TANK_COMMON, true).leader();
+        mine.breachStacks = 2;                                // full HP, but BREACH only goes with a full repair
+        ResourceStack kit = w.depot(0, REPAIR_25);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> w.act(0, new Repair(kit.id, mine.id)))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("doesn't need repairs");
+        assertThat(w.p(0).depot).contains(kit);
+        ResourceStack full = w.depot(0, REPAIR_FULL);
+        w.act(0, new Repair(full.id, mine.id));
+        assertThat(mine.breachStacks).isZero();
+    }
+
+    @Test
     void countersSurviveCopyingAndSaving() {
         fire(line);
         GameState copy = w.s.copy();

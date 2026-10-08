@@ -262,13 +262,18 @@ public final class GameEngine {
         Vehicle v = findVehicle(me, a.vehicleId()).vehicle;
         ResourceSpec spec = catalog.resource(card.cardId);
         boolean full = spec.amount() >= rules.fullRepairThreshold;
-        if (v.hp >= v.maxHp && v.breachStacks == 0) throw violation("That vehicle doesn't need repairs.");
+        boolean helpsHp = v.hp < v.maxHp;
+        boolean helpsBreach = full && v.breachStacks > 0;          // only full repairs remove BREACH
+        boolean clearsCounters = !v.hiddenHits.isEmpty();
+        if (!helpsHp && !helpsBreach && !clearsCounters) throw violation("That vehicle doesn't need repairs.");
         int healed = full ? v.maxHp - v.hp : Math.min(spec.amount(), v.maxHp - v.hp);
         v.hp += healed;
         if (full) v.breachStacks = 0;
+        v.hiddenHits.clear();                                       // any repair clears Artillery counters on a hidden vehicle
         me.depot.remove(card);
         me.discard.add(card.cardId);
-        r.say("Repairs restore " + healed + " HP" + (full ? " and remove BREACH." : "."));
+        r.say("Repairs restore " + healed + " HP" + (full && helpsBreach ? " and remove BREACH" : "")
+                + (clearsCounters ? " and clear the artillery counters" : "") + ".");
     }
 
     private void reveal(GameState s, PlayerState me, PlayerState opp, Reveal a, ActionResult r) {
