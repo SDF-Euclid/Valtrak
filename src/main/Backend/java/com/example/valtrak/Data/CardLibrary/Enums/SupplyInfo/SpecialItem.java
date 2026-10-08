@@ -81,9 +81,9 @@ public enum SpecialItem implements SpecialItemInterface {
 
     /*==================== AIRDROP (Depot to pool without a Resupply vehicle) ====================*/
 
-    SUPPLY_DROP("Supply Drop", "Move 1 Ammo or Fuel card from your Depot into one of your strike group pools. No Resupply vehicle needed", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 1.0, 0.0),
-    AIRDROP_PALLET("Airdrop", "Move up to 2 Ammo or Fuel cards from your Depot into one of your strike group pools. No Resupply vehicle needed", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 2.0, 0.0),
-    EMERGENCY_AIRLIFT("Emergency Airlift", "Move up to 3 Ammo or Fuel cards from your Depot into one of your strike group pools. No Resupply vehicle needed", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 3.0, 0.0);
+    SUPPLY_DROP("Supply Drop", "Move 1 Ammo or Fuel card from your Depot into one of your strike group pools. No Resupply vehicle needed. Once per turn", CardLevel.COMMON, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 1.0, 0.0),
+    AIRDROP_PALLET("Airdrop", "Move up to 2 Ammo or Fuel cards from your Depot into one of your strike group pools. No Resupply vehicle needed. Once per turn", CardLevel.RARE, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 2.0, 0.0),
+    EMERGENCY_AIRLIFT("Emergency Airlift", "Move up to 3 Ammo or Fuel cards from your Depot into one of your strike group pools. No Resupply vehicle needed. Once per turn", CardLevel.LEGENDARY, ItemType.SPECIAL, 1, SpecialItemEffect.AIRDROP, 3.0, 0.0);
 
     private final String itemName;
     private final String itemDescription;

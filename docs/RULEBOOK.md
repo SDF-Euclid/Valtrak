@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.17
+# Valtrak Rulebook: DRAFT v0.18
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -118,7 +118,7 @@ Cards come in the rarities listed; the number is by rarity: **C / U / R / E / L*
 | **Camouflage** (attached to a vehicle) | Retreating this vehicle costs less Fuel (never below 0). If it is a group's Leader, a group retreat costs less too. It goes to the discard pile if the vehicle is destroyed and returns to your hand with it, like ERA. | **[1 / 1 / 2 / 2 / 3]** less Fuel (cards exist at C, R, L) |
 | **Sabotage** (**1 per turn**) | Your opponent discards **up to 3** cards from their hand, **chosen at random** (fewer if they hold fewer). They go to the public discard pile, so you see what they were. Condition: your opponent has a card in hand. | one card (Rare) |
 | **Recycle** | Return up to *N* resource cards from your discard pile to your hand. | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
-| **Airdrop** | Move up to *N* **Ammo or Fuel** cards from your Depot into one of your strike groups' pools. **No Resupply vehicle needed**, and it doesn't use up the convoy's per-turn capacity. (Supply and Repair cards can't go into a pool.) | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
+| **Airdrop** (**1 per turn**) | Move up to *N* **Ammo or Fuel** cards from your Depot into one of your strike groups' pools. **No Resupply vehicle needed**, and it doesn't use up the convoy's per-turn capacity. (Supply and Repair cards can't go into a pool.) | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
 | **Rapid Deployment** | Deploy up to *N* vehicles from your hand into one of your strike groups **without paying the formation cost** (slot rules still apply). | *N* = **1 / 1 / 2 / 2 / 3** (cards exist at C, R, L) |
 
 ## 8. Attacking

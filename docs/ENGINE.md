@@ -36,7 +36,7 @@ validates and returns what to do), then pays the optional Supply cost (`GameRule
   vehicles, which are turned face up. A target that has left the field, or gone face down, since an earlier hit in the same play is skipped.
 - **Search** shuffles with `GameState.rngSeed` (a seed stored in the state and never sent to players), so a saved game replays the same way.
 - **Draw** is refused if the deck has fewer than `count` cards.
-- **Per-turn limits:** `GameRules.itemLimitPerTurn` (Artillery 1, Sabotage 1); uses are counted in `PlayerState.itemUses` and cleared when the turn starts.
+- **Per-turn limits:** `GameRules.itemLimitPerTurn` (Artillery 1, Sabotage 1, Airdrop 1); uses are counted in `PlayerState.itemUses` and cleared when the turn starts.
 - **Smoke** sets `Vehicle.smoked` (can't be targeted by attacks or Artillery, and can't attack); it is cleared when its owner's next turn starts.
 - **Jammer** is part of the group, not a vehicle: `StrikeGroup.jammerCardId`, `jammerId` (its target id), `jammerHp`, `jammerOn`. `Action.SetJammer` switches it
   (free, any time). `UseAbility` can't target vehicles in a group where `jammed()` is true. At the start of its owner's turn a Jammer that is on pays its

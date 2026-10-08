@@ -391,6 +391,22 @@ class MoreItemCardsTest {
         assertThat(w.p(0).hand).containsExactlyInAnyOrder(AIRDROP_1, AIRDROP_2);
     }
 
+    @Test
+    void airdropsAreLimitedToOnePerTurnWhateverTheirRarity() {
+        ResourceStack a = w.depot(0, FUEL_5);
+        ResourceStack b = w.depot(0, FUEL_1);
+        w.hand(0, AIRDROP_1, AIRDROP_2);
+        w.act(0, new PlayItem(AIRDROP_1, List.of(mine.id), List.of(a.id)));
+        assertThatThrownBy(() -> w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of(b.id))))
+                .isInstanceOf(RuleViolationException.class).hasMessageContaining("only play 1 Airdrop card per turn");
+        assertThat(w.p(0).depot).containsExactly(b);
+        w.p(0).deck.add(TANK_COMMON);
+        w.act(0, new EndTurn());
+        w.act(1, new EndTurn());
+        w.act(0, new PlayItem(AIRDROP_2, List.of(mine.id), List.of(b.id)));    // a new turn: allowed again
+        assertThat(mine.pool).contains(a, b);
+    }
+
     // ── recycle ──────────────────────────────────────────────────────────────
 
     @Test
@@ -470,6 +486,7 @@ class MoreItemCardsTest {
         assertThat(rules.damagePercent).isEqualTo(400);
         assertThat(rules.itemLimit(ItemEffect.ARTILLERY)).isEqualTo(1);
         assertThat(rules.itemLimit(ItemEffect.SABOTAGE)).isEqualTo(1);
+        assertThat(rules.itemLimit(ItemEffect.AIRDROP)).isEqualTo(1);
         assertThat(rules.itemLimit(ItemEffect.DRAW)).isZero();
     }
 }

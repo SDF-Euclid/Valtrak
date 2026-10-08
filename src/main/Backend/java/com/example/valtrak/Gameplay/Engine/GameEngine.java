@@ -430,6 +430,7 @@ public final class GameEngine {
         return switch (spec.effect()) {
             case ARTILLERY -> "Artillery";
             case SABOTAGE -> "Sabotage";
+            case AIRDROP -> "Airdrop";
             default -> spec.name();
         };
     }

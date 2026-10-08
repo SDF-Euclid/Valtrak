@@ -55,7 +55,7 @@ public class GameRules {
     public Map<CardLevel, Integer> itemSupply = byLevel(0, 0, 0, 0, 0, 0);
     public CardLevel artilleryBlindFrom = CardLevel.LEGENDARY;
     // how many cards of a limited kind a player may play per turn (kinds not listed have no limit)
-    public Map<ItemEffect, Integer> itemLimitPerTurn = new EnumMap<>(Map.of(ItemEffect.ARTILLERY, 1, ItemEffect.SABOTAGE, 1));
+    public Map<ItemEffect, Integer> itemLimitPerTurn = new EnumMap<>(Map.of(ItemEffect.ARTILLERY, 1, ItemEffect.SABOTAGE, 1, ItemEffect.AIRDROP, 1));
 
     public static GameRules defaults() {
         return new GameRules();
