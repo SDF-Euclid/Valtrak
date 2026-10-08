@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.4
+# Valtrak Rulebook: DRAFT v0.5
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -53,6 +53,8 @@ Resources are counters. When you play a Resource card it goes to your discard pi
 - A **lone tank's pool** is its own; when other vehicles join it, the pool becomes the group's pool (assumed).
 - **Designate:** play one Resource card per turn **[1]** (items can raise this). Put it in your Depot, or directly into a group's pool (unlimited amount, but at risk).
 - Depot contents are public (assumed); the number of resources in each pool is public too.
+- **No storage limit:** a pool and the Depot can hold any amount. The risk of losing half a pool when its Leader dies is the balance for that.
+  There is also **no hand limit**; draw-more cards are kept in check by the risk of decking out (§1).
 - **Convoy (a Resupply vehicle in the group):** during your main step you may move resources from your Depot into the group's pool,
   up to the Resupply vehicle's **capacity** per turn (a number on its card; assumed **[Common 3, Rare 6, Legendary 10]**).
   Without a convoy, resources can't move from the Depot into a pool. Any resources beyond the capacity must already be in the pool.
@@ -108,7 +110,12 @@ Resources are counters. When you play a Resource card it goes to your discard pi
 ---
 
 ## Open questions
-1. Convoy capacity numbers per Resupply vehicle, and whether a cap is worth the extra rules.
-2. A hand limit (and, if you add one, an extra "reserve" play area for spare vehicles).
-3. Resupply vehicle abilities beyond moving resources, special item rules, and where air units fit.
-4. All bracketed numbers: need playtesting.
+1. **Retreat:** does a retreated vehicle stay in its group (face down, can't attack or be attacked), and what happens if the Leader retreats?
+2. **Stalling:** what forces a hidden player to reveal? (Recon vehicles, a stalemate rule.)
+3. **Chip value:** should destroying a group of five be worth more than destroying a lone tank?
+4. **Repair counters:** how to handle "Full Repairs" (999 HP) when Repair is stored in the Depot.
+5. Convoy capacity numbers (and whether to keep the cap), second-player compensation, Resupply abilities, special items, and air units.
+6. All bracketed numbers: need playtesting (a bot-vs-bot simulator can help).
+
+## Planned cards (wish list)
+- Hand-disruption cards (shrink the opponent's hand), recycle cards (return part of the spent pile), capture/seize cards.
