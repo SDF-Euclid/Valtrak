@@ -42,6 +42,8 @@ public class PlayScene {
     private final Label status = new Label();
     private final ComboBox<DeckDto> myDeck = new ComboBox<>();
     private Timeline refresher;
+    private boolean opening;      // a game is being opened: ignore more clicks on Open
+    private boolean left;         // this screen was left: don't open anything any more
 
     public PlayScene(Stage stage, Map<Long, CardDto> cards, List<DeckDto> decks) {
         this.stage = stage;
@@ -221,16 +223,22 @@ public class PlayScene {
     // ── opening a game ───────────────────────────────────────────────────────
 
     private void open(long matchId, String opponent) {
+        if (opening || left) return;
+        opening = true;
         say("Opening the game...", false);
         Ui.async(() -> ServerApi.fetchMatch(matchId), view -> {
+            opening = false;
+            if (left) return;
+            left = true;
             if (refresher != null) refresher.stop();
             stage.setResizable(true);
             BoardScene board = new BoardScene(stage, matchId, opponent, cards, view, this::backToLobby);
             stage.setScene(board.build());
-            stage.setWidth(BoardScene.WIDTH);
-            stage.setHeight(BoardScene.HEIGHT);
+            var screen = javafx.stage.Screen.getPrimary().getVisualBounds();   // fit small laptop screens
+            stage.setWidth(Math.min(BoardScene.WIDTH, screen.getWidth()));
+            stage.setHeight(Math.min(BoardScene.HEIGHT, screen.getHeight()));
             stage.centerOnScreen();
-        }, err -> say(err.getMessage(), true));
+        }, err -> { opening = false; say(err.getMessage(), true); });
     }
 
     private void backToLobby() {
@@ -241,6 +249,7 @@ public class PlayScene {
     }
 
     private void leave() {
+        left = true;
         if (refresher != null) refresher.stop();
         stage.setResizable(false);
         stage.setScene(new MainMenuScene(stage).build());

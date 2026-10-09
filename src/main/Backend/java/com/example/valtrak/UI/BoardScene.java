@@ -55,6 +55,7 @@ public class BoardScene {
     private GameView view;
     private Pending pending;
     private boolean busy;
+    private boolean polling;              // a poll is already on its way: don't start another
     private int lastLogSeq;
     private Timeline poll;
 
@@ -119,7 +120,7 @@ public class BoardScene {
         String color = GOLD;
         if (finished()) {
             boolean won = view.winner() == view.youIndex();
-            turn = (won ? "VICTORY" : "DEFEAT") + (view.endReason() == null ? "" : " - " + view.endReason());
+            turn = (won ? "VICTORY" : "DEFEAT") + (view.endReason() == null ? "" : " - " + relative(view.endReason()));
             color = won ? GREEN : Ui.ERROR;
         } else if ("SETUP".equals(view.phase())) {
             turn = view.yourTurn() ? "SETUP: click a tank in your hand to place it as your starting tank" : "SETUP: waiting for your opponent to place a tank";
@@ -189,7 +190,7 @@ public class BoardScene {
         scroll.setFitToHeight(true);
         scroll.setMinHeight(236);
         scroll.setPrefHeight(236);
-        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);   // a tall group must not hide its pool line
         scroll.setStyle("-fx-background: " + Ui.BG + "; -fx-background-color: transparent;");
         return new VBox(4, head, scroll);
     }
@@ -838,8 +839,10 @@ public class BoardScene {
         d.getDialogPane().setContent(box);
         d.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         ((Button) d.getDialogPane().lookupButton(ButtonType.OK)).setText("ATTACK");
-        d.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
+        Button attackButton = (Button) d.getDialogPane().lookupButton(ButtonType.OK);
+        attackButton.addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
             ev.consume();
+            if (busy) return;                                   // one attack at a time (a double-click would send two)
             List<AttackChoiceRequest> choices = new ArrayList<>();
             for (AttackRow r : rows) {
                 if (!r.use.isSelected()) continue;
@@ -848,9 +851,11 @@ public class BoardScene {
             }
             if (choices.isEmpty()) { error.setText("Tick at least one vehicle."); return; }
             error.setText("");
+            busy = true;
+            attackButton.setDisable(true);
             Ui.async(() -> ServerApi.act(matchId, Moves.attack(g.id(), choices)),
-                    resp -> { d.close(); applyView(resp.view()); },
-                    err -> error.setText(err.getMessage()));
+                    resp -> { busy = false; d.close(); applyView(resp.view()); },
+                    err -> { busy = false; attackButton.setDisable(false); error.setText(err.getMessage()); });
         });
         d.show();
     }
@@ -883,12 +888,14 @@ public class BoardScene {
 
     private void resignNow() {
         busy = true;
+        render();
         Ui.async(() -> ServerApi.resign(matchId),
                 resp -> { busy = false; applyView(resp.view()); },
                 err -> { busy = false; say(err.getMessage(), true); render(); });
     }
 
     private void applyView(GameView fresh) {
+        if (fresh.version() < view.version()) return;          // an answer that arrived late: we already have something newer
         view = fresh;
         pending = null;
         render();
@@ -896,15 +903,18 @@ public class BoardScene {
     }
 
     private void pollServer() {
-        if (busy || finished()) return;
+        if (busy || polling || finished()) return;
+        polling = true;
         Ui.async(() -> ServerApi.fetchMatch(matchId), fresh -> {
-            if (fresh.version() != view.version() && !busy) applyView(fresh);
-        }, err -> { /* the next poll will try again */ });
+            polling = false;
+            if (fresh.version() > view.version() && !busy) applyView(fresh);   // never go back to an older state
+        }, err -> polling = false);                                              // the next poll will try again
     }
 
     private void refreshLog() {
         Ui.async(() -> ServerApi.fetchLog(matchId, lastLogSeq), lines -> {
             for (LogLine l : lines) {
+                if (l.seq() <= lastLogSeq) continue;              // two refreshes that overlapped asked for the same lines
                 logList.getItems().add(relative(l.text()));
                 lastLogSeq = Math.max(lastLogSeq, l.seq());
             }
@@ -924,7 +934,8 @@ public class BoardScene {
         StringBuilder sb = new StringBuilder();
         while (m.find()) m.appendReplacement(sb, "You " + java.util.regex.Matcher.quoteReplacement(plain(m.group(1))));
         m.appendTail(sb);
-        return sb.toString();
+        String text = sb.toString();
+        return text.startsWith("You ") ? text.replace(" their ", " your ") : text;   // "You end your turn"
     }
 
     /** The verb for "you" from the verb for "he/she/it" ("places" -> "place", "launches" -> "launch"). */

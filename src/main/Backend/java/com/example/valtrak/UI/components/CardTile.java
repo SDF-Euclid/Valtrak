@@ -108,8 +108,24 @@ public class CardTile {
         return star;
     }
 
-    /** The picture on a card (a vehicle, a shell, a fuel drum...). */
+    /** Pictures already drawn, by what they depend on: drawing one is slow (a snapshot and a pixel scan), copying it is fast. */
+    private static final java.util.Map<String, javafx.scene.image.WritableImage> ART = new java.util.HashMap<>();
+
+    /** The picture on a card (a vehicle, a shell, a fuel drum...). Call on the JavaFX thread. */
     public static Canvas artFor(CardDto card) {
+        String key = card.category() + "|" + card.vehicleClass() + "|" + card.nation() + "|" + card.damageType()
+                + "|" + card.count() + "|" + card.itemType();
+        javafx.scene.image.WritableImage image = ART.computeIfAbsent(key, k -> {
+            javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+            params.setFill(Color.TRANSPARENT);
+            return drawArt(card).snapshot(params, null);
+        });
+        Canvas canvas = new Canvas(image.getWidth(), image.getHeight());
+        canvas.getGraphicsContext2D().drawImage(image, 0, 0);
+        return canvas;
+    }
+
+    private static Canvas drawArt(CardDto card) {
         return switch (card.category()) {
             case "VEHICLE"    -> CardArtRenderer.createVehicleArt(
                     card.vehicleClass() != null ? card.vehicleClass() : "UNKNOWN", card.nation());
