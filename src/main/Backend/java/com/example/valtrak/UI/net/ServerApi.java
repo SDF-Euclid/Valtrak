@@ -81,6 +81,11 @@ public class ServerApi {
         send("POST", "/account/logout", null, null);
     }
 
+    /** The profile of the player a token belongs to (used to check a saved sign-in at start-up). */
+    public static ProfileDto fetchProfile(String token) throws IOException {
+        return send("GET", "/account/me", null, new TypeReference<ProfileDto>() {}, token);
+    }
+
     public static ProfileDto updateProfile(String displayName, String nation) throws IOException {
         return send("PUT", "/account/me", new UpdateProfileRequest(displayName, nation),
                 new TypeReference<ProfileDto>() {});
@@ -159,11 +164,15 @@ public class ServerApi {
     // ── Plumbing ─────────────────────────────────────────────────────────────
 
     private static <T> T send(String method, String path, Object body, TypeReference<T> type) throws IOException {
+        return send(method, path, body, type, AccountSession.isSignedIn() ? AccountSession.token() : null);
+    }
+
+    private static <T> T send(String method, String path, Object body, TypeReference<T> type, String token) throws IOException {
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(BASE_URL + path))
                 .timeout(Duration.ofSeconds(15))
                 .header("Accept", "application/json");
-        if (AccountSession.isSignedIn()) {
-            builder.header("Authorization", "Bearer " + AccountSession.token());
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
         }
         if (body != null) {
             builder.header("Content-Type", "application/json");

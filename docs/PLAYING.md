@@ -3,7 +3,9 @@
 In the **Deck Builder**, the search box finds cards by any words on them: name, nation, class, rarity, ammunition or text
 (for example "japan legendary" or "heat 120mm"). The + buttons stop at the copy limit for each card's rarity.
 
-Sign in (practice games and challenges are saved to your account), then press **PLAY GAME**.
+Sign in (practice games and challenges are saved to your account), then press **PLAY GAME**. With **Stay signed in on this
+computer** ticked (the default), the app signs you back in when it starts; **Sign out** in My Account forgets it. The sign-in is
+saved in `.valtrak/session.properties` in your user folder and lasts 30 days.
 
 ## The lobby
 - **Your deck:** the deck you take into a game. It has to be playable (60-100 cards, at least 12 tanks). Build decks in the Deck Builder.

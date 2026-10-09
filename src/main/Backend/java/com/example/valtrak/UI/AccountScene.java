@@ -10,6 +10,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.paint.Color;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -35,6 +37,8 @@ public class AccountScene {
     private final VBox content = new VBox(12);
     private List<String> nationNames;
     private Timeline resendTimer;
+    /** "Stay signed in on this computer" (ticked unless the player unticks it). */
+    private boolean remember = true;
 
     public AccountScene(Stage stage) {
         this.stage = stage;
@@ -81,7 +85,7 @@ public class AccountScene {
             Ui.message(status, "Signing in...", false);
             Ui.async(() -> ServerApi.login(email.getText(), password.getText()),
                     login -> {
-                        AccountSession.signIn(login);
+                        AccountSession.signIn(login, remember);
                         goHome();
                     },
                     err -> {
@@ -101,9 +105,14 @@ public class AccountScene {
         Button guest = Ui.link("Continue as guest");
         guest.setOnAction(e -> goHome());
 
+        CheckBox stay = new CheckBox("Stay signed in on this computer");
+        stay.setSelected(remember);
+        stay.setTextFill(Color.web(Ui.TEXT));
+        stay.selectedProperty().addListener((o, was, is) -> remember = is);
+
         content.getChildren().setAll(Ui.heading("SIGN IN", 20),
                 Ui.body("An account lets you save favorites and customize your profile."),
-                email, password, signIn, status, create, guest);
+                email, password, stay, signIn, status, create, guest);
     }
 
     // ── Create account ───────────────────────────────────────────────────────
@@ -202,7 +211,7 @@ public class AccountScene {
             Ui.message(status, "Checking code...", false);
             Ui.async(() -> ServerApi.verify(email, code.getText(), password),
                     login -> {
-                        AccountSession.signIn(login);
+                        AccountSession.signIn(login, remember);
                         goHome();
                     },
                     err -> {

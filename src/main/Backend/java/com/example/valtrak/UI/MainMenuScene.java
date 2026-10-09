@@ -77,6 +77,12 @@ public class MainMenuScene {
             who.setText("Signed in as " + profile.displayName()
                     + (profile.nationAbbreviation().isEmpty() ? "" : "  [" + profile.nationAbbreviation() + "]"));
             who.setTextFill(Color.web(Ui.OK));
+        } else if (AccountSession.isRestoring()) {
+            who.setText("Signing you back in...");
+            who.setTextFill(Color.web(Ui.DIM));
+        } else if (AccountSession.restoreWasOffline()) {
+            who.setText("Couldn't reach the server to sign you back in. Playing as guest for now.");
+            who.setTextFill(Color.web(Ui.DIM));
         } else {
             who.setText("Playing as guest  ·  sign in to save favorites and decks");
             who.setTextFill(Color.web(Ui.DIM));
