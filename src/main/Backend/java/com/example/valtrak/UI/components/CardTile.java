@@ -113,6 +113,8 @@ public class CardTile {
 
     /** The picture on a card (a vehicle, a shell, a fuel drum...). Call on the JavaFX thread. */
     public static Canvas artFor(CardDto card) {
+        Canvas real = realArt(card);
+        if (real != null) return real;
         String key = card.category() + "|" + card.vehicleClass() + "|" + card.nation() + "|" + card.damageType()
                 + "|" + card.count() + "|" + card.itemType();
         javafx.scene.image.WritableImage image = ART.computeIfAbsent(key, k -> {
@@ -122,6 +124,43 @@ public class CardTile {
         });
         Canvas canvas = new Canvas(image.getWidth(), image.getHeight());
         canvas.getGraphicsContext2D().drawImage(image, 0, 0);
+        return canvas;
+    }
+
+    // ── real card art ─────────────────────────────────────────────────────────
+
+    /** Real pictures by file name; an empty entry means "looked, there is none" (so the disk is only checked once). */
+    private static final java.util.Map<String, java.util.Optional<javafx.scene.image.Image>> REAL = new java.util.HashMap<>();
+
+    /**
+     * The file name a card's real picture should have, from its name: lower case, anything that isn't a letter or digit
+     * becomes a dash. "Leopard 2A7V" -> "leopard-2a7v", "Sho't Kal" -> "sho-t-kal", "5x 120mm HEAT Crate" -> "5x-120mm-heat-crate".
+     */
+    public static String artFileName(String cardName) {
+        return cardName == null ? "" : cardName.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+    }
+
+    /**
+     * A card's real picture, if one has been added: {@code art/cards/<file name>.png} (or .jpg) in the client's resources
+     * (src/main/Backend/resources/art/cards/). It is scaled to fill the picture area and centred. Null if there is none, and
+     * the generated placeholder is used instead.
+     */
+    private static Canvas realArt(CardDto card) {
+        String file = artFileName(card.name());
+        if (file.isEmpty()) return null;
+        javafx.scene.image.Image image = REAL.computeIfAbsent(file, f -> {
+            for (String ext : new String[]{".png", ".jpg"}) {
+                var url = CardTile.class.getResource("/art/cards/" + f + ext);
+                if (url != null) return java.util.Optional.of(new javafx.scene.image.Image(url.toExternalForm()));
+            }
+            return java.util.Optional.empty();
+        }).orElse(null);
+        if (image == null || image.isError()) return null;
+        double w = CardArtRenderer.W, h = CardArtRenderer.H;
+        double scale = Math.max(w / image.getWidth(), h / image.getHeight());     // fill the area, crop what sticks out
+        double sw = w / scale, sh = h / scale;
+        Canvas canvas = new Canvas(w, h);
+        canvas.getGraphicsContext2D().drawImage(image, (image.getWidth() - sw) / 2, (image.getHeight() - sh) / 2, sw, sh, 0, 0, w, h);
         return canvas;
     }
 
