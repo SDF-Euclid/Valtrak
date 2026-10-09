@@ -1,5 +1,8 @@
 # Playing Valtrak (desktop client)
 
+In the **Deck Builder**, the search box finds cards by any words on them: name, nation, class, rarity, ammunition or text
+(for example "japan legendary" or "heat 120mm"). The + buttons stop at the copy limit for each card's rarity.
+
 Sign in (practice games and challenges are saved to your account), then press **PLAY GAME**.
 
 ## The lobby

@@ -625,6 +625,14 @@ public class CardArtRenderer {
             case "United States" -> "#003087";
             case "Russia"        -> "#CC2020";
             case "Germany"       -> "#CCAA00";
+            case "Japan"         -> "#BC002D";
+            case "China"         -> "#DE2910";
+            case "United Kingdom" -> "#C8102E";
+            case "France"        -> "#0055A4";
+            case "Israel"        -> "#0038B8";
+            case "Sweden"        -> "#FECC02";
+            case "Italy"         -> "#009246";
+            case "South Korea"   -> "#003478";
             default              -> "#404040";
         };
         gc.setFill(Color.web(color, 0.85));

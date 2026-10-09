@@ -109,6 +109,36 @@ public enum USGroundVehicles implements GroundVehicleCardInterface {
                         new VehicleAttackDefinition("Cannon Shot", AttackSlot.ATTACK_2, Weapon.SMOOTHBORE_CANNON_120MM, 45, 2, 0, SpecialEffect.NONE),
                         new VehicleAttackDefinition("Sabot Barrage", AttackSlot.ATTACK_3, Weapon.SMOOTHBORE_CANNON_120MM, 80, 3, 1, SpecialEffect.PIERCE)
                 )
+    ),
+
+    /*==================== ADDED IN THE ROSTER UPDATE (stats are placeholders) ====================*/
+
+    M8_BUFORD("M8 Buford AGS",
+            "United States",
+            "A light armored gun system built to be air-dropped with airborne troops.",
+            CardLevel.COMMON,
+            VehicleType.GROUND,
+            VehicleClass.LIGHT_TANK,
+            30,
+            130,
+            List.of(
+                new VehicleAttackDefinition("Coax MG", AttackSlot.ATTACK_1, Weapon.COAX_MG_762_NATO, 10, 1, 0, SpecialEffect.SUPPRESSION),
+                new VehicleAttackDefinition("Cannon shot", AttackSlot.ATTACK_2, Weapon.RIFLED_CANNON_105MM, 28, 2, 0, SpecialEffect.NONE)
+            )
+    ),
+
+    M10_BOOKER("M10 Booker",
+            "United States",
+            "A light tank that gives infantry brigades direct fire support.",
+            CardLevel.UNCOMMON,
+            VehicleType.GROUND,
+            VehicleClass.LIGHT_TANK,
+            40,
+            155,
+            List.of(
+                new VehicleAttackDefinition("Coax MG", AttackSlot.ATTACK_1, Weapon.COAX_MG_762_NATO, 10, 1, 0, SpecialEffect.SUPPRESSION),
+                new VehicleAttackDefinition("Cannon shot", AttackSlot.ATTACK_2, Weapon.RIFLED_CANNON_105MM, 32, 2, 0, SpecialEffect.NONE)
+            )
     );
 
     /*===========================================================*/

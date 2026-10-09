@@ -45,7 +45,41 @@ public enum ResupplyVehicles implements GroundVehicleCardInterface {
 
     HX_ARMORED_LOGISTICS("Rheinmetall HX Armored Logistics Truck", "Germany",
             "An armored logistics vehicle with a protected cab and a modular cargo bed.",
-            CardLevel.LEGENDARY, VehicleType.GROUND, VehicleClass.SUPPLY, 40, 200, List.of(), null);
+            CardLevel.LEGENDARY, VehicleType.GROUND, VehicleClass.SUPPLY, 40, 200, List.of(), null),
+
+    /*==================== ADDED IN THE ROSTER UPDATE ====================*/
+
+    TYPE_73_TRUCK("Type 73 Heavy Truck", "Japan",
+            "A Japanese heavy cargo truck that keeps a strike group supplied.",
+            CardLevel.RARE, VehicleType.GROUND, VehicleClass.SUPPLY, 20, 140, List.of(), null),
+
+    SHAANXI_SX2190("Shaanxi SX2190 Truck", "China",
+            "A rugged Chinese military cargo truck.",
+            CardLevel.RARE, VehicleType.GROUND, VehicleClass.SUPPLY, 20, 140, List.of(), null),
+
+    MAN_SV("MAN SV Support Vehicle", "United Kingdom",
+            "The British Army's standard logistics truck.",
+            CardLevel.RARE, VehicleType.GROUND, VehicleClass.SUPPLY, 20, 140, List.of(), null),
+
+    ARQUUS_ARMIS("Arquus Armis Truck", "France",
+            "A French tactical logistics truck.",
+            CardLevel.RARE, VehicleType.GROUND, VehicleClass.SUPPLY, 20, 140, List.of(), null),
+
+    NAMER_LOGISTICS("Namer Armored Logistics Carrier", "Israel",
+            "A heavily armored carrier that brings supplies through contested ground.",
+            CardLevel.LEGENDARY, VehicleType.GROUND, VehicleClass.SUPPLY, 40, 200, List.of(), null),
+
+    SCANIA_SBAT("Scania SBAT 111 Truck", "Sweden",
+            "A Swedish all-terrain military truck.",
+            CardLevel.RARE, VehicleType.GROUND, VehicleClass.SUPPLY, 20, 140, List.of(), null),
+
+    IVECO_TRAKKER("Iveco Trakker Truck", "Italy",
+            "An Italian heavy tactical truck.",
+            CardLevel.RARE, VehicleType.GROUND, VehicleClass.SUPPLY, 20, 140, List.of(), null),
+
+    KM500_TRUCK("KM500 Cargo Truck", "South Korea",
+            "A Korean military cargo truck.",
+            CardLevel.RARE, VehicleType.GROUND, VehicleClass.SUPPLY, 20, 140, List.of(), null);
 
     private final String vehicleName;
     private final String vehicleNation;

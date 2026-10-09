@@ -53,6 +53,66 @@ public enum GermanVehicles implements GroundVehicleCardInterface {
                     new VehicleAttackDefinition("Cannon shot", AttackSlot.ATTACK_2, Weapon.SMOOTHBORE_CANNON_120MM, 48, 2, 0, SpecialEffect.NONE),
                     new VehicleAttackDefinition("Sabot barrage", AttackSlot.ATTACK_3, Weapon.SMOOTHBORE_CANNON_120MM, 82, 3, 1, SpecialEffect.PIERCE)
             )
+    ),
+
+    /*==================== ADDED IN THE ROSTER UPDATE (stats are placeholders) ====================*/
+
+    LEOPARD_1A1("Leopard 1A1",
+            "Germany",
+            "The first post-war German tank: fast and well armed, but lightly protected.",
+            CardLevel.COMMON,
+            VehicleType.GROUND,
+            VehicleClass.MEDIUM_TANK,
+            45,
+            180,
+            List.of(
+                new VehicleAttackDefinition("Coax MG", AttackSlot.ATTACK_1, Weapon.MG3_762MM, 10, 1, 0, SpecialEffect.SUPPRESSION),
+                new VehicleAttackDefinition("Cannon shot", AttackSlot.ATTACK_2, Weapon.RIFLED_CANNON_105MM, 30, 2, 0, SpecialEffect.NONE)
+            )
+    ),
+
+    LEOPARD_1A5("Leopard 1A5",
+            "Germany",
+            "A Leopard 1 with a modern fire-control system.",
+            CardLevel.UNCOMMON,
+            VehicleType.GROUND,
+            VehicleClass.MEDIUM_TANK,
+            55,
+            200,
+            List.of(
+                new VehicleAttackDefinition("Coax MG", AttackSlot.ATTACK_1, Weapon.MG3_762MM, 10, 1, 0, SpecialEffect.SUPPRESSION),
+                new VehicleAttackDefinition("Cannon shot", AttackSlot.ATTACK_2, Weapon.RIFLED_CANNON_105MM, 34, 2, 0, SpecialEffect.NONE)
+            )
+    ),
+
+    LEOPARD_2A4("Leopard 2A4",
+            "Germany",
+            "The Cold War Leopard 2 that equipped half of Europe.",
+            CardLevel.RARE,
+            VehicleType.GROUND,
+            VehicleClass.MAIN_BATTLE_TANK,
+            82,
+            245,
+            List.of(
+                new VehicleAttackDefinition("Coax MG", AttackSlot.ATTACK_1, Weapon.MG3_762MM, 12, 1, 0, SpecialEffect.SUPPRESSION),
+                new VehicleAttackDefinition("Cannon shot", AttackSlot.ATTACK_2, Weapon.SMOOTHBORE_CANNON_120MM, 40, 2, 0, SpecialEffect.NONE),
+                new VehicleAttackDefinition("Sabot barrage", AttackSlot.ATTACK_3, Weapon.SMOOTHBORE_CANNON_120MM, 66, 3, 1, SpecialEffect.NONE)
+            )
+    ),
+
+    LEOPARD_2A6("Leopard 2A6",
+            "Germany",
+            "A Leopard 2 with a longer, more powerful 120mm gun.",
+            CardLevel.EPIC,
+            VehicleType.GROUND,
+            VehicleClass.MAIN_BATTLE_TANK,
+            92,
+            275,
+            List.of(
+                new VehicleAttackDefinition("Coax MG", AttackSlot.ATTACK_1, Weapon.MG3_762MM, 15, 1, 0, SpecialEffect.SUPPRESSION),
+                new VehicleAttackDefinition("Cannon shot", AttackSlot.ATTACK_2, Weapon.SMOOTHBORE_CANNON_120MM, 43, 2, 0, SpecialEffect.NONE),
+                new VehicleAttackDefinition("Sabot barrage", AttackSlot.ATTACK_3, Weapon.SMOOTHBORE_CANNON_120MM, 72, 3, 1, SpecialEffect.NONE)
+            )
     );
 
     /*===========================================================*/

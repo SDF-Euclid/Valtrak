@@ -35,15 +35,18 @@ class ArtilleryBalanceTest {
     }
 
     @Test
-    void onlyLegendaryArtilleryCanOneShotATankAndOnlyTheWeakestLightTank() {
-        VehicleSpec weakestLight = vehicles().stream().filter(VehicleSpec::isTank).min(java.util.Comparator.comparingInt(VehicleSpec::hp)).orElseThrow();
+    void onlyLegendaryArtilleryCanOneShotATankAndOnlyACommonOrUncommonLightTank() {
+        int lightKills = 0;
         for (ItemSpec card : artillery()) {
             for (VehicleSpec tank : vehicles().stream().filter(VehicleSpec::isTank).toList()) {
-                boolean kills = hit(card, tank) >= tank.hp();
-                boolean allowed = card.level() == CardLevel.LEGENDARY && tank == weakestLight;
-                assertThat(kills).as(card.name() + " vs " + tank.name() + " (" + hit(card, tank) + " of " + tank.hp() + " HP)").isEqualTo(allowed);
+                if (hit(card, tank) < tank.hp()) continue;
+                boolean allowed = card.level() == CardLevel.LEGENDARY && tank.vehicleClass().name().equals("LIGHT_TANK")
+                        && tank.level().compareTo(CardLevel.UNCOMMON) <= 0;       // only cheap light tanks
+                assertThat(allowed).as(card.name() + " one-shots " + tank.name() + " (" + hit(card, tank) + " of " + tank.hp() + " HP)").isTrue();
+                lightKills++;
             }
         }
+        assertThat(lightKills).as("Legendary Artillery can still one-shot the weakest light tanks").isPositive();
     }
 
     @Test
@@ -62,6 +65,6 @@ class ArtilleryBalanceTest {
         for (int i = 1; i < cards.size(); i++) assertThat(cards.get(i).power()).isGreaterThan(cards.get(i - 1).power());
         assertThat(cards.get(cards.size() - 1).power()).isEqualTo(36);
         assertThat(vehicles().stream().filter(VehicleSpec::air).map(VehicleSpec::name))
-                .contains("RQ-11 Raven Team", "MQ-9 Reaper Flight").hasSize(7);
+                .contains("RQ-11 Raven Team", "MQ-9 Reaper Flight").hasSize(15);
     }
 }

@@ -22,11 +22,11 @@ class ResupplyCardsTest {
     }
 
     @Test
-    void thereAreSixTwoPerNationRareAndLegendaryWithNoAttacksOrAbility() {
-        assertThat(resupply()).hasSize(6);
+    void everyNationHasResupplyVehiclesWithNoAttacksOrAbility() {
+        assertThat(resupply()).hasSize(14);
         assertThat(resupply()).allMatch(v -> v.attacks().isEmpty() && v.ability() == null && v.isResupply() && !v.isTank());
-        assertThat(resupply().stream().filter(v -> v.level() == CardLevel.RARE)).hasSize(3);
-        assertThat(resupply().stream().filter(v -> v.level() == CardLevel.LEGENDARY)).hasSize(3);
+        assertThat(resupply().stream().filter(v -> v.level() == CardLevel.RARE)).hasSize(10);
+        assertThat(resupply().stream().filter(v -> v.level() == CardLevel.LEGENDARY)).hasSize(4);
         assertThat(resupply().stream().map(VehicleSpec::name)).contains("M977 HEMTT Supply Truck", "Ural-4320 Supply Truck", "MAN SX 8x8 Supply Truck");
     }
 

@@ -52,22 +52,20 @@ public final class SimDecks {
     }
 
     /**
-     * In order of importance, so a small deck loses the least important cards: tanks, Ammo for every weapon, Fuel, Supply,
-     * Repair, UAV/Recon vehicles, then more Ammo up to the size.
+     * In order of importance, so a small deck loses the least important cards: tanks (a random selection, about a quarter of the
+     * deck and never fewer than the minimum), Ammo for every weapon they carry, Fuel, Supply, Repair, a few UAV/Recon vehicles,
+     * then more Ammo up to the size.
      */
     private static List<Long> standardWithoutItems(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts) {
         List<Long> tanks = new ArrayList<>(), fuel = new ArrayList<>(), supply = new ArrayList<>(), repair = new ArrayList<>(), scoutCards = new ArrayList<>();
         List<ResourceSpec> ammo = new ArrayList<>();
+        List<VehicleSpec> tankSpecs = new ArrayList<>(), scoutSpecs = new ArrayList<>();
         java.util.Set<com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon> weapons =
                 java.util.EnumSet.noneOf(com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon.class);
         for (CardSpec spec : all) {
-            if (spec instanceof VehicleSpec v && v.isTank()) {
-                addCopies(tanks, spec.cardId(), copies(spec, 3));
-                v.attacks().forEach(a -> weapons.add(a.weapon()));
-            } else if (spec instanceof VehicleSpec v && v.ability() != null) {
-                addCopies(scoutCards, spec.cardId(), copies(spec, scouts));       // UAV teams and Recon vehicles
-                if (scouts > 0) v.attacks().forEach(a -> weapons.add(a.weapon()));
-            } else if (spec instanceof ResourceSpec r) {
+            if (spec instanceof VehicleSpec v && v.isTank()) tankSpecs.add(v);
+            else if (spec instanceof VehicleSpec v && v.ability() != null) scoutSpecs.add(v);       // UAV teams and Recon vehicles
+            else if (spec instanceof ResourceSpec r) {
                 switch (r.kind()) {
                     case AMMO -> { if (r.amount() == 5 || r.amount() == 10) ammo.add(r); }
                     case FUEL -> { if (r.amount() == 5 || r.amount() == 10) addCopies(fuel, r.cardId(), copies(r, 3)); }
@@ -75,6 +73,18 @@ public final class SimDecks {
                     case REPAIR -> { if (r.amount() <= 75) addCopies(repair, r.cardId(), copies(r, 2)); }
                 }
             }
+        }
+        Collections.shuffle(tankSpecs, rng);
+        int tanksWanted = Math.max(LIMITS.minTanksInDeck + 2, size / 4);
+        for (VehicleSpec v : tankSpecs) {
+            if (tanks.size() >= tanksWanted) break;
+            addCopies(tanks, v.cardId(), Math.min(copies(v, 3), tanksWanted - tanks.size()));
+            v.attacks().forEach(a -> weapons.add(a.weapon()));
+        }
+        Collections.shuffle(scoutSpecs, rng);
+        for (VehicleSpec v : scoutSpecs.subList(0, Math.min(4, scoutSpecs.size()))) {
+            addCopies(scoutCards, v.cardId(), copies(v, scouts));
+            if (scouts > 0) v.attacks().forEach(a -> weapons.add(a.weapon()));
         }
         Collections.shuffle(ammo, rng);
         List<Long> deck = new ArrayList<>(tanks);

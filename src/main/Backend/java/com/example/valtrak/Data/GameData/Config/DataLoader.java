@@ -20,12 +20,6 @@ import com.example.valtrak.Data.CardLibrary.Interfaces.Items.SupplyItemInterface
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.VehicleAttackInterface;
 import com.example.valtrak.Data.CardLibrary.Nations;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Germany.GermanVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Russia.RussianVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ReconVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ResupplyVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Support.UavTeams;
-import com.example.valtrak.Data.CardLibrary.Vehicles.US.USGroundVehicles;
 import com.example.valtrak.Data.GameData.Entity.EnumEntity.*;
 import com.example.valtrak.Data.GameData.Repository.Cards.AmmunitionCardRepository;
 import com.example.valtrak.Data.GameData.Repository.Cards.FuelCardRepository;
@@ -115,12 +109,7 @@ public class DataLoader implements CommandLineRunner {
         loadAmmunition();
         loadWeapons();
         loadNations();
-        loadGroundVehicles(USGroundVehicles.values());
-        loadGroundVehicles(RussianVehicles.values());
-        loadGroundVehicles(GermanVehicles.values());
-        loadGroundVehicles(ReconVehicles.values());
-        loadGroundVehicles(UavTeams.values());
-        loadGroundVehicles(ResupplyVehicles.values());
+        for (var vehicles : com.example.valtrak.Data.CardLibrary.Vehicles.VehicleLibrary.ALL) loadGroundVehicles(vehicles);
         loadAmmunitionCards(AmmoSupplyCrate.values());
         loadFuelCards(FuelSupplyDrum.values());
         loadRepairCards(RepairSupplyKit.values());

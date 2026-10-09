@@ -26,7 +26,7 @@ class BotAndSimulationTest {
 
     @Test
     void theEnumCatalogHasEveryCardKindWithStableIds() {
-        assertThat(catalog.all()).hasSize(7 + 3 + 7 + 6 + 60 + 4 + 4 + 3 + 42);   // tanks, recon, UAV teams, Resupply vehicles, ammo, fuel, repair, supply, item cards
+        assertThat(catalog.all()).hasSize(55 + 11 + 15 + 14 + 64 + 4 + 4 + 3 + 42);   // tanks, recon, UAV teams, Resupply vehicles, ammo, fuel, repair, supply, item cards
         assertThat(catalog.find(1)).isInstanceOf(VehicleSpec.class);
         assertThat(new EnumCardCatalog(true).find(1).name()).isEqualTo(catalog.find(1).name());
         assertThat(catalog.all()).anyMatch(c -> c instanceof ResourceSpec r && r.kind() == ResourceKind.SUPPLY);
@@ -63,7 +63,7 @@ class BotAndSimulationTest {
     void theNewCardsHaveAbilitiesScaledByRarity() {
         var uavs = catalog.all().stream().filter(c -> c instanceof VehicleSpec v && v.isSpecialist() && v.ability() != null)
                 .map(c -> (VehicleSpec) c).toList();
-        assertThat(uavs).hasSize(7);
+        assertThat(uavs).hasSize(15);
         assertThat(uavs).allMatch(v -> v.attacks().isEmpty());
         for (VehicleSpec v : uavs) {
             int expected = switch (v.level()) {
@@ -75,7 +75,7 @@ class BotAndSimulationTest {
         }
         var recon = catalog.all().stream().filter(c -> c instanceof VehicleSpec v && v.vehicleClass().name().equals("RECON"))
                 .map(c -> (VehicleSpec) c).toList();
-        assertThat(recon).hasSize(3);
+        assertThat(recon).hasSize(11);
         assertThat(recon).allMatch(v -> v.ability() != null && !v.attacks().isEmpty());
     }
 

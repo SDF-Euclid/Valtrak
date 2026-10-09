@@ -9,12 +9,6 @@ import com.example.valtrak.Data.CardLibrary.Enums.SupplyInfo.SupplyCrate;
 import com.example.valtrak.Data.CardLibrary.Enums.VehicleInfo.VehicleClass;
 import com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Ammunition;
 import com.example.valtrak.Data.CardLibrary.Interfaces.Vehicle.GroundVehicleCardInterface;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Germany.GermanVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Russia.RussianVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ReconVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Support.ResupplyVehicles;
-import com.example.valtrak.Data.CardLibrary.Vehicles.Support.UavTeams;
-import com.example.valtrak.Data.CardLibrary.Vehicles.US.USGroundVehicles;
 import com.example.valtrak.Gameplay.Engine.*;
 
 import java.util.Collection;
@@ -39,9 +33,7 @@ public final class EnumCardCatalog implements CardCatalog {
      */
     public EnumCardCatalog(boolean fillMissingAmmo) {
         long id = 1;
-        for (GroundVehicleCardInterface[] nation : new GroundVehicleCardInterface[][]{
-                USGroundVehicles.values(), RussianVehicles.values(), GermanVehicles.values(),
-                ReconVehicles.values(), UavTeams.values(), ResupplyVehicles.values()}) {
+        for (GroundVehicleCardInterface[] nation : com.example.valtrak.Data.CardLibrary.Vehicles.VehicleLibrary.ALL) {
             for (GroundVehicleCardInterface v : nation) {
                 var attacks = v.getVehicleAttacks().stream()
                         .map(a -> new AttackSpec(a.getAttackSlot(), a.getAttackName(), a.getWeapon(), a.getBaseDamage(),

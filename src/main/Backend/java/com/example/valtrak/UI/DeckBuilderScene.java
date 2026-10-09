@@ -50,6 +50,8 @@ public class DeckBuilderScene {
     private final Map<Long, String>  deckNames  = new LinkedHashMap<>();
 
     private Filter currentFilter = Filter.ALL;
+    /** What is typed in the search box, lower case; every word must match somewhere on the card. */
+    private String query = "";
     private Grouping currentGrouping = Grouping.CATEGORY;
     private VBox grid;
     private Label hint;
@@ -151,7 +153,19 @@ public class DeckBuilderScene {
         groupBox.setValue(currentGrouping);
         groupBox.setOnAction(e -> { currentGrouping = groupBox.getValue(); populateGrid(); });
 
-        HBox filters = new HBox(8, allBtn, favBtn, vehBtn, itemBtn, filterSpacer, groupLbl, groupBox);
+        TextField search = Ui.field("Search cards: name, nation, class, ammo...");
+        search.setPrefWidth(260);
+        search.setMaxWidth(260);
+        javafx.animation.PauseTransition typing = new javafx.animation.PauseTransition(javafx.util.Duration.millis(200));
+        typing.setOnFinished(e -> populateGrid());                 // wait for a short pause in typing, then filter
+        search.textProperty().addListener((obs, old, now) -> {
+            query = now == null ? "" : now.trim().toLowerCase();
+            typing.playFromStart();
+        });
+        Button clear = Ui.link("clear");
+        clear.setOnAction(e -> search.clear());
+
+        HBox filters = new HBox(8, allBtn, favBtn, vehBtn, itemBtn, search, clear, filterSpacer, groupLbl, groupBox);
         filters.setAlignment(Pos.CENTER_LEFT);
         filters.setPadding(new Insets(10, 16, 10, 16));
         filters.setStyle("-fx-background-color: " + BG + ";");
@@ -187,7 +201,7 @@ public class DeckBuilderScene {
                     ? (favorites == null
                             ? "Sign in to save favorites. Guests can build decks but favorites need an account."
                             : "No favorites yet — click the ☆ on any card to add it here.")
-                    : "No cards to show.");
+                    : !query.isEmpty() ? "No cards match \"" + query + "\"." : "No cards to show.");
             empty.setFont(Font.font("Arial", 13));
             empty.setTextFill(Color.web(DIM));
             grid.getChildren().add(empty);
@@ -275,12 +289,23 @@ public class DeckBuilderScene {
     }
 
     private boolean matchesFilter(CardDto c) {
-        return switch (currentFilter) {
+        boolean inTab = switch (currentFilter) {
             case ALL       -> true;
             case FAVORITES -> isFavorite(c);
             case VEHICLES  -> isVehicle(c);
             case ITEMS     -> !isVehicle(c);
         };
+        return inTab && matchesQuery(c);
+    }
+
+    /** True if every word typed in the search box appears somewhere on the card (name, nation, class, rarity, ammo, text...). */
+    private boolean matchesQuery(CardDto c) {
+        if (query.isEmpty()) return true;
+        String text = String.join(" ", java.util.Arrays.asList(c.name(), c.nation(), c.vehicleClass(), c.level(), c.category(),
+                        c.ammunition(), c.damageType(), c.itemType(), c.ability(), c.description()).stream()
+                .filter(java.util.Objects::nonNull).toList()).toLowerCase().replace('_', ' ');
+        for (String word : query.split("\\s+")) if (!text.contains(word)) return false;
+        return true;
     }
 
     // ── Deck panel ────────────────────────────────────────────────────────────

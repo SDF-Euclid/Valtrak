@@ -18,6 +18,7 @@ public enum Weapon {
 
     /*==================== RIFLED CANNONS ====================*/
 
+    RIFLED_CANNON_120MM(List.of(Ammunition.APFSDS_120MM, Ammunition.HESH_120MM)),
     RIFLED_CANNON_105MM(List.of(Ammunition.APDS_105MM, Ammunition.APFSDS_105MM, Ammunition.SQUASH_HEAD_105MM)),
 
     /*========================================================*/
@@ -45,6 +46,8 @@ public enum Weapon {
     BROWNING_50CAL(List.of(Ammunition.NATO_127x99MM)),
 
     MG3_762MM(List.of(Ammunition.MG3_762x51MM)),
+    /** A generic 7.62mm NATO coaxial machine gun: it fires the same 7.62x51mm rounds as the MG3. */
+    COAX_MG_762_NATO(List.of(Ammunition.MG3_762x51MM)),
     PKT_762MM(List.of(Ammunition.PKT_762x54MM));
 
     /*======================================================*/

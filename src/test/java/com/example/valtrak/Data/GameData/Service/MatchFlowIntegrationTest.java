@@ -44,12 +44,15 @@ class MatchFlowIntegrationTest {
         return players.save(p);
     }
 
-    /** Every vehicle (3 copies each, 21 tanks) topped up with 3 copies of other cards to exactly 90 cards. */
+    /** About 24 tanks at their copy limits, topped up with other cards (each at its limit) to about 90 cards. */
     private DeckDto playableDeck(Player owner, String name) {
         Map<Long, Integer> counts = new LinkedHashMap<>();
         int total = 0;
-        for (var c : cards.findAll()) {
-            if (catalog.find(c.getId()) instanceof VehicleSpec) { int n = DeckRules.maxCopies(c.getLevel()); counts.put(c.getId(), n); total += n; }
+        int tanks = 0;
+        for (var c : cards.findAll()) {                      // 24 tanks are plenty; there are far more in the game now
+            if (tanks < 24 && catalog.find(c.getId()) instanceof VehicleSpec v && v.isTank()) {
+                int n = DeckRules.maxCopies(c.getLevel()); counts.put(c.getId(), n); total += n; tanks += n;
+            }
         }
         for (var c : cards.findAll()) {
             if (total >= 90) break;

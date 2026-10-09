@@ -42,6 +42,7 @@ public enum Ammunition {
     HE_120MM(DamageType.EXPLOSIVE, 120),
 
     SQUASH_HEAD_105MM(DamageType.EXPLOSIVE, 105),
+    HESH_120MM(DamageType.EXPLOSIVE, 120),
 
     /*===================================================*/
 

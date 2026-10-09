@@ -44,6 +44,7 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
 
     /*==========SQUASH HEAD==========*/
     SQUASH_HEAD_105MM_X1("1x 105mm Squash Head Crate", "Re-supplies 1 105mm squash head shell", CardLevel.COMMON, ItemType.AMMUNITION, Ammunition.SQUASH_HEAD_105MM, 1),
+    HESH_120MM_X1("1x 120mm HESH Crate", "Re-supplies 1 120mm HESH shell", CardLevel.COMMON, ItemType.AMMUNITION, Ammunition.HESH_120MM, 1),
     /*===============================*/
 
     /*==========MACHINE GUN==========*/
@@ -82,6 +83,7 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
 
     /*==========SQUASH HEAD==========*/
     SQUASH_HEAD_105MM_X5("5x 105mm Squash Head Crate", "Re-supplies 5 105mm squash head shells", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.SQUASH_HEAD_105MM, 5),
+    HESH_120MM_X5("5x 120mm HESH Crate", "Re-supplies 5 120mm HESH shells", CardLevel.UNCOMMON, ItemType.AMMUNITION, Ammunition.HESH_120MM, 5),
     /*===============================*/
 
     /*==========MACHINE GUN==========*/
@@ -120,6 +122,7 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
 
     /*==========SQUASH HEAD==========*/
     SQUASH_HEAD_105MM_X10("10x 105mm Squash Head Crate", "Re-supplies 10 105mm squash head shells", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.SQUASH_HEAD_105MM, 10),
+    HESH_120MM_X10("10x 120mm HESH Crate", "Re-supplies 10 120mm HESH shells", CardLevel.RARE, ItemType.AMMUNITION, Ammunition.HESH_120MM, 10),
     /*===============================*/
 
     /*==========MACHINE GUN==========*/
@@ -158,6 +161,7 @@ public enum AmmoSupplyCrate implements AmmunitionItemInterface {
 
     /*==========SQUASH HEAD==========*/
     SQUASH_HEAD_105MM_X20("20x 105mm Squash Head Crate", "Re-supplies 20 105mm squash head shells", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.SQUASH_HEAD_105MM, 20),
+    HESH_120MM_X20("20x 120mm HESH Crate", "Re-supplies 20 120mm HESH shells", CardLevel.LEGENDARY, ItemType.AMMUNITION, Ammunition.HESH_120MM, 20),
     /*===============================*/
 
     /*==========MACHINE GUN==========*/
