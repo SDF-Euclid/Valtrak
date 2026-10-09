@@ -1,4 +1,4 @@
-# Valtrak Rulebook: DRAFT v0.23
+# Valtrak Rulebook: DRAFT v0.24
 
 Values in **[brackets]** are tunable numbers I picked as a starting point. Lines marked **(assumed)** are gaps I filled in;
 please veto or change them. Items marked **(OPEN)** are listed again at the bottom.
@@ -10,7 +10,7 @@ your hand to start one** (only a tank can stand alone, so a Specialist, Recon or
 stuck with no vehicles while the opponent snowballs.
 
 ## 2. Decks
-- **[60–100]** cards, at most **3 copies** of any card.
+- **[60–100]** cards. **Copies of one card by rarity: Common and Uncommon 3, Rare and Epic 2, Legendary and Commander 1.**
 - At least **[12]** tanks, so a starting hand almost always has one (assumed).
 
 ## 3. Card types

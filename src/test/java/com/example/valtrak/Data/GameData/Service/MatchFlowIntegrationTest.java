@@ -1,5 +1,6 @@
 package com.example.valtrak.Data.GameData.Service;
 
+import com.example.valtrak.Data.GameData.Config.DeckRules;
 import com.example.valtrak.Data.GameData.DataTransfer.DeckData.DeckDtos.DeckDto;
 import com.example.valtrak.Data.GameData.DataTransfer.DeckData.DeckDtos.SaveDeckRequest;
 import com.example.valtrak.Data.GameData.DataTransfer.MatchData.MatchDtos.*;
@@ -48,11 +49,11 @@ class MatchFlowIntegrationTest {
         Map<Long, Integer> counts = new LinkedHashMap<>();
         int total = 0;
         for (var c : cards.findAll()) {
-            if (catalog.find(c.getId()) instanceof VehicleSpec) { counts.put(c.getId(), 3); total += 3; }
+            if (catalog.find(c.getId()) instanceof VehicleSpec) { int n = DeckRules.maxCopies(c.getLevel()); counts.put(c.getId(), n); total += n; }
         }
         for (var c : cards.findAll()) {
             if (total >= 90) break;
-            if (!counts.containsKey(c.getId())) { counts.put(c.getId(), 3); total += 3; }
+            if (!counts.containsKey(c.getId())) { int n = DeckRules.maxCopies(c.getLevel()); counts.put(c.getId(), n); total += n; }
         }
         return decks.create(owner.getId(), new SaveDeckRequest(name, counts));
     }
@@ -129,6 +130,16 @@ class MatchFlowIntegrationTest {
         String botName = matches.list(me.getId()).get(0).opponentName();
         assertThatThrownBy(() -> matches.challenge(me.getId(), new ChallengeRequest(botName, deck.id())))
                 .isInstanceOf(ApiException.class).hasMessageContaining("Play vs Bot");
+    }
+
+    @Test
+    void savingADeckRespectsTheRarityCopyLimits() {
+        Player me = newPlayer();
+        var legendary = cards.findAll().stream().filter(c -> c.getLevel() == com.example.valtrak.Data.CardLibrary.CardLevel.LEGENDARY)
+                .findFirst().orElseThrow();
+        assertThatThrownBy(() -> decks.create(me.getId(), new SaveDeckRequest("Too many", Map.of(legendary.getId(), 2))))
+                .isInstanceOf(ApiException.class).hasMessageContaining("1-1 time");
+        assertThat(decks.create(me.getId(), new SaveDeckRequest("Fine", Map.of(legendary.getId(), 1))).totalCards()).isEqualTo(1);
     }
 
     @Test

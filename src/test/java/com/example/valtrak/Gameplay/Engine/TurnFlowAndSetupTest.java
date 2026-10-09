@@ -92,7 +92,7 @@ class TurnFlowAndSetupTest {
         GameRules rules = GameRules.defaults();
         rules.minDeckSize = 10;
         rules.minTanksInDeck = 1;
-        rules.maxCopies = 100;
+        rules.maxCopies.replaceAll((level, n) -> 100);
         GameEngine engine = new GameEngine(rules, w.catalog);
         List<Long> weak = new ArrayList<>();
         for (int i = 0; i < 29; i++) weak.add(i % 2 == 0 ? FUEL_5 : ANTI_AIR);

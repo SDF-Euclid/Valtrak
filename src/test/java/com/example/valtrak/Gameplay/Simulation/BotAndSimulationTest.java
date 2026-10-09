@@ -87,8 +87,9 @@ class BotAndSimulationTest {
                     SimDecks.standard(catalog, catalog.all(), 80, new Random(seed + 40), 1),
                     new GreedyBot(false), new GreedyBot(false), seed, 20000);
             attacks += r.attacks()[0] + r.attacks()[1];
+            assertThat(r.endedBy()).as("decided by fighting, not by running out of cards").isNotEqualTo("DECK_OUT");
         }
-        assertThat(attacks).isGreaterThan(50);
+        assertThat(attacks).as("games are short (3 chips), so about 6 attacks each").isGreaterThan(20);
     }
 
     @Test
@@ -194,7 +195,7 @@ class BotAndSimulationTest {
         GameRules rules = GameRules.defaults();
         var stats = SimulationMain.run(rules, new SimulationMain.Matchup(new GreedyBot(true), new GreedyBot(true)), 6, true, 100, 1);
         assertThat(stats.games()).isEqualTo(6);
-        assertThat(stats.chipsWins() + stats.deckOuts() + stats.limits()).isEqualTo(6);
+        assertThat(stats.chipsWins() + stats.wipeouts() + stats.deckOuts() + stats.limits()).isEqualTo(6);
         assertThat(stats.describe()).contains("aggressive vs aggressive");
     }
 }

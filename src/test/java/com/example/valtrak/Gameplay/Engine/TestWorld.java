@@ -114,7 +114,8 @@ public final class TestWorld {
         GameRules r = GameRules.defaults();
         r.winChips = 5;
         r.damagePercent = 100;
-        r.artilleryDamageType = null;      // Artillery is plain true damage in these tests (the explosive version has its own tests)
+        r.artilleryDamageType = null;
+        r.maxCopies.replaceAll((level, n) -> 3);  // test decks use 3 of everything (the rarity limits have their own test)      // Artillery is plain true damage in these tests (the explosive version has its own tests)
         return r;
     }
 

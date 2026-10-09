@@ -17,7 +17,8 @@ public class GameRules {
     public int winChips = 3;
     public int minDeckSize = 60;
     public int maxDeckSize = 100;
-    public int maxCopies = 3;
+    // copies of one card a deck may hold, by the card's rarity: Common/Uncommon 3, Rare/Epic 2, Legendary/Commander 1
+    public Map<CardLevel, Integer> maxCopies = byLevel(3, 3, 2, 2, 1, 1);
     public int minTanksInDeck = 12;
 
     // setup
@@ -69,6 +70,8 @@ public class GameRules {
     public static GameRules defaults() {
         return new GameRules();
     }
+
+    public int maxCopies(CardLevel level) { return maxCopies.get(level); }
 
     public int retreatFuel(CardLevel level) { return retreatFuel.get(level); }
 

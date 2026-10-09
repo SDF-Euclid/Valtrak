@@ -31,7 +31,6 @@ public class DeckBuilderScene {
     private static final String DIM    = "#555555";
 
     private static final int MAX_DECK   = DeckRules.MAX_DECK_SIZE;
-    private static final int MAX_COPIES = DeckRules.MAX_COPIES;
 
     private enum Filter { ALL, FAVORITES, VEHICLES, ITEMS }
 
@@ -355,7 +354,7 @@ public class DeckBuilderScene {
         deckScroll.setStyle("-fx-background: " + PANEL + "; -fx-background-color: " + PANEL + ";");
         VBox.setVgrow(deckScroll, Priority.ALWAYS);
 
-        Label copiesHint = new Label("Max " + MAX_COPIES + " copies of each card");
+        Label copiesHint = new Label("Max copies: 3 Common/Uncommon, 2 Rare/Epic, 1 Legendary");
         copiesHint.setFont(Font.font("Arial", 9));
         copiesHint.setTextFill(Color.web(DIM));
 
@@ -524,7 +523,13 @@ public class DeckBuilderScene {
     }
 
     private boolean canAdd(Long id) {
-        return deckCounts.getOrDefault(id, 0) < MAX_COPIES && deckTotal() < MAX_DECK;
+        return deckCounts.getOrDefault(id, 0) < copyLimit(id) && deckTotal() < MAX_DECK;
+    }
+
+    /** Copies of this card a deck may hold, by its rarity. */
+    private int copyLimit(Long id) {
+        CardDto card = cardsById.get(id);
+        return DeckRules.maxCopies(card == null ? null : card.level());
     }
 
     private void addCard(Long id, String name) {
@@ -588,6 +593,11 @@ public class DeckBuilderScene {
             if (card != null && isTank(card)) tanks += e.getValue();
         }
         List<String> problems = new ArrayList<>();
+        for (Map.Entry<Long, Integer> e : deckCounts.entrySet()) {
+            if (e.getValue() > copyLimit(e.getKey())) {
+                problems.add("too many copies of " + deckNames.get(e.getKey()) + " (max " + copyLimit(e.getKey()) + ")");
+            }
+        }
         if (total < DeckRules.MIN_PLAYABLE_DECK_SIZE) {
             problems.add("needs " + (DeckRules.MIN_PLAYABLE_DECK_SIZE - total) + " more card(s) (minimum "
                     + DeckRules.MIN_PLAYABLE_DECK_SIZE + ")");

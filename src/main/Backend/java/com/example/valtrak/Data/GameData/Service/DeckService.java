@@ -97,22 +97,27 @@ public class DeckService {
     /** Checks sizes and that every card exists; drops nothing silently. */
     private Map<Long, Integer> validateCards(Map<Long, Integer> requested) {
         if (requested == null) requested = Map.of();
+        if (requested.keySet().stream().anyMatch(java.util.Objects::isNull)) throw new ApiException(HttpStatus.BAD_REQUEST, "The deck contains an empty card id.");
+        var found = cards.findAllById(requested.keySet());
+        if (found.size() != requested.size()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The deck contains a card that doesn't exist.");
+        }
+        Map<Long, com.example.valtrak.Gameplay.Cards.Base.Card> byId = new java.util.HashMap<>();
+        found.forEach(c -> byId.put(c.getId(), c));
         int total = 0;
         for (var e : requested.entrySet()) {
             int copies = e.getValue() == null ? 0 : e.getValue();
-            if (copies < 1 || copies > DeckRules.MAX_COPIES) {
-                throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "Each card can appear 1-" + DeckRules.MAX_COPIES + " times in a deck.");
+            var card = byId.get(e.getKey());
+            int limit = DeckRules.maxCopies(card.getLevel());
+            if (copies < 1 || copies > limit) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, card.getName() + " can appear 1-" + limit + " time(s) in a deck ("
+                        + (card.getLevel() == null ? "" : card.getLevel().name().toLowerCase() + " cards: ") + "3 Common/Uncommon, 2 Rare/Epic, 1 Legendary).");
             }
             total += copies;
         }
         if (total > DeckRules.MAX_DECK_SIZE) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "A deck can have at most " + DeckRules.MAX_DECK_SIZE + " cards.");
-        }
-        long found = cards.findAllById(requested.keySet()).size();
-        if (found != requested.size()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "The deck contains a card that doesn't exist.");
         }
         return new LinkedHashMap<>(requested);
     }

@@ -53,8 +53,10 @@ public final class GameEngine {
                 problems.add("The deck contains an unknown card (" + id + ").");
                 continue;
             }
-            if (copies.merge(id, 1, Integer::sum) == rules.maxCopies + 1) {
-                problems.add("A deck can have at most " + rules.maxCopies + " copies of " + spec.name() + ".");
+            int limit = rules.maxCopies(spec.level());
+            if (copies.merge(id, 1, Integer::sum) == limit + 1) {
+                problems.add("A deck can have at most " + limit + (limit == 1 ? " copy" : " copies") + " of " + spec.name()
+                        + " (" + spec.level().name().toLowerCase() + ").");
             }
             if (spec instanceof VehicleSpec v && v.isTank()) tanks++;
         }

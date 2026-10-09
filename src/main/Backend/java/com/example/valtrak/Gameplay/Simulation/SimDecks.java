@@ -25,6 +25,13 @@ public final class SimDecks {
         return standard(catalog, all, size, rng, scouts, 0);
     }
 
+    private static final GameRules LIMITS = GameRules.defaults();
+
+    /** Copies of a card a deck may hold (by rarity), never more than {@code wanted}. */
+    private static int copies(CardSpec spec, int wanted) {
+        return Math.min(wanted, LIMITS.maxCopies(spec.level()));
+    }
+
     /** Item effects GreedyBot knows how to play; the others would only clog its hand. */
     private static final java.util.Set<ItemEffect> BOT_ITEMS = java.util.EnumSet.of(ItemEffect.ERA, ItemEffect.ARTILLERY,
             ItemEffect.SEARCH, ItemEffect.DRAW, ItemEffect.SABOTAGE, ItemEffect.RECYCLE, ItemEffect.RAPID_DEPLOY);
@@ -36,7 +43,7 @@ public final class SimDecks {
     public static List<Long> standard(CardCatalog catalog, Iterable<CardSpec> all, int size, RandomGenerator rng, int scouts, int items) {
         List<Long> itemCards = new ArrayList<>();
         for (CardSpec spec : all) {
-            if (spec instanceof ItemSpec i && BOT_ITEMS.contains(i.effect())) addCopies(itemCards, spec.cardId(), Math.min(3, items));
+            if (spec instanceof ItemSpec i && BOT_ITEMS.contains(i.effect())) addCopies(itemCards, spec.cardId(), copies(spec, items));
         }
         while (itemCards.size() > size / 4) itemCards.remove(itemCards.size() - 1);
         List<Long> deck = new ArrayList<>(standardWithoutItems(catalog, all, size - itemCards.size(), rng, Math.min(3, scouts)));
@@ -55,17 +62,17 @@ public final class SimDecks {
                 java.util.EnumSet.noneOf(com.example.valtrak.Data.CardLibrary.Enums.WeaponInfo.Weapon.class);
         for (CardSpec spec : all) {
             if (spec instanceof VehicleSpec v && v.isTank()) {
-                addCopies(tanks, spec.cardId(), 3);
+                addCopies(tanks, spec.cardId(), copies(spec, 3));
                 v.attacks().forEach(a -> weapons.add(a.weapon()));
             } else if (spec instanceof VehicleSpec v && v.ability() != null) {
-                addCopies(scoutCards, spec.cardId(), scouts);       // UAV teams and Recon vehicles
+                addCopies(scoutCards, spec.cardId(), copies(spec, scouts));       // UAV teams and Recon vehicles
                 if (scouts > 0) v.attacks().forEach(a -> weapons.add(a.weapon()));
             } else if (spec instanceof ResourceSpec r) {
                 switch (r.kind()) {
                     case AMMO -> { if (r.amount() == 5 || r.amount() == 10) ammo.add(r); }
-                    case FUEL -> { if (r.amount() == 5 || r.amount() == 10) addCopies(fuel, r.cardId(), 3); }
-                    case SUPPLY -> { if (r.amount() <= 3) addCopies(supply, r.cardId(), 3); }
-                    case REPAIR -> { if (r.amount() <= 75) addCopies(repair, r.cardId(), 2); }
+                    case FUEL -> { if (r.amount() == 5 || r.amount() == 10) addCopies(fuel, r.cardId(), copies(r, 3)); }
+                    case SUPPLY -> { if (r.amount() <= 3) addCopies(supply, r.cardId(), copies(r, 3)); }
+                    case REPAIR -> { if (r.amount() <= 75) addCopies(repair, r.cardId(), copies(r, 2)); }
                 }
             }
         }
@@ -73,7 +80,7 @@ public final class SimDecks {
         List<Long> deck = new ArrayList<>(tanks);
         for (var weapon : weapons) {                                   // Ammo for every weapon, so every attack can be paid for
             ammo.stream().filter(r -> weapon.getCompatibleAmmunition().contains(r.ammunition())).findFirst()
-                    .ifPresent(r -> { if (!deck.contains(r.cardId())) addCopies(deck, r.cardId(), 2); });
+                    .ifPresent(r -> { if (!deck.contains(r.cardId())) addCopies(deck, r.cardId(), copies(r, 2)); });
         }
         deck.addAll(fuel);
         deck.addAll(supply);
@@ -82,7 +89,7 @@ public final class SimDecks {
         for (int pass = 0; deck.size() < size && pass < 10; pass++) {  // then more Ammo
             for (ResourceSpec r : ammo) {
                 if (deck.size() >= size) break;
-                if (Collections.frequency(deck, r.cardId()) < 3) deck.add(r.cardId());
+                if (Collections.frequency(deck, r.cardId()) < copies(r, 3)) deck.add(r.cardId());
             }
         }
         while (deck.size() > size) deck.remove(deck.size() - 1);     // a small deck: drop the least important cards
